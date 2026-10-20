@@ -30,7 +30,13 @@ jobs:
       - name: Install Python Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install numpy scipy networkx
+          if [ -f "requirements.txt" ]; then
+            pip install -r requirements.txt
+          elif [ -f "tsp_research/requirements.txt" ]; then
+            pip install -r tsp_research/requirements.txt
+          else
+            pip install numpy scipy networkx
+          fi
 
       - name: Install elan (Lean 4 Toolchain Manager)
         run: |
