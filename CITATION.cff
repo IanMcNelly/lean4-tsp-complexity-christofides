@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use these formal proofs, benchmarks, or monograph, please cite as below."
+title: "Machine-Checked TSP Complexity Obstructions and Christofides 3/2-Approximation in Lean 4"
+authors:
+  - family-names: "McNelly"
+    given-names: "Ian"
+version: 1.0.0
+date-released: 2026-10-20
+url: "https://github.com/IanMcNelly/lean4-tsp-complexity-christofides"
+repository-code: "https://github.com/IanMcNelly/lean4-tsp-complexity-christofides"
+license: "Apache-2.0"
+keywords:
+  - "lean4"
+  - "mathlib"
+  - "formal-verification"
+  - "traveling-salesperson-problem"
+  - "computational-complexity"
+  - "approximation-algorithms"
+  - "christofides-algorithm"
+  - "held-karp"
