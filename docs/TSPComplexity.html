@@ -445,7 +445,7 @@
     <div class="toc-header">
       <h3 style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 0.5rem;">Sections</h3>
       <ul class="toc-list">
-        <li><a href="#sec-1" class="toc-link">1. Discrete Problem Formulation <span class="toc-count">(7)</span></a></li><li><a href="#sec-2" class="toc-link">2. Foundational Combinatorial Auxiliary Lemmas <span class="toc-count">(6)</span></a></li><li><a href="#sec-3" class="toc-link">3. The Certified Branch-and-Cut State Machine <span class="toc-count">(14)</span></a></li><li><a href="#sec-4" class="toc-link">4. Parameterized Structural Invariant &amp; Complexity <span class="toc-count">(19)</span></a></li><li><a href="#sec-5" class="toc-link">5. Topological Two-Cut Boundary (DFJ Subtour Inequality) <span class="toc-count">(26)</span></a></li><li><a href="#sec-6" class="toc-link">6. Continuous Polyhedral Relaxations &amp; The Extension Complexity Barrier <span class="toc-count">(19)</span></a></li><li><a href="#sec-7" class="toc-link">6. Continuous Polyhedral Relaxations (Petersen $P_{10}$ Witness) <span class="toc-count">(24)</span></a></li><li><a href="#sec-8" class="toc-link">6. Continuous Polyhedral Relaxations (Yannakakis Slack &amp; Lower Bound) <span class="toc-count">(17)</span></a></li><li><a href="#sec-9" class="toc-link">7. Formal 3-SAT Reduction Verification (Ring-of-Triangles &amp; Clause Interlock) <span class="toc-count">(52)</span></a></li><li><a href="#sec-10" class="toc-link">8. Track C: Graph-Pruned Cycle-Separation Rank &amp; Arbitrary-n Decision <span class="toc-count">(12)</span></a></li>
+        <li><a href="#sec-1" class="toc-link">1. Discrete Problem Formulation <span class="toc-count">(7)</span></a></li><li><a href="#sec-2" class="toc-link">2. Foundational Combinatorial Auxiliary Lemmas <span class="toc-count">(6)</span></a></li><li><a href="#sec-3" class="toc-link">3. The Certified Branch-and-Cut State Machine <span class="toc-count">(14)</span></a></li><li><a href="#sec-4" class="toc-link">4. Parameterized Structural Invariant &amp; Complexity <span class="toc-count">(19)</span></a></li><li><a href="#sec-5" class="toc-link">5. Topological Two-Cut Boundary (DFJ Subtour Inequality) <span class="toc-count">(26)</span></a></li><li><a href="#sec-6" class="toc-link">6. Continuous Polyhedral Relaxations &amp; The Extension Complexity Barrier <span class="toc-count">(19)</span></a></li><li><a href="#sec-7" class="toc-link">6. Continuous Polyhedral Relaxations (Petersen $P_{10}$ Witness) <span class="toc-count">(24)</span></a></li><li><a href="#sec-8" class="toc-link">6. Continuous Polyhedral Relaxations (Yannakakis Slack &amp; Lower Bound) <span class="toc-count">(17)</span></a></li><li><a href="#sec-9" class="toc-link">7. Formal 3-SAT Reduction Verification (Ring-of-Triangles &amp; Clause Interlock) <span class="toc-count">(52)</span></a></li><li><a href="#sec-10" class="toc-link">8. Track C: Graph-Pruned Cycle-Separation Rank &amp; Arbitrary-n Decision <span class="toc-count">(15)</span></a></li>
       </ul>
     </div>
 
@@ -460,11 +460,11 @@
       <div class="hero-subtitle">Computational Complexity Barriers, Certified Branch-and-Cut Semantics, and Polyhedral Limits of Decision TSP</div>
       <div class="metrics-bar">
         <div class="metric-card">
-          <div class="metric-val">196</div>
+          <div class="metric-val">199</div>
           <div class="metric-lbl">Total Declarations</div>
         </div>
         <div class="metric-card">
-          <div class="metric-val">123</div>
+          <div class="metric-val">126</div>
           <div class="metric-lbl">Theorems &amp; Lemmas</div>
         </div>
         <div class="metric-card">
@@ -488,8 +488,8 @@
         <input type="text" class="search-input" id="searchInput" placeholder="Search declarations, signatures, or theorems..." onkeyup="filterDecls()">
       </div>
       <div class="filter-chips">
-        <div class="chip active" onclick="setKindFilter('all', this)">All (196)</div>
-        <div class="chip" onclick="setKindFilter('theorem', this)">Theorems (123)</div>
+        <div class="chip active" onclick="setKindFilter('all', this)">All (199)</div>
+        <div class="chip" onclick="setKindFilter('theorem', this)">Theorems (126)</div>
         <div class="chip" onclick="setKindFilter('def', this)">Defs (73)</div>
         <div class="chip" onclick="setKindFilter('landmark', this)">Landmarks (15)</div>
       </div>
@@ -6909,8 +6909,8 @@
           <div class="section-header">
             <h2>8. Track C: Graph-Pruned Cycle-Separation Rank &amp; Arbitrary-n Decision</h2>
             <div class="section-counts">
-              <span class="count-pill">12 Declarations</span>
-              <span class="count-pill">8 Theorems</span>
+              <span class="count-pill">15 Declarations</span>
+              <span class="count-pill">11 Theorems</span>
               <span class="count-pill">4 Definitions</span>
             </div>
           </div>
@@ -7311,6 +7311,121 @@
   dsimp [run]
   <span class="kw">exact</span> run_accepted_stable (Reduction.ringOfTrianglesGraph n) (zeroCost n) 0
     (n ^ (1 + 3) + n ^ 2) _ (<span class="ty">List</span>.finRange n) hStep</code></pre>
+                </div>
+            </div>
+            
+            <div class="decl-card" data-name="le_pow_self_and_pos" data-kind="lemma" data-landmark="false">
+              <div class="decl-header">
+                <div class="decl-title">
+                  <span class="badge badge-lemma">lemma</span>
+                  
+                  
+                  <span class="decl-name">le_pow_self_and_pos</span>
+                </div>
+                <div class="decl-meta">
+                  <a href="../TSPComplexity.lean#L2473" target="_blank" class="line-link">Line 2473</a>
+                  <button class="btn btn-copy" onclick="copyDecl('le_pow_self_and_pos')" title="Copy declaration">Copy</button>
+                  <button class="btn btn-proof" onclick="toggleProof('le_pow_self_and_pos')">
+                  <span id="btn-text-le_pow_self_and_pos">Show Proof</span>
+                </button>
+                </div>
+              </div>
+              <div class="docstring">Exponential upper bound for self: L &lt;= n ^ L and 1 &lt;= n ^ L for all 3 &lt;= n.</div>
+              <div class="signature-container">
+                <pre class="code-block" id="code-le_pow_self_and_pos"><code><span class="kw">lemma</span> le_pow_self_and_pos {n : ℕ} (hn : 3 <span class="sym">≤</span> n) (L : ℕ) : L <span class="sym">≤</span> n ^ L <span class="sym">∧</span> 1 <span class="sym">≤</span> n ^ L</code></pre>
+              </div>
+              <div id="proof-le_pow_self_and_pos" class="proof-container hidden">
+                  <pre class="code-block code-proof"><code>:= <span class="kw">by</span>
+  induction L <span class="kw">with</span>
+  | zero =&gt;
+    refine ⟨<span class="ty">Nat</span>.zero_le _, <span class="ty">Nat</span>.le_refl 1⟩
+  | succ m ih =&gt;
+    <span class="kw">have</span> h3 : n ^ m * n = n ^ (m + 1) := rfl
+    <span class="kw">have</span> h2 : n ^ m * 2 <span class="sym">≤</span> n ^ m * n := <span class="ty">Nat</span>.mul_le_mul_left (n ^ m) (<span class="kw">by</span> omega)
+    <span class="kw">have</span> ih_le := ih.1
+    <span class="kw">have</span> ih_pos := ih.2
+    refine ⟨<span class="kw">by</span> omega, <span class="kw">by</span> omega⟩</code></pre>
+                </div>
+            </div>
+            
+            <div class="decl-card" data-name="le_pow_self_of_three_le" data-kind="lemma" data-landmark="false">
+              <div class="decl-header">
+                <div class="decl-title">
+                  <span class="badge badge-lemma">lemma</span>
+                  
+                  
+                  <span class="decl-name">le_pow_self_of_three_le</span>
+                </div>
+                <div class="decl-meta">
+                  <a href="../TSPComplexity.lean#L2485" target="_blank" class="line-link">Line 2485</a>
+                  <button class="btn btn-copy" onclick="copyDecl('le_pow_self_of_three_le')" title="Copy declaration">Copy</button>
+                  <button class="btn btn-proof" onclick="toggleProof('le_pow_self_of_three_le')">
+                  <span id="btn-text-le_pow_self_of_three_le">Show Proof</span>
+                </button>
+                </div>
+              </div>
+              <div class="docstring">Exponential upper bound for self: L &lt;= n ^ L for all 3 &lt;= n.</div>
+              <div class="signature-container">
+                <pre class="code-block" id="code-le_pow_self_of_three_le"><code><span class="kw">lemma</span> le_pow_self_of_three_le {n : ℕ} (hn : 3 <span class="sym">≤</span> n) (L : ℕ) : L <span class="sym">≤</span> n ^ L</code></pre>
+              </div>
+              <div id="proof-le_pow_self_of_three_le" class="proof-container hidden">
+                  <pre class="code-block code-proof"><code>:=
+  (le_pow_self_and_pos hn L).1</code></pre>
+                </div>
+            </div>
+            
+            <div class="decl-card" data-name="prunedstructuralrank_positive_inhabited_all_ge_three" data-kind="theorem" data-landmark="false">
+              <div class="decl-header">
+                <div class="decl-title">
+                  <span class="badge badge-theorem">theorem</span>
+                  
+                  
+                  <span class="decl-name">prunedStructuralRank_positive_inhabited_all_ge_three</span>
+                </div>
+                <div class="decl-meta">
+                  <a href="../TSPComplexity.lean#L2492" target="_blank" class="line-link">Line 2492</a>
+                  <button class="btn btn-copy" onclick="copyDecl('prunedStructuralRank_positive_inhabited_all_ge_three')" title="Copy declaration">Copy</button>
+                  <button class="btn btn-proof" onclick="toggleProof('prunedStructuralRank_positive_inhabited_all_ge_three')">
+                  <span id="btn-text-prunedStructuralRank_positive_inhabited_all_ge_three">Show Proof</span>
+                </button>
+                </div>
+              </div>
+              <div class="docstring">Track C Positive Non-Vacuity Theorem: For all n &gt;= 3, there exist a graph G,
+    cost function c, budget B, rank parameter k, and non-empty candidate frontier
+    frontier != [] such that ValidTourBound G c B holds and PrunedStructuralRank n G c B k frontier
+    is constructively inhabited.</div>
+              <div class="signature-container">
+                <pre class="code-block" id="code-prunedStructuralRank_positive_inhabited_all_ge_three"><code><span class="kw">theorem</span> prunedStructuralRank_positive_inhabited_all_ge_three (n : ℕ) (hn : 3 <span class="sym">≤</span> n) :
+    <span class="sym">∃</span> (G : <span class="ty">Graph</span> n) (c : <span class="ty">CostFunction</span> n) (B k : ℕ) (frontier : <span class="ty">List</span> (<span class="ty">List</span> (<span class="ty">Fin</span> n))),
+      frontier <span class="sym">≠</span> [] <span class="sym">∧</span> <span class="ty">ValidTourBound</span> G c B <span class="sym">∧</span> Nonempty (PrunedStructuralRank n G c B k frontier)</code></pre>
+              </div>
+              <div id="proof-prunedStructuralRank_positive_inhabited_all_ge_three" class="proof-container hidden">
+                  <pre class="code-block code-proof"><code>:= <span class="kw">by</span>
+  <span class="kw">let</span> G := Reduction.ringOfTrianglesGraph n
+  <span class="kw">let</span> c := zeroCost n
+  <span class="kw">let</span> frontier := (<span class="ty">SolverState</span>.init n).queue
+  <span class="kw">let</span> k := frontier.length
+  refine ⟨G, c, 0, k, frontier, ?_, ?_, ⟨⟨k, <span class="ty">Nat</span>.le_refl k, ?_, ?_, ?_⟩⟩⟩
+  · <span class="kw">intro</span> hnil
+    <span class="kw">have</span> hmem : <span class="ty">List</span>.finRange n <span class="sym">∈</span> (<span class="ty">List</span>.finRange n).permutations :=
+      <span class="ty">List</span>.mem_permutations.mpr (<span class="ty">List</span>.Perm.refl (<span class="ty">List</span>.finRange n))
+    change <span class="ty">List</span>.finRange n <span class="sym">∈</span> frontier at hmem
+    rw [hnil] at hmem
+    contradiction
+  · refine ⟨<span class="ty">List</span>.finRange n, finRange_isTour_ringOfTriangles hn, ?_⟩
+    rw [zeroCost_tourCost_eq_zero]
+  · <span class="kw">intro</span> p hp
+    <span class="kw">have</span> hp_perm : <span class="ty">List</span>.Perm p (<span class="ty">List</span>.finRange n) := <span class="ty">List</span>.mem_permutations.mp hp
+    <span class="kw">have</span> hlen : p.length = n := <span class="kw">by</span> rw [hp_perm.length_eq, <span class="ty">List</span>.length_finRange]
+    <span class="kw">have</span> hnodup : p.Nodup := (<span class="ty">List</span>.Perm.nodup_iff hp_perm).mpr (<span class="ty">List</span>.nodup_finRange n)
+    refine ⟨hlen, hnodup, ?_⟩
+    <span class="kw">intro</span> e he
+    change Reduction.ringOfTrianglesAdj e.1 e.2
+    rw [Reduction.ringOfTrianglesAdj_iff_ne]
+    <span class="kw">exact</span> cycleEdges_loopless p hn hlen hnodup e he
+  · <span class="kw">intro</span> p hp
+    <span class="kw">exact</span> tour_mem_init_queue hp.1
+  · <span class="kw">exact</span> le_pow_self_of_three_le hn frontier.length</code></pre>
                 </div>
             </div>
             

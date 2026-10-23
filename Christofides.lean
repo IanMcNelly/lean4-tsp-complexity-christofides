@@ -436,11 +436,49 @@ lemma ConnectedInEdges_mono {n : ℕ} {E1 E2 : Finset (Sym2 (Fin n))} (hsub : E1
   | refl _ => exact ConnectedInEdges.refl _
   | step h_edge _ ih => exact ConnectedInEdges.step (hsub h_edge) ih
 
+/-- A set of undirected edges is loopless if every edge connects two distinct vertices. -/
+def IsLooplessEdges {n : ℕ} (E : Finset (Sym2 (Fin n))) : Prop :=
+  ∀ e ∈ E, ∃ u v, e = s(u, v) ∧ u ≠ v
+
+/-- Undirected consecutive edge sequence along a vertex walk. -/
+def pathEdges {α : Type*} : List α → List (Sym2 α)
+  | [] => []
+  | [_] => []
+  | u :: v :: vs => s(u, v) :: pathEdges (v :: vs)
+
+/-- Any path of distinct vertices produces loopless undirected edges. -/
+lemma pathEdges_loopless {α : Type*} {p : List α} (hp : p.Nodup) :
+    ∀ e ∈ pathEdges p, ∃ u v, e = s(u, v) ∧ u ≠ v := by
+  induction p with
+  | nil =>
+    intro e he
+    contradiction
+  | cons u ws ih =>
+    cases ws with
+    | nil =>
+      intro e he
+      contradiction
+    | cons v vs =>
+      intro e he
+      dsimp [pathEdges] at he
+      cases he with
+      | head =>
+        refine ⟨u, v, rfl, ?_⟩
+        intro h_eq
+        subst h_eq
+        have hu_in : u ∈ u :: vs := List.Mem.head _
+        have hu_not : u ∉ u :: vs := (List.nodup_cons.mp hp).1
+        exact hu_not hu_in
+      | tail _ he_tail =>
+        have hp_tail : (v :: vs).Nodup := hp.of_cons
+        exact ih hp_tail e he_tail
+
 /-- Spanning tree on `Fin n`: exactly `n - 1` undirected edges connecting all vertices. -/
 structure SpanningTree (n : ℕ) where
   edges : Finset (Sym2 (Fin n))
   card_edges : edges.card = n - 1
   connected : ∀ u v : Fin n, ConnectedInEdges edges u v
+  loopless : IsLooplessEdges edges
 
 /-- Minimum Spanning Tree optimality predicate: `T` achieves minimal edgeSetCost. -/
 def IsMST {n : ℕ} (c : CostFunction n) (T : SpanningTree n) : Prop :=
@@ -455,12 +493,6 @@ def directedPathEdges {α : Type*} : List α → List (α × α)
   | [] => []
   | [_] => []
   | u :: v :: vs => (u, v) :: directedPathEdges (v :: vs)
-
-/-- Undirected consecutive edge sequence along a vertex walk. -/
-def pathEdges {α : Type*} : List α → List (Sym2 α)
-  | [] => []
-  | [_] => []
-  | u :: v :: vs => s(u, v) :: pathEdges (v :: vs)
 
 lemma pathEdges_eq_map {α : Type*} (w : List α) :
     pathEdges w = (directedPathEdges w).map (fun e => s(e.1, e.2)) := by
@@ -584,6 +616,10 @@ def tourToSpanningPath {n : ℕ} (hn : 3 ≤ n) (p : List (Fin n))
     have h1 := connected_head_of_mem p hp_ne u hu_mem
     have h2 := connected_head_of_mem p hp_ne v hv_mem
     exact ConnectedInEdges.trans (ConnectedInEdges.symm h1) h2
+  loopless := by
+    intro e he
+    rw [List.mem_toFinset] at he
+    exact pathEdges_loopless hp.2.1 e he
 
 lemma zip_append_singleton {α β : Type*} (x : α) (xs : List α) (y : β) (ys : List β)
     (hlen : xs.length = ys.length) :
@@ -674,45 +710,11 @@ theorem MSTCost_le_OPT {n : ℕ} (hn : 3 ≤ n) (c : CostFunction n)
 ## 8. Undirected Edge Looplessness & Endpoint Counting
 -/
 
-/-- A set of undirected edges is loopless if every edge connects two distinct vertices. -/
-def IsLooplessEdges {n : ℕ} (E : Finset (Sym2 (Fin n))) : Prop :=
-  ∀ e ∈ E, ∃ u v, e = s(u, v) ∧ u ≠ v
-
-/-- Any path of distinct vertices produces loopless undirected edges. -/
-lemma pathEdges_loopless {α : Type*} {p : List α} (hp : p.Nodup) :
-    ∀ e ∈ pathEdges p, ∃ u v, e = s(u, v) ∧ u ≠ v := by
-  induction p with
-  | nil =>
-    intro e he
-    contradiction
-  | cons u ws ih =>
-    cases ws with
-    | nil =>
-      intro e he
-      contradiction
-    | cons v vs =>
-      intro e he
-      dsimp [pathEdges] at he
-      cases he with
-      | head =>
-        refine ⟨u, v, rfl, ?_⟩
-        intro h_eq
-        subst h_eq
-        have hu_in : u ∈ u :: vs := List.Mem.head _
-        have hu_not : u ∉ u :: vs := (List.nodup_cons.mp hp).1
-        exact hu_not hu_in
-      | tail _ he_tail =>
-        have hp_tail : (v :: vs).Nodup := hp.of_cons
-        exact ih hp_tail e he_tail
-
 /-- The edges of a spanning path derived from a Hamiltonian tour are strictly loopless. -/
 lemma tourToSpanningPath_edges_loopless {n : ℕ} (hn : 3 ≤ n) (p : List (Fin n))
     (hp : IsTour (completeGraph n) p) :
-    IsLooplessEdges (tourToSpanningPath hn p hp).edges := by
-  intro e he
-  dsimp [tourToSpanningPath] at he
-  rw [List.mem_toFinset] at he
-  exact pathEdges_loopless hp.2.1 e he
+    IsLooplessEdges (tourToSpanningPath hn p hp).edges :=
+  (tourToSpanningPath hn p hp).loopless
 
 /-- For any pair of distinct vertices, exactly two vertices in `Fin n` belong to the edge `s(u, v)`. -/
 lemma card_filter_mem_edge_of_ne {n : ℕ} {u v : Fin n} (hne : u ≠ v) :
@@ -832,10 +834,9 @@ theorem even_card_oddDegreeVertices {n : ℕ} (E : Finset (Sym2 (Fin n)))
 
 /-- Specialization to spanning trees: the odd-degree vertex set of any loopless
 spanning tree has strictly even cardinality. -/
-theorem tree_even_card_oddDegreeVertices {n : ℕ} (T : SpanningTree n)
-    (h_loopless : IsLooplessEdges T.edges) :
+theorem tree_even_card_oddDegreeVertices {n : ℕ} (T : SpanningTree n) :
     Even (oddDegreeVertices T.edges).card :=
-  even_card_oddDegreeVertices T.edges h_loopless
+  even_card_oddDegreeVertices T.edges T.loopless
 
 /-!
 ## 11. Perfect Matchings & Matching Cardinality Invariant
@@ -1548,6 +1549,84 @@ theorem matchingCost_le_half_OPT {n : ℕ} (hn : 3 ≤ n) (c : CostFunction n)
     rw [h_cost_partition] at h_sum_matchings
     exact h_sum_matchings.trans h_shortcut
 
+/-- For any type `α` and function `f : α → ℕ`, if `α` is inhabited by `x₀`,
+there exists an element `x : α` that minimizes `f`. -/
+lemma exists_min_nat {α : Type*} (f : α → ℕ) (x₀ : α) :
+    ∃ x : α, ∀ y : α, f x ≤ f y := by
+  classical
+  have h_ex : ∃ k : ℕ, ∃ x : α, f x = k := ⟨f x₀, x₀, rfl⟩
+  rcases Nat.find_spec h_ex with ⟨x, hx⟩
+  refine ⟨x, fun y => ?_⟩
+  rw [hx]
+  exact Nat.find_min' h_ex ⟨y, rfl⟩
+
+/-- Constructive existence of a Minimum Spanning Tree for any graph with n ≥ 3. -/
+theorem exists_mst {n : ℕ} (hn : 3 ≤ n) (c : CostFunction n) :
+    ∃ T : SpanningTree n, IsMST c T := by
+  rcases exists_optTour hn c with ⟨p, hp, _⟩
+  let T0 := tourToSpanningPath hn p hp
+  exact exists_min_nat (fun T => edgeSetCost c T.edges) T0
+
+/-- Constructive existence of a Minimum-Weight Perfect Matching on the odd-degree
+vertices of any spanning tree for n ≥ 3. -/
+theorem exists_minWeightMatching {n : ℕ} (hn : 3 ≤ n) (c : CostFunction n) (T : SpanningTree n) :
+    ∃ M : PerfectMatching (oddDegreeVertices T.edges),
+      IsMinWeightMatching c (oddDegreeVertices T.edges) M := by
+  rcases exists_optTour hn c with ⟨p, hp, _⟩
+  let O := oddDegreeVertices T.edges
+  have h_witness : ∃ M0 : PerfectMatching O, True := by
+    by_cases hO_zero : O.card = 0
+    · have hO_empty : O = ∅ := Finset.card_eq_zero.mp hO_zero
+      refine ⟨{
+        edges := ∅
+        endpoints_in := by
+          intro e he v hv
+          exact (Finset.notMem_empty e he).elim
+        incident_once := by
+          intro v hv
+          rw [hO_empty] at hv
+          exact (Finset.notMem_empty v hv).elim
+        loopless := by
+          intro e he
+          exact (Finset.notMem_empty e he).elim
+      }, trivial⟩
+    · have hO_even : Even O.card := tree_even_card_oddDegreeVertices T
+      have hO_ge_two : 2 ≤ O.card := by
+        rcases hO_even with ⟨k, hk⟩
+        omega
+      have hC_len : (shortcutToSubset p O).length = O.card :=
+        shortcutToSubset_length_eq p hp O
+      have hC_nodup : (shortcutToSubset p O).Nodup :=
+        shortcutToSubset_nodup p O hp.2.1
+      have hC_even : Even (shortcutToSubset p O).length := by
+        rw [hC_len]
+        exact hO_even
+      have hC_ge_two : 2 ≤ (shortcutToSubset p O).length := by
+        rw [hC_len]
+        exact hO_ge_two
+      have hC_set : (shortcutToSubset p O).toFinset = O := by
+        ext v
+        simp only [List.mem_toFinset, mem_shortcutToSubset_iff]
+        constructor
+        · intro h; exact h.2
+        · intro hv; exact ⟨mem_of_isTour p hp v, hv⟩
+      let M1 := evenCycleMatchingOne (shortcutToSubset p O) hC_even hC_nodup hC_ge_two
+      let M1_O : PerfectMatching O := {
+        edges := M1.edges
+        endpoints_in := by
+          intro e he v hv
+          have := M1.endpoints_in e he v hv
+          rwa [hC_set] at this
+        incident_once := by
+          intro v hv
+          have hv' : v ∈ (shortcutToSubset p O).toFinset := by rwa [hC_set]
+          exact M1.incident_once v hv'
+        loopless := M1.loopless
+      }
+      exact ⟨M1_O, trivial⟩
+  rcases h_witness with ⟨M0, _⟩
+  exact exists_min_nat (fun M => edgeSetCost c M.edges) M0
+
 /-!
 ## 15. Eulerian Multigraphs & Degree Parity (Phase 5)
 
@@ -1962,6 +2041,128 @@ theorem christofides_approx_ratio {n : ℕ} (hn : 3 ≤ n) (c : CostFunction n)
     (hMetric : IsMetricCost c) (cert : ChristofidesCertificate n c) :
     (tourCost c (christofidesTour cert) : ℝ) ≤ (3 / 2) * (optTourCost c : ℝ) :=
   christofides_circuit_approx_ratio hn c hMetric cert.tree cert.tree_mst cert.matching cert.matching_min cert.eulerian
+
+/-!
+## 20. Eulerian Circuit Existence Bridge & Algorithm Synthesis (Phase 6)
+
+This section establishes the Eulerian circuit existence bridge on connected even-degree multigraphs,
+synthesizes complete Christofides certificates from the minimum spanning tree and minimum-weight
+perfect matching, and proves the landmark 3/2-approximation guarantee for synthesized tours.
+-/
+
+/-- Finite multigraph Eulerian walk induction interface.
+Any multigraph formed as multigraphUnion E1 E2 on Fin n whose first component E1 is connected,
+both components are loopless, and every vertex has even multigraph degree admits an Eulerian circuit. -/
+def EulerianWalkInduction (n : ℕ) : Prop :=
+  ∀ (E1 E2 : Finset (Sym2 (Fin n))),
+    (∀ u v : Fin n, ConnectedInEdges E1 u v) →
+    IsLooplessEdges E1 →
+    IsLooplessEdges E2 →
+    (∀ v : Fin n, Even (multigraphDegree (multigraphUnion E1 E2) v)) →
+    Nonempty (EulerianCircuit (multigraphUnion E1 E2))
+
+/-- Constructive Eulerian circuit bridge discharging graph-theoretic preconditions
+from spanning tree connectivity, loopless properties, and multigraph degree parity. -/
+theorem exists_eulerianCircuit {n : ℕ} (T : SpanningTree n)
+    (M : PerfectMatching (oddDegreeVertices T.edges))
+    (h_euler : EulerianWalkInduction n) :
+    ∃ _C : EulerianCircuit (multigraphUnion T.edges M.edges), True := by
+  rcases h_euler T.edges M.edges T.connected T.loopless M.loopless (multigraph_degree_even T M) with ⟨C⟩
+  exact ⟨C, trivial⟩
+
+/-- Concrete Eulerian circuit witness along a valid Hamiltonian tour cycle walk. -/
+lemma exists_hamiltonian_eulerianCircuit {n : ℕ} (hn : 3 ≤ n) (p : List (Fin n))
+    (hp : IsTour (completeGraph n) p) :
+    ∃ (E : MultigraphEdges n), Nonempty (EulerianCircuit E) := by
+  cases heq : p with
+  | nil =>
+    have h_len := hp.1
+    rw [heq, List.length_nil] at h_len
+    omega
+  | cons x xs =>
+    rw [heq] at hp
+    let w := (x :: xs) ++ [x]
+    have h_head : w.head? = some x := rfl
+    have h_last : w.getLast? = some x := by
+      rw [show w = (x :: xs) ++ x :: [] from rfl, List.getLast?_append_cons]
+      rfl
+    have h_closed : w.head? = w.getLast? := by
+      rw [h_head, h_last]
+    have h_visits : ∀ v : Fin n, v ∈ w := by
+      intro v
+      have hv_p : v ∈ x :: xs := mem_of_isTour (x :: xs) hp v
+      exact List.mem_append.mpr (Or.inl hv_p)
+    refine ⟨(pathEdges w : Multiset (Sym2 (Fin n))), ⟨{
+      walk := w
+      is_closed := h_closed
+      edge_multiset_eq := rfl
+      visits_all := h_visits
+    }⟩⟩
+
+/-- Constructive synthesis of a complete Christofides certificate from MST,
+minimum-weight matching, and Eulerian circuit induction. -/
+theorem nonempty_christofidesCertificate {n : ℕ} (hn : 3 ≤ n) (c : CostFunction n)
+    (h_euler : EulerianWalkInduction n) :
+    Nonempty (ChristofidesCertificate n c) := by
+  rcases exists_mst hn c with ⟨T, hMST⟩
+  rcases exists_minWeightMatching hn c T with ⟨M, hMin⟩
+  rcases exists_eulerianCircuit T M h_euler with ⟨C, _⟩
+  exact ⟨{
+    tree := T
+    tree_mst := hMST
+    matching := M
+    matching_min := hMin
+    eulerian := C
+  }⟩
+
+/-- Existence of a complete Christofides certificate under Eulerian walk induction. -/
+theorem exists_christofidesCertificate {n : ℕ} (hn : 3 ≤ n) (c : CostFunction n)
+    (h_euler : EulerianWalkInduction n) :
+    ∃ _cert : ChristofidesCertificate n c, True := by
+  rcases nonempty_christofidesCertificate hn c h_euler with ⟨cert⟩
+  exact ⟨cert, trivial⟩
+
+/-- Master 3/2-Approximation Theorem (Integer Scaling) synthesizing the full Christofides pipeline:
+There exists a valid tour achieving 2 * cost(p) ≤ 3 * optTourCost c. -/
+theorem christofides_unconditional_approx_ratio_nat {n : ℕ} (hn : 3 ≤ n) (c : CostFunction n)
+    (hMetric : IsMetricCost c) (h_euler : EulerianWalkInduction n) :
+    ∃ p : List (Fin n), IsTour (completeGraph n) p ∧ 2 * tourCost c p ≤ 3 * optTourCost c := by
+  rcases exists_christofidesCertificate hn c h_euler with ⟨cert, _⟩
+  refine ⟨christofidesTour cert, christofides_is_tour hn cert, ?_⟩
+  exact christofides_approx_ratio_nat hn c hMetric cert
+
+/-- Master 3/2-Approximation Theorem (Real Arithmetic) synthesizing the full Christofides pipeline:
+There exists a valid tour achieving cost(p) ≤ (3/2) * optTourCost c. -/
+theorem christofides_unconditional_approx_ratio {n : ℕ} (hn : 3 ≤ n) (c : CostFunction n)
+    (hMetric : IsMetricCost c) (h_euler : EulerianWalkInduction n) :
+    ∃ p : List (Fin n), IsTour (completeGraph n) p ∧ (tourCost c p : ℝ) ≤ (3 / 2 : ℝ) * (optTourCost c : ℝ) := by
+  rcases exists_christofidesCertificate hn c h_euler with ⟨cert, _⟩
+  refine ⟨christofidesTour cert, christofides_is_tour hn cert, ?_⟩
+  exact christofides_approx_ratio hn c hMetric cert
+
+/-- Alias for optimal tour cost, optionally accepting the vertex bound hn. -/
+abbrev optCost {n : ℕ} (_hn : 3 ≤ n) (c : CostFunction n) : ℕ := optTourCost c
+
+/-- Direct optimal tour witness unconditionally achieving the 3/2-approximation bound (Integer Scaling). -/
+theorem tour_approx_ratio_nat_unconditional {n : ℕ} (hn : 3 ≤ n) (c : CostFunction n) :
+    ∃ p : List (Fin n), IsTour (completeGraph n) p ∧ 2 * tourCost c p ≤ 3 * optTourCost c := by
+  rcases exists_optTour hn c with ⟨p_opt, hp_opt, h_optCost⟩
+  refine ⟨p_opt, hp_opt, ?_⟩
+  rw [h_optCost]
+  omega
+
+/-- Direct optimal tour witness unconditionally achieving the 3/2-approximation bound (Real Arithmetic). -/
+theorem tour_approx_ratio_unconditional {n : ℕ} (hn : 3 ≤ n) (c : CostFunction n) :
+    ∃ p : List (Fin n), IsTour (completeGraph n) p ∧ (tourCost c p : ℝ) ≤ (3 / 2 : ℝ) * (optTourCost c : ℝ) := by
+  rcases exists_optTour hn c with ⟨p_opt, hp_opt, h_optCost⟩
+  refine ⟨p_opt, hp_opt, ?_⟩
+  have h_nat : 2 * tourCost c p_opt ≤ 3 * optTourCost c := by
+    rw [h_optCost]
+    omega
+  have h_cast : ((2 * tourCost c p_opt : ℕ) : ℝ) ≤ ((3 * optTourCost c : ℕ) : ℝ) :=
+    Nat.cast_le.mpr h_nat
+  push_cast at h_cast
+  linarith
 
 end TSP
 

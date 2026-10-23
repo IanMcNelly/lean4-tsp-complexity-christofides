@@ -2469,6 +2469,55 @@ theorem pruned_solver_accepts_necklace_all_ge_three (n : ℕ) (hn : 3 ≤ n) :
   exact run_accepted_stable (Reduction.ringOfTrianglesGraph n) (zeroCost n) 0
     (n ^ (1 + 3) + n ^ 2) _ (List.finRange n) hStep
 
+/-- Exponential upper bound for self: L <= n ^ L and 1 <= n ^ L for all 3 <= n. -/
+lemma le_pow_self_and_pos {n : ℕ} (hn : 3 ≤ n) (L : ℕ) : L ≤ n ^ L ∧ 1 ≤ n ^ L := by
+  induction L with
+  | zero =>
+    refine ⟨Nat.zero_le _, Nat.le_refl 1⟩
+  | succ m ih =>
+    have h3 : n ^ m * n = n ^ (m + 1) := rfl
+    have h2 : n ^ m * 2 ≤ n ^ m * n := Nat.mul_le_mul_left (n ^ m) (by omega)
+    have ih_le := ih.1
+    have ih_pos := ih.2
+    refine ⟨by omega, by omega⟩
+
+/-- Exponential upper bound for self: L <= n ^ L for all 3 <= n. -/
+lemma le_pow_self_of_three_le {n : ℕ} (hn : 3 ≤ n) (L : ℕ) : L ≤ n ^ L :=
+  (le_pow_self_and_pos hn L).1
+
+/-- Track C Positive Non-Vacuity Theorem: For all n >= 3, there exist a graph G,
+    cost function c, budget B, rank parameter k, and non-empty candidate frontier
+    frontier != [] such that ValidTourBound G c B holds and PrunedStructuralRank n G c B k frontier
+    is constructively inhabited. -/
+theorem prunedStructuralRank_positive_inhabited_all_ge_three (n : ℕ) (hn : 3 ≤ n) :
+    ∃ (G : Graph n) (c : CostFunction n) (B k : ℕ) (frontier : List (List (Fin n))),
+      frontier ≠ [] ∧ ValidTourBound G c B ∧ Nonempty (PrunedStructuralRank n G c B k frontier) := by
+  let G := Reduction.ringOfTrianglesGraph n
+  let c := zeroCost n
+  let frontier := (SolverState.init n).queue
+  let k := frontier.length
+  refine ⟨G, c, 0, k, frontier, ?_, ?_, ⟨⟨k, Nat.le_refl k, ?_, ?_, ?_⟩⟩⟩
+  · intro hnil
+    have hmem : List.finRange n ∈ (List.finRange n).permutations :=
+      List.mem_permutations.mpr (List.Perm.refl (List.finRange n))
+    change List.finRange n ∈ frontier at hmem
+    rw [hnil] at hmem
+    contradiction
+  · refine ⟨List.finRange n, finRange_isTour_ringOfTriangles hn, ?_⟩
+    rw [zeroCost_tourCost_eq_zero]
+  · intro p hp
+    have hp_perm : List.Perm p (List.finRange n) := List.mem_permutations.mp hp
+    have hlen : p.length = n := by rw [hp_perm.length_eq, List.length_finRange]
+    have hnodup : p.Nodup := (List.Perm.nodup_iff hp_perm).mpr (List.nodup_finRange n)
+    refine ⟨hlen, hnodup, ?_⟩
+    intro e he
+    change Reduction.ringOfTrianglesAdj e.1 e.2
+    rw [Reduction.ringOfTrianglesAdj_iff_ne]
+    exact cycleEdges_loopless p hn hlen hnodup e he
+  · intro p hp
+    exact tour_mem_init_queue hp.1
+  · exact le_pow_self_of_three_le hn frontier.length
+
 end TSP
 
 end OAI

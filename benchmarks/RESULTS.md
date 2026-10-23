@@ -1,9 +1,9 @@
-# Phase 5 & Phase 9 Empirical Benchmark Report (`RESULTS.md`)
+# Empirical Benchmark & Verification Report (`RESULTS.md`)
 
-**Project:** Computational Complexity & Formal Verification of Decision TSP  
+**Project:** Computational Complexity, Polyhedral Barriers & Christofides 3/2-Approximation in Lean 4  
 **Module:** `benchmarks/`  
-**Engine:** [`branch_and_cut.py`](branch_and_cut.py) & [`adversarial_instances.py`](adversarial_instances.py)  
-**Environment:** Python 3.12.0, SciPy 1.18.1 (`highs` LP solver), NumPy 2.5.3, NetworkX 3.7  
+**Engines:** [`branch_and_cut.py`](branch_and_cut.py), [`adversarial_instances.py`](adversarial_instances.py), [`christofides.py`](christofides.py), [`structural_rank.py`](structural_rank.py)  
+**Environment:** Python 3.12, SciPy 1.12+, NumPy 1.26+, NetworkX 3.2+  
 
 ---
 
@@ -128,11 +128,57 @@ Evaluating `dfjSlack petersenFractional S` across all $2^{10} - 2 = 1,022$ prope
 
 ---
 
-## 6. Reproducibility
+## 6. Benchmark 5: Track C Empirical Kappa-Profiling (`structural_rank.py`)
 
-To reproduce all benchmark tables and verify the outputs:
+Evaluating the empirical cycle-separation rank $\hat{\kappa} = \lceil \log_n(\text{bb\_nodes}) \rceil$ across graph families confirms the sharp dichotomy between support-pruned polynomial instances and adversarial clause-interlock graphs:
+
+| Graph Family | Vertices ($n$) | $c_0$ (Root Comps) | B&B Nodes | $\hat{\kappa}$ | Pruned Frontier $|F| \le n^1$ | Status |
+| :--- | :---: | :---: | :---: | :---: | :---: | :--- |
+| **Family 1: Bounded-Rank Necklace** | $9 \dots 24$ | 1 | **1** | **0** | $1 \le n^1$ | `accepted` (constant 1 B&B node) |
+| **Family 2: Clustered $K_n$** | $9 \dots 24$ | $\ge 2$ | **1** | **0** | Dynamic DFJ cuts | `accepted` (resolved at root LP) |
+| **Family 3: Adversarial $G_{\text{path}}$ (3-SAT)** | $9 \dots 24$ | $n/3$ | **$2^{n/3}-1$** | **$\Theta(n/\log n)$** | Unbounded | `rejected` (exponential explosion) |
+
+---
+
+## 7. Benchmark 6: Christofides-Serdyukov 3/2-Approximation (`christofides.py`)
+
+Evaluating the 4-stage Christofides-Serdyukov pipeline across 9 canonical metric benchmark instances confirms 100% compliance with every theoretical invariant from `Christofides.lean`:
+
+| Instance | $n$ | $c(T_{\text{mst}})$ | $c(M)$ | $c(W)$ | $c(\pi)$ | $\text{OPT}$ | Approx Ratio | Master Invariant Status |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
+| **Ring Metric** $n=4$ | 4 | 45 | 15 | 60 | 60 | 60 | **1.0000** | $60 \le 90.0$ [PASSED] |
+| **Ring Metric** $n=6$ | 6 | 50 | 10 | 60 | 60 | 60 | **1.0000** | $60 \le 90.0$ [PASSED] |
+| **Ring Metric** $n=8$ | 8 | 140 | 20 | 160 | 160 | 160 | **1.0000** | $160 \le 240.0$ [PASSED] |
+| **Euclidean 2D** $n=4$ (seed 101) | 4 | 1089 | 997 | 2086 | 2019 | 2019 | **1.0000** | $2019 \le 3028.5$ [PASSED] |
+| **Euclidean 2D** $n=6$ (seed 202) | 6 | 1767 | 1237 | 3004 | 2901 | 2756 | **1.0526** | $2901 \le 4134.0$ [PASSED] |
+| **Euclidean 2D** $n=8$ (seed 303) | 8 | 1694 | 1358 | 3052 | 2778 | 2778 | **1.0000** | $2778 \le 4167.0$ [PASSED] |
+| **Euclidean 2D** $n=10$ (seed 777) | 10 | 2330 | 1415 | 3745 | 3252 | 3252 | **1.0000** | $3252 \le 4878.0$ [PASSED] |
+| **Euclidean 2D** $n=11$ (seed 404) | 11 | 2469 | 910 | 3379 | 3352 | 3115 | **1.0761** | $3352 \le 4672.5$ [PASSED] |
+| **Euclidean 2D** $n=12$ (seed 505) | 12 | 1865 | 1207 | 3072 | 3060 | 2621 | **1.1675** | $3060 \le 3931.5$ [PASSED] |
+
+All 9 test suites verify:
+1. $c(T_{\text{mst}}) \le \text{OPT}$ (`MSTCost_le_OPT`)
+2. Odd-degree parity $|O| \in 2\mathbb{N}$ (`even_card_oddDegreeVertices`)
+3. $c(M) \le \frac{1}{2}\text{OPT}$ (`matchingCost_le_half_OPT`)
+4. Eulerian degree parity $\deg_H(v) \equiv 0 \pmod 2$ (`multigraph_degree_even`)
+5. Traversal cost identity $c(W) = c(T) + c(M)$ (`circuitCost_eq_treeCost_add_matchingCost`)
+6. Metric shortcutting contraction $c(\pi) \le c(W)$ (`shortcut_tourCost_le_circuitCost`)
+7. Master 3/2-approximation guarantee $c(\pi) \le \frac{3}{2}\text{OPT}$ (`christofides_approx_ratio`)
+
+---
+
+## 8. Reproducibility
+
+To reproduce all benchmark suites independently:
 
 ```bash
+# Held-Karp LP, Branch-and-Cut & Yannakakis Slack Matrix Suite
 python benchmarks/adversarial_instances.py
+
+# Christofides-Serdyukov 3/2-Approximation 9-Suite Verification
+python benchmarks/christofides.py
+
+# Track C: Empirical Kappa-Profiling & Cycle-Separation Rank
+python benchmarks/structural_rank.py
 ```
 

@@ -7,7 +7,7 @@ This directory contains the peer-review and arXiv-compatible LaTeX source for th
   - Vector TikZ graph figure for the Ring-of-Triangles 3-SAT Gadget Graph ($G_{\text{path}}$) with variable 2-opt bridges and clause-interlock penalties ($c_{\text{penalty}} = B + 1$).
   - Vector TikZ diagram for the three formalized mathematical obstructions (Polyhedral Integrality Gaps on $P_{10}$, PSD Extension Complexity & Yannakakis Slack Factorization, and Combinatorial NP-Hardness Reductions).
   - Vector TikZ plot for the Branch-and-Bound search node explosion ($2^m - 1$ vs. 1) and the Christofides-Serdyukov 3/2-approximation pipeline.
-  - Complete formal theorem statements and proof sketches matching `TSPComplexity.lean` (196 declarations) and `Christofides.lean` (141 declarations; 337 total declarations).
+  - Complete formal theorem statements and proof sketches matching `TSPComplexity.lean` (199 declarations) and `Christofides.lean` (158 declarations; 357 total declarations).
   - Comprehensive bibliography with 10 seminal citations.
 
 ## Compilation Instructions
