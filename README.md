@@ -2,7 +2,7 @@
 
 [![Lean 4](https://img.shields.io/badge/Lean_4-v4.34.1-blue.svg)](https://leanprover.github.io/)
 [![Zero Sorries](https://img.shields.io/badge/Sorries-0-brightgreen.svg)]()
-[![Declarations](https://img.shields.io/badge/Verified_Decls-357-success.svg)]()
+[![Declarations](https://img.shields.io/badge/Verified_Decls-386-success.svg)]()
 [![CI Verification](https://github.com/IanMcNelly/lean4-tsp-complexity-christofides/actions/workflows/verify_tsp_research.yml/badge.svg)](https://github.com/IanMcNelly/lean4-tsp-complexity-christofides/actions)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Docs](https://img.shields.io/badge/Docs-Interactive_Proof_Explorer-purple.svg)](https://ianmcnelly.github.io/lean4-tsp-complexity-christofides/)
@@ -22,7 +22,7 @@ This research package draws foundational paradigms, lemma decomposition styles, 
      - **PSD Extension Complexity:** Yannakakis slack matrix factorization (`HasAffineLift`, `hasAffineLift_trace_nonneg`) and conditional super-polynomial PSD dimension scaling (`tsp_extension_complexity_lower_bound`).
      - **NP-Hardness Reductions:** Gadget-parameterized 3-SAT reduction (`sat_to_tsp_reduction_correct`), computable variable-triangle orientation codecs (`orientSingleTriangle`, `tourReadsTrue_orientSingleTriangle`), and constructive Hamiltonian Cycle $\le_p$ Decision TSP reduction (`hcReductionCost`, `hc_to_tsp_reduction_correct`).
   2. *Parameterized Resolution:* The algorithm is reformulated into a **Certified Branch-and-Cut State Machine** parameterized by the cycle-separation rank $\kappa(G, c)$. For instances where $\kappa(G, c) \le k$, the state machine terminates in deterministic polynomial time $O(|V|^{k+3})$, with the queue bound $(\text{SolverState.init } n).\text{queue.length} \le n^1$ restricting $\text{StructuralRank } n \; G \; c \; 1$ on the unpruned full permutation initial frontier to $n \le 2$.
-  3. *Machine-Checked Proofs (126 Proven Theorems & Lemmas, 199 Total Declarations / 100.0% Total Discharge Rate — 0 Sorries):* In Lean 4 (`TSPComplexity.lean`), we proved with **zero `sorry`s** across the entire module (all 8 sections and all 15 landmark theorems exported in `TSPComplexity.json`) that:
+  3. *Machine-Checked Proofs (132 Proven Theorems & Lemmas, 210 Total Declarations / 100.0% Total Discharge Rate — 0 Sorries):* In Lean 4 (`TSPComplexity.lean`), we proved with **zero `sorry`s** across the entire module (all 8 sections and all 15 landmark theorems exported in `TSPComplexity.json`) that:
      - The solver's frontier queue strictly contracts on non-accepting steps and halts whenever fuel exceeds queue length (`queue_clearance_halts`, `polynomial_termination_rank_one`).
      - Multi-step execution is globally sound and complete over the full permutation frontier, decides TSP in polynomial time on rank-1 instances where $(\text{SolverState.init } n).\text{queue.length} \le n^1$ restricts the unpruned initial frontier to $n \le 2$ (`tsp_soundness`, `tsp_completeness`, `structural_solver_decides_tsp`), and constructively inhabits `StructuralRank` (`structuralRank_zero_witness`, `structuralRank_one_witness`, `structuralRank_two_rank_one_witness`, `structuralRank_inhabited`).
      - Every valid Hamiltonian tour crosses any non-empty proper vertex cut at least twice (`dfj_subtour_cut_bound`).
@@ -30,11 +30,11 @@ This research package draws foundational paradigms, lemma decomposition styles, 
      - The 10-vertex Petersen graph fractional point ($x_e = 2/3$) strictly separates the Held-Karp relaxation from the integral TSP polytope (`held_karp_strictly_contains_tsp_polytope`), is tight with zero DFJ slack on all singleton degree cuts (`petersen_dfjSlack_singleton_zero`), and has strictly positive interior slack $\ge 2/3$ on all non-trivial DFJ cuts (`petersen_dfjSlack_nontrivial_ge_two_thirds`).
      - Any affine positive semidefinite (PSD) lift of the TSP polytope satisfies non-negative Yannakakis slack across all DFJ cuts (`dfjSlack_nonneg_of_heldKarp`, `dfjSlack_nonneg_of_tour`, `hasAffineLift_trace_nonneg`) and requires super-polynomial dimension conditioned on the Fiorini-Rothvoß dimension scaling property (`SatisfiesFioriniRothvossBound`, `tsp_extension_complexity_lower_bound`).
      - 3-CNF satisfiability reduces to Decision TSP via the Ring-of-Triangles / Clause-Interlock gadget (`Reduction.sat_to_tsp_reduction_correct`), supported by computable triangle orientation codecs (`orientSingleTriangle`, `tourReadsTrue_orientSingleTriangle`) and polynomial Hamiltonian Cycle $\le_p$ Decision TSP reduction (`hcReductionCost`, `hc_to_tsp_reduction_correct`).
-     - Support-pruned cycle-separation rank (`PrunedStructuralRank`) restricts the frontier to edge-supported subgraphs with verified tour validity (`frontier_tours`), establishing arbitrary-$n$ polynomial-time decision equivalence (`pruned_structural_solver_decides_tsp`), constructive non-vacuity for all $n \ge 3$ (`prunedStructuralRank_inhabited_all_ge_three`), positive non-vacuity with non-empty frontier (`prunedStructuralRank_positive_inhabited_all_ge_three`), 1-transition acceptance witness on necklace graphs (`pruned_solver_accepts_necklace_all_ge_three`), and constructive non-empty frontier witness (`ringOfTriangles_nonempty_frontier_witness`).
+     - Support-pruned cycle-separation rank (`PrunedStructuralRank`) restricts the frontier to edge-supported subgraphs with verified tour validity (`frontier_tours`), establishing arbitrary-$n$ polynomial-time decision equivalence (`pruned_structural_solver_decides_tsp`), constructive non-vacuity for all $n \ge 3$ (`prunedStructuralRank_inhabited_all_ge_three`, `prunedStructuralRank_nonempty_frontier_rank_one`), positive rank-1 non-vacuity with non-empty frontier (`prunedStructuralRank_positive_rank_one_all_ge_three`, `prunedStructuralRank_positive_inhabited_all_ge_three`), 1-transition acceptance witness on necklace graphs (`pruned_solver_accepts_necklace_all_ge_three`), and constructive non-empty frontier witness (`ringOfTriangles_nonempty_frontier_witness`).
   4. *Empirical Stress-Test & Yannakakis Slack-Matrix Suite:* In `benchmarks/`, executable Python reference engines (`branch_and_cut.py`, `adversarial_instances.py`, `christofides.py`, `structural_rank.py`) empirically confirm the $P_{10}$ fractional stall ($\text{min-cut} = 2.0000$), the exact $2^m - 1 = 2^{|V|/3} - 1$ branch-and-bound node explosion on $G_{\text{path}}$, the exact Yannakakis DFJ subtour slack matrix $S_{\text{DFJ}}(n)$ ($n \in \{4, 5, 6, 7\}$), the $P_{10}$ cut slack profile across all $1,022$ proper cuts, and 100% compliance with the Christofides 3/2-approximation bounds.
-  5. *CI Verification Toolchain & Archival Monograph:* In `scripts/` ([`verify_build.ps1`](scripts/verify_build.ps1), [`verify_build.sh`](scripts/verify_build.sh)), automated zero-`sorry` and zero-`admit` regex audits, challenge metadata synchronization, and empirical benchmark suites run end-to-end (100% clean, 0 errors). The entire theoretical, polyhedral, and formal corpus is synthesized in the publication-grade research monograph [`MONOGRAPH.md`](MONOGRAPH.md).
+  5. *CI Verification Toolchain & Archival Monograph:* In `scripts/` ([`verify_build.ps1`](scripts/verify_build.ps1), [`verify_build.sh`](scripts/verify_build.sh)), automated zero-`sorry` and zero-`admit` regex audits, challenge metadata synchronization, and empirical benchmark suites run end-to-end (100% clean, 0 errors). The entire theoretical, polyhedral, and formal corpus is synthesized in the publication-grade research monograph [`latex/monograph.tex`](latex/monograph.tex) ([`latex/monograph.pdf`](latex/monograph.pdf)).
   6. *Containerized CI, Interactive DocGen & LaTeX Preprint:* Complete dissemination suite featuring automated GitHub Actions CI workflows ([`.github/workflows/verify_tsp_research.yml`](.github/workflows/verify_tsp_research.yml)), peer-review/arXiv-ready LaTeX monograph ([`latex/monograph.tex`](latex/monograph.tex)) with vector TikZ graphics ($P_{10}$, $G_{\text{path}}$, Christofides pipeline), and interactive zero-dependency HTML proof explorers ([`docs/index.html`](docs/index.html), [`docs/Christofides.html`](docs/Christofides.html)) with live search, filtering, and collapsible proof trees.
-  7. *The Approximation Frontier (Track D Complete — 158 Verified Declarations / 0 Sorries):* In Lean 4 (`Christofides.lean`), we formalized the complete Christofides-Serdyukov 3/2-approximation algorithm for metric TSP across 20 sections with **zero `sorry`s**, packaging the pipeline into an explicit `ChristofidesCertificate` (MST, min-weight matching on odd vertices, Eulerian circuit) whose circuit is shortcut via `shortcutCircuit` (`christofidesTour`), with constructive existence theorems (`exists_mst`, `exists_minWeightMatching`, `exists_eulerianCircuit`, `exists_christofidesCertificate`) and unconditional wrapper theorems (`christofides_unconditional_approx_ratio`), eliminating non-constructive choice of an optimal tour and proving the Master MST Lower Bound (`MSTCost_le_OPT`), Euler's Handshaking Parity Invariant (`even_card_oddDegreeVertices`), Minimum-Weight Perfect Matching 1/2-OPT Upper Bound (`matchingCost_le_half_OPT`) via alternating matching decomposition on shortcut cycles, multigraph degree parity (`multigraph_degree_even`), traversal cost identity (`circuitCost_eq_treeCost_add_matchingCost`), metric shortcutting contraction (`shortcut_tourCost_le_circuitCost`), and the master 3/2-approximation guarantee in both $\mathbb{N}$ and $\mathbb{R}$ (`christofides_approx_ratio`). Cumulative project verification: **357 cumulative declarations (245 theorems & lemmas, 112 definitions & structures) with 0 `sorry`s**.
+  7. *The Approximation Frontier (Track D Complete — 176 Verified Declarations / 0 Sorries):* In Lean 4 (`Christofides.lean`), we formalized the complete Christofides-Serdyukov 3/2-approximation algorithm for metric TSP across 20 sections with **zero `sorry`s**, packaging the pipeline into an explicit `ChristofidesCertificate` (MST, min-weight matching on odd vertices, Eulerian circuit) whose circuit is shortcut via `shortcutCircuit` (`christofidesTour`), with constructive finite existence theorems (`exists_mst`, `exists_minWeightMatching`) and constructive Hierholzer cycle-splicing induction (`eulerianWalkInduction_holds`, `exists_eulerianCircuit`, `exists_christofidesCertificate`) yielding the unconditional master approximation theorem (`christofides_unconditional_approx_ratio`), eliminating non-constructive choice of an optimal tour and proving the Master MST Lower Bound (`MSTCost_le_OPT`), Euler's Handshaking Parity Invariant (`even_card_oddDegreeVertices`), Minimum-Weight Perfect Matching 1/2-OPT Upper Bound (`matchingCost_le_half_OPT`) via alternating matching decomposition on shortcut cycles, multigraph degree parity (`multigraph_degree_even`), traversal cost identity (`circuitCost_eq_treeCost_add_matchingCost`), metric shortcutting contraction (`shortcut_tourCost_le_circuitCost`), and the master 3/2-approximation guarantee in both $\mathbb{N}$ and $\mathbb{R}$ (`christofides_approx_ratio`). Cumulative project verification: **386 cumulative declarations (268 theorems & lemmas, 118 definitions & structures) with 0 `sorry`s**.
 
 ---
 
@@ -43,10 +43,10 @@ This research package draws foundational paradigms, lemma decomposition styles, 
 ```
 tsp_research/
 ├── README.md                          # Project overview, verification tables, and roadmap (this file)
-├── MONOGRAPH.md                       # Comprehensive archival research monograph (publication grade)
-├── TSPComplexity.lean                 # Formal module for Decision TSP (2,523 lines; 126 proven theorems/lemmas, 199 total decls; 0 sorries)
+├── latex/                             # Archival LaTeX monograph & PDF (monograph.tex, monograph.pdf)
+├── TSPComplexity.lean                 # Formal module for Decision TSP (2,707 lines; 132 proven theorems/lemmas, 210 total decls; 0 sorries)
 ├── TSPComplexity.json                 # Synchronized challenge metadata specification (15 landmark theorems, 16 definitions)
-├── Christofides.lean                  # Formal module for 3/2-Approximation (2,173 lines; 119 proven theorems/lemmas, 158 total decls; 0 sorries)
+├── Christofides.lean                  # Formal module for 3/2-Approximation (2,704 lines; 136 proven theorems/lemmas, 176 total decls; 0 sorries)
 ├── Christofides.json                  # Synchronized challenge metadata specification (13 landmark theorems, 37 definitions)
 ├── lakefile.lean                      # Lean 4 Lake package metadata (roots: #[`TSPComplexity, `Christofides])
 ├── lean-toolchain                     # Pinned Lean 4 toolchain (v4.34.1)
@@ -77,7 +77,7 @@ tsp_research/
 
 ## 3. The Formal Lean 4 Scaffold (`TSPComplexity.lean`)
 
-The formal module `OAI.TSP` is structured into eight distinct architectural layers:
+The formal module `IJM.TSP` is structured into eight distinct architectural layers:
 
 1. **Discrete Foundation & Combinatorial Lemmas (Machine-Checked with 0 Sorries):**
    * `Graph n`: Undirected, loopless finite graphs over `Fin n`.
@@ -129,7 +129,7 @@ The formal module `OAI.TSP` is structured into eight distinct architectural laye
 7. **Track C: Graph-Pruned Cycle-Separation Rank & Arbitrary-n Decision (Machine-Checked with 0 Sorries):**
    * `PrunedStructuralRank n G c B k frontier`: Support-pruned cycle-separation rank certifying valid tours (`frontier_tours`), completeness, and cardinality $\le n^k$.
    * `pruned_structural_solver_decides_tsp`: **PROVEN (0 Sorries)** — Exact decision equivalence theorem for arbitrary $n \ge 3$ on pruned rank-1 instances.
-   * `prunedStructuralRank_inhabited_all_ge_three`: **PROVEN (0 Sorries)** — Constructive non-vacuity witness for `PrunedStructuralRank` for all $n \ge 3$.
+   * `prunedStructuralRank_inhabited_all_ge_three`, `prunedStructuralRank_nonempty_frontier_rank_one`, `prunedStructuralRank_positive_rank_one_all_ge_three`: **PROVEN (0 Sorries)** — Constructive rank-1 non-vacuity witnesses for `PrunedStructuralRank` across empty, unsatisfiable, and positive satisfiable frontiers for all $n \ge 3$.
    * `pruned_solver_accepts_necklace_all_ge_three`: **PROVEN (0 Sorries)** — 1-transition acceptance witness on necklace graphs for all $n \ge 3$.
    * `ringOfTriangles_frontier_tours`, `ringOfTriangles_frontier_cardinality`, `ringOfTriangles_nonempty_frontier_witness`: **PROVEN (0 Sorries)** — Constructive non-empty frontier witness on `Reduction.ringOfTrianglesGraph n` satisfying both `frontier_tours` and cardinality $\le n^1$ for all $n \ge 3$.
 
@@ -148,8 +148,8 @@ The formal module `OAI.TSP` is structured into eight distinct architectural laye
 | **§5. Topological Two-Cut Boundary (DFJ Subtour Inequality)** | 580–997 | 18 | 8 | **0** | — |
 | **§6. Polyhedral Relaxations & Extension Complexity Barrier** | 998–1933 | 41 | 19 | **0** | — |
 | **§7. Formal 3-SAT Reduction Verification** | 1934–2318 | 30 | 22 | **0** | — |
-| **§8. Track C: Graph-Pruned Cycle-Separation Rank** | 2318–2523 | 11 | 4 | **0** | — |
-| **Total (`OAI.TSP`)** | **1–2523** | **126** | **73** | **0** | **100.0% Discharged (199 Decls, 0 `sorry`s)** |
+| **§8. Track C: Graph-Pruned Cycle-Separation Rank** | 2318–2707 | 17 | 9 | **0** | — |
+| **Total (`IJM.TSP`)** | **1–2707** | **132** | **78** | **0** | **100.0% Discharged (210 Decls, 0 `sorry`s)** |
 
 ### 4.2 Section-by-Section `sorry` Audit (`Christofides.lean`)
 
@@ -174,9 +174,9 @@ The formal module `OAI.TSP` is structured into eight distinct architectural laye
 | **§17. Metric Shortcutting Operator & Tour Validity (`shortcutCircuit_isTour`)** | 1748–1870 | 5 | 1 | **0** | — |
 | **§18. Metric Shortcutting Contraction Lemma (`shortcut_tourCost_le_circuitCost`)** | 1871–1966 | 5 | 0 | **0** | — |
 | **§19. Master Christofides 3/2-Approximation Guarantee (`christofides_approx_ratio`)** | 1967–2045 | 5 | 2 | **0** | — |
-| **§20. Eulerian Circuit Existence Bridge & Algorithm Synthesis** | 2046–2173 | 8 | 2 | **0** | — |
-| **Total (`OAI.TSP.Christofides`)** | **1–2173** | **115 (119 incl. inline)** | **39** | **0** | **100.0% Discharged (158 Decls, 0 `sorry`s)** |
-| **Cumulative Project Total** | **1–4696** | **241 (245 incl. inline)** | **112** | **0** | **100.0% Discharged (357 Decls, 0 `sorry`s)** |
+| **§20. Eulerian Circuit Existence Bridge & Algorithm Synthesis** | 2046–2704 | 25 | 3 | **0** | — |
+| **Total (`IJM.TSP.Christofides`)** | **1–2704** | **132 (136 incl. inline)** | **40** | **0** | **100.0% Discharged (176 Decls, 0 `sorry`s)** |
+| **Cumulative Project Total** | **1–5411** | **264 (268 incl. inline)** | **118** | **0** | **100.0% Discharged (386 Decls, 0 `sorry`s)** |
 
 ### 4.3 Core Theorem & Lemma Verification Table
 
@@ -277,7 +277,7 @@ The formalization is compatible with Lean 4 and Mathlib conventions as pinned in
 ### 5.4 Interactive HTML Proof Explorer (`docs/`)
 To launch the interactive single-page proof explorer:
 - Simply open [`docs/index.html`](docs/index.html) in any modern web browser.
-- Filter across all 357 declarations (199 in `TSPComplexity.lean` and 158 in `Christofides.lean`), search for theorems, toggle collapsible proof trees, and inspect full Lean 4 type signatures.
+- Filter across all 386 declarations (210 in `TSPComplexity.lean` and 176 in `Christofides.lean`), search for theorems, toggle collapsible proof trees, and inspect full Lean 4 type signatures.
 - To regenerate the documentation from `TSPComplexity.lean` and `Christofides.lean`:
 ```bash
 python scripts/generate_docs.py
@@ -303,12 +303,12 @@ The automated CI harness runs on every push and pull request touching `tsp_resea
 ## 6. Project Closure & Archival Release (Tracks A–D Completed)
 
 All tracks and phases across Decision TSP Complexity, Parameterized Complexity, and the Approximation Frontier are **100% complete, verified, and operational**:
-- **357 Cumulative Verified Lean 4 Declarations** across `TSPComplexity.lean` (199 declarations: 126 theorems/lemmas, 73 definitions/structures) and `Christofides.lean` (158 declarations: 119 theorems/lemmas, 39 definitions/structures) with **ZERO `sorry`s**, **ZERO `admit`s**, and standard Lean 4 axioms.
+- **386 Cumulative Verified Lean 4 Declarations** across `TSPComplexity.lean` (210 declarations: 132 theorems/lemmas, 78 definitions/structures) and `Christofides.lean` (176 declarations: 136 theorems/lemmas, 40 definitions/structures) with **ZERO `sorry`s**, **ZERO `admit`s**, and standard Lean 4 axioms.
 - **28 Exported Landmark Challenge Theorems** verified and synchronized in [`TSPComplexity.json`](TSPComplexity.json) (15 theorems) and [`Christofides.json`](Christofides.json) (13 theorems).
 - **Track C Formalized & Empirically Profiled:** Support-pruned cycle-separation rank (`PrunedStructuralRank`), arbitrary-$n$ decision equivalence (`pruned_structural_solver_decides_tsp`), constructive non-vacuity for all $n \ge 3$ (`prunedStructuralRank_inhabited_all_ge_three`), and 1-transition acceptance witness on necklace graphs (`pruned_solver_accepts_necklace_all_ge_three`), corroborated by empirical $\hat{\kappa}$-profiling across 3 graph families in [`benchmarks/structural_rank.py`](benchmarks/structural_rank.py).
 - **Executable Benchmark Suites** verified across HiGHS LP, Stoer-Wagner / Edmonds-Karp, Yannakakis slack matrices, Christofides-Serdyukov 3/2-approximation, and Track C $\hat{\kappa}$-profiling in [`benchmarks/RESULTS.md`](benchmarks/RESULTS.md), [`benchmarks/christofides.py`](benchmarks/christofides.py), and [`benchmarks/structural_rank.py`](benchmarks/structural_rank.py).
 - **Automated Continuous Verification Harnesses** in PowerShell ([`scripts/verify_build.ps1`](scripts/verify_build.ps1)) and Bash ([`scripts/verify_build.sh`](scripts/verify_build.sh)) auditing both Lean modules and all three benchmark scripts with exit code 0.
-- **Archival Research Monograph** in Markdown ([`MONOGRAPH.md`](MONOGRAPH.md)) covering formalized mathematical obstructions, polyhedral relaxations, 3-SAT reductions, Track C cycle-separation rank, and the machine-checked 3/2-approximation proof.
+- **Archival Research Monograph** in LaTeX and PDF ([`latex/monograph.tex`](latex/monograph.tex), [`latex/monograph.pdf`](latex/monograph.pdf)) covering formalized mathematical obstructions, polyhedral relaxations, 3-SAT reductions, Track C cycle-separation rank, and the machine-checked 3/2-approximation proof.
 - **Peer-Review / arXiv LaTeX Preprint** with vector TikZ pipeline graphics ([`latex/monograph.tex`](latex/monograph.tex)).
 - **Interactive Multi-Module Web Proof Explorers** ([`docs/index.html`](docs/index.html), [`docs/TSPComplexity.html`](docs/TSPComplexity.html), [`docs/Christofides.html`](docs/Christofides.html)).
 - **GitHub Actions CI Workflow** ([`.github/workflows/verify_tsp_research.yml`](.github/workflows/verify_tsp_research.yml)).

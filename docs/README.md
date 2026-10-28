@@ -1,6 +1,6 @@
 # Interactive Documentation & DocGen (`docs/`)
 
-This directory houses the interactive HTML documentation and explorer for the `OAI.TSP.TSPComplexity` and `OAI.TSP.Christofides` formalizations in Lean 4.
+This directory houses the interactive HTML documentation and explorer for the `IJM.TSP.TSPComplexity` and `IJM.TSP.Christofides` formalizations in Lean 4.
 
 ## Features of the Interactive Proof Explorer
 

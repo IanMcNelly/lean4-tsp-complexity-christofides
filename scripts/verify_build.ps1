@@ -153,7 +153,7 @@ foreach ($mod in $Modules) {
     $missingTheorems = @()
 
     foreach ($thm in $json.theorem_names) {
-        $shortName = $thm -replace '^OAI\.TSP\.(Reduction\.)?', ''
+        $shortName = $thm -replace '^IJM\.TSP\.(Reduction\.)?', ''
         $pattern = "\b(theorem|lemma)\s+$([regex]::Escape($shortName))\b"
         if ($rawContent -notmatch $pattern) {
             $missingTheorems += $thm

@@ -1,11 +1,11 @@
 -- Lean 4 formalization matching openai/math repository idioms
--- Module: OAI.TSP.Christofides
+-- Module: IJM.TSP.Christofides
 -- Topic: Metric Foundations, Walk Contraction, Spanning Trees, Handshaking Lemma, Degree Parity, Perfect Matchings, Eulerian Multigraphs, Shortcutting, and Master 3/2-Approximation Bound
 -- Track D: Complete Formal Verification (Phases 1-6)
 
 import Mathlib
 
-namespace OAI
+namespace IJM
 
 namespace TSP
 
@@ -2061,13 +2061,544 @@ def EulerianWalkInduction (n : ℕ) : Prop :=
     (∀ v : Fin n, Even (multigraphDegree (multigraphUnion E1 E2) v)) →
     Nonempty (EulerianCircuit (multigraphUnion E1 E2))
 
+/-- Predicate asserting that every edge in a multigraph edge multiset connects two distinct vertices. -/
+def IsLooplessMultiset {n : ℕ} (E : MultigraphEdges n) : Prop :=
+  ∀ e ∈ E, ∃ x y : Fin n, e = s(x, y) ∧ x ≠ y
+
+/-- The multigraph union of two loopless edge sets is loopless. -/
+lemma isLooplessMultiset_union {n : ℕ} {E1 E2 : Finset (Sym2 (Fin n))}
+    (h1 : IsLooplessEdges E1) (h2 : IsLooplessEdges E2) :
+    IsLooplessMultiset (multigraphUnion E1 E2) := by
+  intro e he
+  dsimp [multigraphUnion] at he
+  rw [Multiset.mem_add] at he
+  rcases he with he1 | he2
+  · exact h1 e he1
+  · exact h2 e he2
+
+/-- Any submultiset of a loopless multigraph edge multiset is loopless. -/
+lemma isLooplessMultiset_of_le {n : ℕ} {A B : MultigraphEdges n}
+    (h_le : A ≤ B) (hB : IsLooplessMultiset B) : IsLooplessMultiset A :=
+  fun e he => hB e (Multiset.mem_of_le h_le he)
+
+/-- Multigraph degree is additive over multiset addition. -/
+lemma multigraphDegree_add {n : ℕ} (A B : MultigraphEdges n) (v : Fin n) :
+    multigraphDegree (A + B) v = multigraphDegree A v + multigraphDegree B v := by
+  dsimp [multigraphDegree]
+  rw [Multiset.filter_add, Multiset.card_add]
+
+/-- Multigraph degree conservation under multiset subtraction (`A ≤ B`). -/
+lemma multigraphDegree_sub_of_le {n : ℕ} {A B : MultigraphEdges n}
+    (h : A ≤ B) (v : Fin n) :
+    multigraphDegree (B - A) v + multigraphDegree A v = multigraphDegree B v := by
+  rw [← multigraphDegree_add, Multiset.sub_add_cancel h]
+
+/-- Multigraph degree of the empty multiset is zero. -/
+lemma multigraphDegree_zero {n : ℕ} (v : Fin n) :
+    multigraphDegree (0 : MultigraphEdges n) v = 0 := rfl
+
+/-- Multigraph degree upon inserting a single undirected edge `e`. -/
+lemma multigraphDegree_cons {n : ℕ} (e : Sym2 (Fin n)) (E : MultigraphEdges n) (v : Fin n) :
+    multigraphDegree (e ::ₘ E) v = (if v ∈ e then 1 else 0) + multigraphDegree E v := by
+  dsimp [multigraphDegree]
+  rw [Multiset.filter_cons]
+  split_ifs <;> simp [Nat.add_comm]
+
+/-- Incidence indicator decomposition for a loopless undirected edge `s(u, w)` (`u ≠ w`). -/
+lemma mem_sym2_ite_of_ne {n : ℕ} {u w : Fin n} (hne : u ≠ w) (v : Fin n) :
+    (if v ∈ (s(u, w) : Sym2 (Fin n)) then 1 else 0) =
+      (if v = u then 1 else 0) + (if v = w then 1 else 0) := by
+  simp only [Sym2.mem_iff]
+  by_cases hvu : v = u
+  · subst hvu
+    simp [hne]
+  · by_cases hvw : v = w
+    · subst hvw
+      simp [hvu]
+    · simp [hvu, hvw]
+
+/-- Edge list decomposition across an internal vertex `u` in a concatenated walk `s ++ u :: t`. -/
+lemma pathEdges_append_cons {α : Type*} :
+    ∀ (s : List α) (u : α) (t : List α),
+      pathEdges (s ++ u :: t) = pathEdges (s ++ [u]) ++ pathEdges (u :: t)
+  | [], _, _ => rfl
+  | [_], _, _ => rfl
+  | a :: b :: s, u, t => by
+    change s(a, b) :: pathEdges ((b :: s) ++ u :: t) =
+      s(a, b) :: (pathEdges ((b :: s) ++ [u]) ++ pathEdges (u :: t))
+    rw [pathEdges_append_cons (b :: s) u t]
+
+/-- Appending a single step `z` to a non-empty walk `u :: ws` appends the terminal edge `s(last, z)`. -/
+lemma pathEdges_snoc {α : Type*} :
+    ∀ (u : α) (ws : List α) (z : α),
+      pathEdges (u :: (ws ++ [z])) =
+        pathEdges (u :: ws) ++ [s((u :: ws).getLast (List.cons_ne_nil _ _), z)]
+  | u, [], z => rfl
+  | u, w :: rest, z => by
+    change s(u, w) :: pathEdges (w :: (rest ++ [z])) =
+      s(u, w) :: pathEdges (w :: rest) ++ [s((w :: rest).getLast (List.cons_ne_nil _ _), z)]
+    rw [pathEdges_snoc w rest z, List.cons_append]
+
+/-- Parity invariant for any loopless walk `u :: ws`: the multigraph degree of vertex `v` modulo 2
+equals the sum of endpoint indicators at the start vertex `u` and terminal vertex `getLast`. -/
+lemma walk_degree_mod_two {n : ℕ} :
+    ∀ (u : Fin n) (ws : List (Fin n)),
+      IsLooplessMultiset (pathEdges (u :: ws) : MultigraphEdges n) →
+      ∀ v : Fin n,
+        multigraphDegree (pathEdges (u :: ws) : MultigraphEdges n) v % 2 =
+          ((if v = u then 1 else 0) + (if v = (u :: ws).getLast (by simp) then 1 else 0)) % 2
+  | u, [], _, v => by
+    have h0 : multigraphDegree (pathEdges [u] : MultigraphEdges n) v = 0 := rfl
+    rw [h0]
+    have hlast : ([u].getLast (by simp)) = u := rfl
+    rw [hlast]
+    omega
+  | u, w :: rest, hloop, v => by
+    have h_head_mem : s(u, w) ∈ (pathEdges (u :: w :: rest) : MultigraphEdges n) := by
+      dsimp [pathEdges]
+      exact Multiset.mem_coe.mpr List.mem_cons_self
+    rcases hloop s(u, w) h_head_mem with ⟨x, y, hxy_eq, hxy_ne⟩
+    have huw_ne : u ≠ w := by
+      intro heq
+      subst heq
+      have hx_mem : x ∈ (s(u, u) : Sym2 (Fin n)) := by
+        rw [hxy_eq]
+        exact Sym2.mem_mk_left x y
+      have hy_mem : y ∈ (s(u, u) : Sym2 (Fin n)) := by
+        rw [hxy_eq]
+        exact Sym2.mem_mk_right x y
+      simp only [Sym2.mem_iff, or_self] at hx_mem hy_mem
+      exact hxy_ne (hx_mem.trans hy_mem.symm)
+    have hloop_tail : IsLooplessMultiset (pathEdges (w :: rest) : MultigraphEdges n) := by
+      intro e he
+      exact hloop e (Multiset.mem_cons_of_mem he)
+    have ih := walk_degree_mod_two w rest hloop_tail v
+    have h_deg : multigraphDegree (pathEdges (u :: w :: rest) : MultigraphEdges n) v =
+        (if v ∈ (s(u, w) : Sym2 (Fin n)) then 1 else 0) +
+          multigraphDegree (pathEdges (w :: rest) : MultigraphEdges n) v := by
+      change multigraphDegree (s(u, w) ::ₘ (pathEdges (w :: rest) : MultigraphEdges n)) v = _
+      exact multigraphDegree_cons s(u, w) _ v
+    rw [h_deg, mem_sym2_ite_of_ne huw_ne v]
+    have hlast : (u :: w :: rest).getLast (by simp) = (w :: rest).getLast (by simp) := rfl
+    rw [hlast]
+    omega
+
+/-- Any vertex `b` of positive multigraph degree in a loopless multigraph has an incident edge `s(b, z)` (`b ≠ z`). -/
+lemma exists_incident_edge_of_pos_degree {n : ℕ} {E : MultigraphEdges n} {b : Fin n}
+    (hloop : IsLooplessMultiset E) (hpos : 0 < multigraphDegree E b) :
+    ∃ z : Fin n, b ≠ z ∧ s(b, z) ∈ E := by
+  dsimp [multigraphDegree] at hpos
+  rcases Multiset.card_pos_iff_exists_mem.mp hpos with ⟨e, he_filt⟩
+  rw [Multiset.mem_filter] at he_filt
+  rcases he_filt with ⟨he_mem, hb_in_e⟩
+  rcases hloop e he_mem with ⟨x, y, rfl, hxy_ne⟩
+  rw [Sym2.mem_iff] at hb_in_e
+  rcases hb_in_e with rfl | rfl
+  · exact ⟨y, hxy_ne, he_mem⟩
+  · refine ⟨x, hxy_ne.symm, ?_⟩
+    rw [Sym2.eq_swap]
+    exact he_mem
+
+/-- Adding a single residual edge `e ∈ R - A` to a submultiset `A ≤ R` preserves `A + {e} ≤ R`. -/
+lemma multiset_add_singleton_le_of_mem_sub {n : ℕ} {A R : MultigraphEdges n} {e : Sym2 (Fin n)}
+    (hle : A ≤ R) (he : e ∈ R - A) :
+    A + {e} ≤ R := by
+  rw [Multiset.le_iff_count] at hle ⊢
+  intro a
+  have h_le_a := hle a
+  rw [Multiset.count_add]
+  have he_cnt : 0 < Multiset.count e (R - A) := Multiset.count_pos.mpr he
+  rw [Multiset.count_sub] at he_cnt
+  by_cases ha : a = e
+  · subst ha
+    have h1 : Multiset.count a ({a} : MultigraphEdges n) = 1 := Multiset.count_singleton_self a
+    rw [h1]
+    omega
+  · have h0 : Multiset.count a ({e} : MultigraphEdges n) = 0 :=
+      Multiset.count_eq_zero.mpr (by simp [ha])
+    rw [h0]
+    omega
+
+/-- Combining a submultiset `A ≤ R` with a residual submultiset `B ≤ R - A` preserves `A + B ≤ R`. -/
+lemma multiset_add_le_of_le_sub {n : ℕ} {A B R : MultigraphEdges n}
+    (hA : A ≤ R) (hB : B ≤ R - A) :
+    A + B ≤ R := by
+  rw [Multiset.le_iff_count] at hA hB ⊢
+  intro a
+  have h1 := hA a
+  have h2 := hB a
+  rw [Multiset.count_sub] at h2
+  rw [Multiset.count_add]
+  omega
+
+/-- Finite fuel induction extending any non-empty trail `u :: ws` in an even-degree loopless
+multigraph `R` to a closed cycle starting and ending at `u`. -/
+lemma extend_trail_to_cycle {n : ℕ} {R : MultigraphEdges n}
+    (hloop : IsLooplessMultiset R)
+    (heven : ∀ v : Fin n, Even (multigraphDegree R v)) :
+    ∀ (fuel : ℕ) (u : Fin n) (ws : List (Fin n)),
+      ws ≠ [] →
+      (pathEdges (u :: ws) : MultigraphEdges n) ≤ R →
+      R.card - (pathEdges (u :: ws)).length ≤ fuel →
+      ∃ ws' : List (Fin n),
+        ws' ≠ [] ∧
+        (u :: ws').getLast (by simp) = u ∧
+        (pathEdges (u :: ws') : MultigraphEdges n) ≤ R
+  | 0, u, ws, hws_ne, hle, hfuel => by
+    let b := (u :: ws).getLast (by simp)
+    by_cases hb : b = u
+    · exact ⟨ws, hws_ne, hb, hle⟩
+    · exfalso
+      have hA_loop : IsLooplessMultiset (pathEdges (u :: ws) : MultigraphEdges n) :=
+        isLooplessMultiset_of_le hle hloop
+      have h_mod := walk_degree_mod_two u ws hA_loop b
+      have hb_def : (u :: ws).getLast (by simp) = b := rfl
+      rw [hb_def] at h_mod
+      simp only [hb, ↓reduceIte] at h_mod
+      have h_sub := multigraphDegree_sub_of_le hle b
+      have h_even_b : multigraphDegree R b % 2 = 0 := Nat.even_iff.mp (heven b)
+      have h_pos_rem : 0 < multigraphDegree (R - (pathEdges (u :: ws) : MultigraphEdges n)) b := by
+        omega
+      have hR_sub_loop : IsLooplessMultiset (R - (pathEdges (u :: ws) : MultigraphEdges n)) :=
+        isLooplessMultiset_of_le (Multiset.sub_le_self _ _) hloop
+      rcases exists_incident_edge_of_pos_degree hR_sub_loop h_pos_rem with ⟨z, _, hz_mem⟩
+      have h_next_le : (pathEdges (u :: (ws ++ [z])) : MultigraphEdges n) ≤ R := by
+        rw [pathEdges_snoc]
+        exact multiset_add_singleton_le_of_mem_sub hle hz_mem
+      have h_card := Multiset.card_le_card h_next_le
+      rw [Multiset.coe_card, pathEdges_snoc, List.length_append, List.length_singleton] at h_card
+      omega
+  | fuel + 1, u, ws, hws_ne, hle, hfuel => by
+    let b := (u :: ws).getLast (by simp)
+    by_cases hb : b = u
+    · exact ⟨ws, hws_ne, hb, hle⟩
+    · have hA_loop : IsLooplessMultiset (pathEdges (u :: ws) : MultigraphEdges n) :=
+        isLooplessMultiset_of_le hle hloop
+      have h_mod := walk_degree_mod_two u ws hA_loop b
+      have hb_def : (u :: ws).getLast (by simp) = b := rfl
+      rw [hb_def] at h_mod
+      simp only [hb, ↓reduceIte] at h_mod
+      have h_sub := multigraphDegree_sub_of_le hle b
+      have h_even_b : multigraphDegree R b % 2 = 0 := Nat.even_iff.mp (heven b)
+      have h_pos_rem : 0 < multigraphDegree (R - (pathEdges (u :: ws) : MultigraphEdges n)) b := by
+        omega
+      have hR_sub_loop : IsLooplessMultiset (R - (pathEdges (u :: ws) : MultigraphEdges n)) :=
+        isLooplessMultiset_of_le (Multiset.sub_le_self _ _) hloop
+      rcases exists_incident_edge_of_pos_degree hR_sub_loop h_pos_rem with ⟨z, _, hz_mem⟩
+      have h_next_le : (pathEdges (u :: (ws ++ [z])) : MultigraphEdges n) ≤ R := by
+        rw [pathEdges_snoc]
+        exact multiset_add_singleton_le_of_mem_sub hle hz_mem
+      have h_card := Multiset.card_le_card h_next_le
+      rw [Multiset.coe_card, pathEdges_snoc, List.length_append, List.length_singleton] at h_card
+      have h_fuel_next : R.card - (pathEdges (u :: (ws ++ [z]))).length ≤ fuel := by
+        rw [pathEdges_snoc, List.length_append, List.length_singleton]
+        omega
+      exact extend_trail_to_cycle hloop heven fuel u (ws ++ [z]) (by simp) h_next_le h_fuel_next
+
+/-- Every vertex `u` of positive degree in an even-degree loopless multigraph `R` lies on a
+non-empty closed sub-walk `u :: (c_init ++ [u])` contained in `R`. -/
+lemma exists_closed_walk_of_pos_degree {n : ℕ} {R : MultigraphEdges n} {u : Fin n}
+    (hloop : IsLooplessMultiset R)
+    (heven : ∀ v : Fin n, Even (multigraphDegree R v))
+    (hpos : 0 < multigraphDegree R u) :
+    ∃ c_init : List (Fin n),
+      0 < (pathEdges (u :: (c_init ++ [u]))).length ∧
+      (pathEdges (u :: (c_init ++ [u])) : MultigraphEdges n) ≤ R := by
+  rcases exists_incident_edge_of_pos_degree hloop hpos with ⟨w0, _, hw0_mem⟩
+  have h_init_le : (pathEdges [u, w0] : MultigraphEdges n) ≤ R := by
+    change ({s(u, w0)} : MultigraphEdges n) ≤ R
+    rwa [Multiset.singleton_le]
+  rcases extend_trail_to_cycle hloop heven R.card u [w0] (by simp) h_init_le (by omega) with
+    ⟨ws', hws'_ne, hws'_last, hws'_le⟩
+  have h_last_eq : ws'.getLast hws'_ne = u := by
+    have h1 : (u :: ws').getLast (by simp) = ws'.getLast hws'_ne :=
+      List.getLast_cons hws'_ne
+    exact h1.symm.trans hws'_last
+  have h_drop : ws'.dropLast ++ [u] = ws' := by
+    rw [← h_last_eq]
+    exact List.dropLast_append_getLast hws'_ne
+  refine ⟨ws'.dropLast, ?_, ?_⟩
+  · rw [h_drop, pathEdges_length (u :: ws') (by simp)]
+    have h_len : 1 ≤ ws'.length := List.length_pos_of_ne_nil hws'_ne
+    simp only [List.length_cons]
+    omega
+  · rw [h_drop]
+    exact hws'_le
+
+/-- Splicing a closed sub-walk `u :: (c_init ++ [u])` into `s ++ u :: t` at vertex `u`
+adds their edge multisets. -/
+lemma splice_pathEdges_multiset {n : ℕ} (s : List (Fin n)) (u : Fin n) (c_init t : List (Fin n)) :
+    (pathEdges (s ++ u :: (c_init ++ u :: t)) : MultigraphEdges n) =
+      (pathEdges (s ++ u :: t) : MultigraphEdges n) +
+        (pathEdges (u :: (c_init ++ [u])) : MultigraphEdges n) := by
+  have h_list : pathEdges (s ++ u :: (c_init ++ u :: t)) =
+      pathEdges (s ++ [u]) ++ (pathEdges (u :: (c_init ++ [u])) ++ pathEdges (u :: t)) := by
+    rw [pathEdges_append_cons s u (c_init ++ u :: t)]
+    change pathEdges (s ++ [u]) ++ pathEdges ((u :: c_init) ++ u :: t) = _
+    rw [pathEdges_append_cons (u :: c_init) u t]
+    rfl
+  have h5 := pathEdges_append_cons s u t
+  have h_coe1 : (pathEdges (s ++ u :: (c_init ++ u :: t)) : MultigraphEdges n) =
+      (pathEdges (s ++ [u]) : MultigraphEdges n) +
+        ((pathEdges (u :: (c_init ++ [u])) : MultigraphEdges n) +
+          (pathEdges (u :: t) : MultigraphEdges n)) := by
+    rw [h_list, Multiset.coe_add, Multiset.coe_add]
+  have h_coe2 : (pathEdges (s ++ u :: t) : MultigraphEdges n) =
+      (pathEdges (s ++ [u]) : MultigraphEdges n) + (pathEdges (u :: t) : MultigraphEdges n) := by
+    rw [h5, Multiset.coe_add]
+  rw [h_coe1, h_coe2, add_assoc, add_comm (pathEdges (u :: (c_init ++ [u])) : MultigraphEdges n)]
+
+/-- Splicing a closed sub-walk at an internal vertex `u` preserves the closed-walk boundary condition. -/
+lemma splice_is_closed {α : Type*} (s : List α) (u : α) (c_init t : List α)
+    (h_closed : (s ++ u :: t).head? = (s ++ u :: t).getLast?) :
+    (s ++ u :: (c_init ++ u :: t)).head? = (s ++ u :: (c_init ++ u :: t)).getLast? := by
+  have h_head : (s ++ u :: (c_init ++ u :: t)).head? = (s ++ u :: t).head? := by
+    cases s <;> rfl
+  have h_last1 : (s ++ u :: (c_init ++ u :: t)).getLast? = (u :: t).getLast? := by
+    rw [List.getLast?_append_of_ne_nil s (by simp)]
+    change ((u :: c_init) ++ (u :: t)).getLast? = (u :: t).getLast?
+    exact List.getLast?_append_of_ne_nil (u :: c_init) (by simp)
+  have h_last2 : (s ++ u :: t).getLast? = (u :: t).getLast? :=
+    List.getLast?_append_of_ne_nil s (by simp)
+  rw [h_head, h_closed, h_last2, h_last1]
+
+/-- Any non-empty closed loopless walk contributes an even multigraph degree at every vertex. -/
+lemma closed_walk_even_degree {n : ℕ} {w : List (Fin n)}
+    (hw_ne : w ≠ []) (hw_closed : w.head? = w.getLast?)
+    (hloop : IsLooplessMultiset (pathEdges w : MultigraphEdges n)) (v : Fin n) :
+    Even (multigraphDegree (pathEdges w : MultigraphEdges n) v) := by
+  cases w with
+  | nil => contradiction
+  | cons u ws =>
+    have h_last : (u :: ws).getLast (by simp) = u := by
+      have h1 : (u :: ws).head? = some u := rfl
+      have h2 : (u :: ws).getLast? = some ((u :: ws).getLast (by simp)) :=
+        List.getLast?_eq_getLast_of_ne_nil (by simp)
+      rw [h1, h2, Option.some.injEq] at hw_closed
+      exact hw_closed.symm
+    have h_mod := walk_degree_mod_two u ws hloop v
+    rw [h_last] at h_mod
+    exact Nat.even_iff.mpr (by omega)
+
+/-- Iterated Hierholzer cycle-splicing induction: extends any closed subwalk `w` in an even-degree
+loopless multigraph `E` until every visited vertex has zero residual degree in `E - pathEdges w_star`. -/
+lemma extend_closed_walk_to_eulerian {n : ℕ} {E : MultigraphEdges n}
+    (hloop : IsLooplessMultiset E)
+    (heven : ∀ v : Fin n, Even (multigraphDegree E v)) :
+    ∀ (fuel : ℕ) (w : List (Fin n)),
+      w ≠ [] →
+      w.head? = w.getLast? →
+      (pathEdges w : MultigraphEdges n) ≤ E →
+      E.card - (pathEdges w).length ≤ fuel →
+      ∃ w_star : List (Fin n),
+        w_star ≠ [] ∧
+        w_star.head? = w_star.getLast? ∧
+        (pathEdges w_star : MultigraphEdges n) ≤ E ∧
+        (∀ x ∈ w, x ∈ w_star) ∧
+        (∀ u ∈ w_star, multigraphDegree (E - (pathEdges w_star : MultigraphEdges n)) u = 0)
+  | 0, w, hw_ne, hw_closed, hw_le, hfuel => by
+    let R := E - (pathEdges w : MultigraphEdges n)
+    by_cases h_ex : ∃ u ∈ w, 0 < multigraphDegree R u
+    · exfalso
+      rcases h_ex with ⟨u, hu_mem, hu_pos⟩
+      rcases List.append_of_mem hu_mem with ⟨s, t, rfl⟩
+      have hR_loop : IsLooplessMultiset R :=
+        isLooplessMultiset_of_le (Multiset.sub_le_self _ _) hloop
+      have hR_even : ∀ v : Fin n, Even (multigraphDegree R v) := by
+        intro v
+        have hw_loop := isLooplessMultiset_of_le hw_le hloop
+        have hw_even := closed_walk_even_degree hw_ne hw_closed hw_loop v
+        have h_sub := multigraphDegree_sub_of_le hw_le v
+        change multigraphDegree R v + multigraphDegree (pathEdges (s ++ u :: t) : MultigraphEdges n) v =
+          multigraphDegree E v at h_sub
+        have hE_even := Nat.even_iff.mp (heven v)
+        have hw_even' := Nat.even_iff.mp hw_even
+        exact Nat.even_iff.mpr (by omega)
+      rcases exists_closed_walk_of_pos_degree hR_loop hR_even hu_pos with ⟨c_init, hc_len, hc_le⟩
+      let w' := s ++ u :: (c_init ++ u :: t)
+      have hw'_edges : (pathEdges w' : MultigraphEdges n) =
+          (pathEdges (s ++ u :: t) : MultigraphEdges n) +
+            (pathEdges (u :: (c_init ++ [u])) : MultigraphEdges n) :=
+        splice_pathEdges_multiset s u c_init t
+      have hw'_le : (pathEdges w' : MultigraphEdges n) ≤ E := by
+        rw [hw'_edges]
+        exact multiset_add_le_of_le_sub hw_le hc_le
+      have h_card := Multiset.card_le_card hw'_le
+      have h_len_add : (pathEdges w').length =
+          (pathEdges (s ++ u :: t)).length + (pathEdges (u :: (c_init ++ [u]))).length := by
+        have h_mc := congrArg Multiset.card hw'_edges
+        simpa using h_mc
+      rw [Multiset.coe_card] at h_card
+      omega
+    · refine ⟨w, hw_ne, hw_closed, hw_le, fun x hx => hx, ?_⟩
+      intro u hu
+      by_contra h_ne_zero
+      exact h_ex ⟨u, hu, Nat.pos_of_ne_zero h_ne_zero⟩
+  | fuel + 1, w, hw_ne, hw_closed, hw_le, hfuel => by
+    let R := E - (pathEdges w : MultigraphEdges n)
+    by_cases h_ex : ∃ u ∈ w, 0 < multigraphDegree R u
+    · rcases h_ex with ⟨u, hu_mem, hu_pos⟩
+      rcases List.append_of_mem hu_mem with ⟨s, t, rfl⟩
+      have hR_loop : IsLooplessMultiset R :=
+        isLooplessMultiset_of_le (Multiset.sub_le_self _ _) hloop
+      have hR_even : ∀ v : Fin n, Even (multigraphDegree R v) := by
+        intro v
+        have hw_loop := isLooplessMultiset_of_le hw_le hloop
+        have hw_even := closed_walk_even_degree hw_ne hw_closed hw_loop v
+        have h_sub := multigraphDegree_sub_of_le hw_le v
+        change multigraphDegree R v + multigraphDegree (pathEdges (s ++ u :: t) : MultigraphEdges n) v =
+          multigraphDegree E v at h_sub
+        have hE_even := Nat.even_iff.mp (heven v)
+        have hw_even' := Nat.even_iff.mp hw_even
+        exact Nat.even_iff.mpr (by omega)
+      rcases exists_closed_walk_of_pos_degree hR_loop hR_even hu_pos with ⟨c_init, hc_len, hc_le⟩
+      let w' := s ++ u :: (c_init ++ u :: t)
+      have hw'_edges : (pathEdges w' : MultigraphEdges n) =
+          (pathEdges (s ++ u :: t) : MultigraphEdges n) +
+            (pathEdges (u :: (c_init ++ [u])) : MultigraphEdges n) :=
+        splice_pathEdges_multiset s u c_init t
+      have hw'_le : (pathEdges w' : MultigraphEdges n) ≤ E := by
+        rw [hw'_edges]
+        exact multiset_add_le_of_le_sub hw_le hc_le
+      have h_card := Multiset.card_le_card hw'_le
+      have h_len_add : (pathEdges w').length =
+          (pathEdges (s ++ u :: t)).length + (pathEdges (u :: (c_init ++ [u]))).length := by
+        have h_mc := congrArg Multiset.card hw'_edges
+        simpa using h_mc
+      rw [Multiset.coe_card] at h_card
+      have hw'_ne : w' ≠ [] := by simp [w']
+      have hw'_closed : w'.head? = w'.getLast? := splice_is_closed s u c_init t hw_closed
+      have h_fuel_next : E.card - (pathEdges w').length ≤ fuel := by omega
+      rcases extend_closed_walk_to_eulerian hloop heven fuel w' hw'_ne hw'_closed hw'_le h_fuel_next with
+        ⟨w_star, hw_star_ne, hw_star_closed, hw_star_le, hw_star_sub, hw_star_deg⟩
+      refine ⟨w_star, hw_star_ne, hw_star_closed, hw_star_le, ?_, hw_star_deg⟩
+      intro x hx
+      apply hw_star_sub
+      simp only [w', List.mem_append, List.mem_cons] at hx ⊢
+      rcases hx with hxs | rfl | hxt
+      · exact Or.inl hxs
+      · exact Or.inr (Or.inl rfl)
+      · exact Or.inr (Or.inr (Or.inr (Or.inr hxt)))
+    · refine ⟨w, hw_ne, hw_closed, hw_le, fun x hx => hx, ?_⟩
+      intro u hu
+      by_contra h_ne_zero
+      exact h_ex ⟨u, hu, Nat.pos_of_ne_zero h_ne_zero⟩
+
+/-- Both endpoints of any edge `s(x, y) ∈ pathEdges w` belong to the vertex list `w`. -/
+lemma mem_of_mem_pathEdges {α : Type*} :
+    ∀ {w : List α} {x y : α}, s(x, y) ∈ pathEdges w → x ∈ w ∧ y ∈ w
+  | [], _, _, h => by contradiction
+  | [_], _, _, h => by contradiction
+  | a :: b :: rest, x, y, h => by
+    dsimp [pathEdges] at h
+    rcases List.mem_cons.mp h with heq | htail
+    · have hx : x ∈ (s(a, b) : Sym2 α) := by
+        rw [← heq]
+        exact Sym2.mem_mk_left x y
+      have hy : y ∈ (s(a, b) : Sym2 α) := by
+        rw [← heq]
+        exact Sym2.mem_mk_right x y
+      rw [Sym2.mem_iff] at hx hy
+      refine ⟨?_, ?_⟩
+      · rcases hx with rfl | rfl <;> simp
+      · rcases hy with rfl | rfl <;> simp
+    · rcases mem_of_mem_pathEdges htail with ⟨hx, hy⟩
+      exact ⟨List.mem_cons_of_mem a hx, List.mem_cons_of_mem a hy⟩
+
+/-- Constructive Hierholzer's Theorem on `multigraphUnion E1 E2`:
+Unconditionally discharges `EulerianWalkInduction n` for all `n : ℕ`. -/
+theorem eulerianWalkInduction_holds (n : ℕ) : EulerianWalkInduction n := by
+  intro E1 E2 h_conn h_loop1 h_loop2 h_even
+  let E := multigraphUnion E1 E2
+  have hE_loop : IsLooplessMultiset E := isLooplessMultiset_union h_loop1 h_loop2
+  cases n with
+  | zero =>
+    refine ⟨{
+      walk := []
+      is_closed := rfl
+      edge_multiset_eq := ?_
+      visits_all := fun v => Fin.elim0 v
+    }⟩
+    apply le_antisymm (Multiset.zero_le E)
+    rw [Multiset.le_iff_count]
+    intro e
+    by_contra h_pos
+    have he_mem : e ∈ E := Multiset.count_pos.mp (by omega)
+    rcases hE_loop e he_mem with ⟨x, _, _, _⟩
+    exact Fin.elim0 x
+  | succ m =>
+    let v0 : Fin (m + 1) := ⟨0, Nat.zero_lt_succ m⟩
+    have hw0_ne : [v0] ≠ [] := by simp
+    have hw0_closed : [v0].head? = [v0].getLast? := rfl
+    have hw0_le : (pathEdges [v0] : MultigraphEdges (m + 1)) ≤ E := by
+      change (0 : MultigraphEdges (m + 1)) ≤ E
+      exact Multiset.zero_le E
+    rcases extend_closed_walk_to_eulerian hE_loop h_even E.card [v0] hw0_ne hw0_closed hw0_le (by omega) with
+      ⟨w_star, hw_star_ne, hw_star_closed, hw_star_le, hw_star_sub, hw_star_deg⟩
+    have hv0_mem : v0 ∈ w_star := hw_star_sub v0 (by simp)
+    have h_step_mem : ∀ {a b : Fin (m + 1)}, s(a, b) ∈ E1 → a ∈ w_star → b ∈ w_star := by
+      intro a b hab ha_mem
+      have hab_E : s(a, b) ∈ E := by
+        dsimp [E, multigraphUnion]
+        exact Multiset.mem_add.mpr (Or.inl hab)
+      have hab_not_rem : s(a, b) ∉ E - (pathEdges w_star : MultigraphEdges (m + 1)) := by
+        intro h_in_rem
+        have h_in_filt : s(a, b) ∈ (E - (pathEdges w_star : MultigraphEdges (m + 1))).filter (fun e => a ∈ e) := by
+          rw [Multiset.mem_filter]
+          exact ⟨h_in_rem, Sym2.mem_mk_left a b⟩
+        have h_pos : 0 < multigraphDegree (E - (pathEdges w_star : MultigraphEdges (m + 1))) a :=
+          Multiset.card_pos_iff_exists_mem.mpr ⟨s(a, b), h_in_filt⟩
+        have h_zero := hw_star_deg a ha_mem
+        omega
+      have hab_in_walk : s(a, b) ∈ (pathEdges w_star : MultigraphEdges (m + 1)) := by
+        have h_cnt_E : 0 < Multiset.count s(a, b) E := Multiset.count_pos.mpr hab_E
+        have h_cnt_rem : Multiset.count s(a, b) (E - (pathEdges w_star : MultigraphEdges (m + 1))) = 0 :=
+          Multiset.count_eq_zero.mpr hab_not_rem
+        rw [Multiset.count_sub] at h_cnt_rem
+        have h_cnt_walk : 0 < Multiset.count s(a, b) (pathEdges w_star : MultigraphEdges (m + 1)) := by
+          omega
+        exact Multiset.count_pos.mp h_cnt_walk
+      rw [Multiset.mem_coe] at hab_in_walk
+      exact (mem_of_mem_pathEdges hab_in_walk).2
+    have h_conn_mem : ∀ u v : Fin (m + 1), ConnectedInEdges E1 u v → u ∈ w_star → v ∈ w_star := by
+      intro u v h_c
+      induction h_c with
+      | refl _ => exact fun h => h
+      | step hu_a _ ih => exact fun hu => ih (h_step_mem hu_a hu)
+    have h_visits_all : ∀ v : Fin (m + 1), v ∈ w_star :=
+      fun v => h_conn_mem v0 v (h_conn v0 v) hv0_mem
+    have h_edges_eq : (pathEdges w_star : MultigraphEdges (m + 1)) = E := by
+      apply le_antisymm hw_star_le
+      rw [Multiset.le_iff_count]
+      intro e
+      by_contra h_gt
+      have he_rem : e ∈ E - (pathEdges w_star : MultigraphEdges (m + 1)) := by
+        rw [← Multiset.count_pos, Multiset.count_sub]
+        omega
+      have hR_loop : IsLooplessMultiset (E - (pathEdges w_star : MultigraphEdges (m + 1))) :=
+        isLooplessMultiset_of_le (Multiset.sub_le_self _ _) hE_loop
+      rcases hR_loop e he_rem with ⟨x, y, rfl, _⟩
+      have h_in_filt : s(x, y) ∈ (E - (pathEdges w_star : MultigraphEdges (m + 1))).filter (fun e => x ∈ e) := by
+        rw [Multiset.mem_filter]
+        exact ⟨he_rem, Sym2.mem_mk_left x y⟩
+      have h_pos : 0 < multigraphDegree (E - (pathEdges w_star : MultigraphEdges (m + 1))) x :=
+        Multiset.card_pos_iff_exists_mem.mpr ⟨s(x, y), h_in_filt⟩
+      have h_zero := hw_star_deg x (h_visits_all x)
+      omega
+    exact ⟨{
+      walk := w_star
+      is_closed := hw_star_closed
+      edge_multiset_eq := h_edges_eq
+      visits_all := h_visits_all
+    }⟩
+
 /-- Constructive Eulerian circuit bridge discharging graph-theoretic preconditions
 from spanning tree connectivity, loopless properties, and multigraph degree parity. -/
 theorem exists_eulerianCircuit {n : ℕ} (T : SpanningTree n)
     (M : PerfectMatching (oddDegreeVertices T.edges))
-    (h_euler : EulerianWalkInduction n) :
-    ∃ _C : EulerianCircuit (multigraphUnion T.edges M.edges), True := by
-  rcases h_euler T.edges M.edges T.connected T.loopless M.loopless (multigraph_degree_even T M) with ⟨C⟩
+
+    : ∃ _C : EulerianCircuit (multigraphUnion T.edges M.edges), True := by
+  rcases eulerianWalkInduction_holds n T.edges M.edges T.connected T.loopless M.loopless (multigraph_degree_even T M) with ⟨C⟩
   exact ⟨C, trivial⟩
 
 /-- Concrete Eulerian circuit witness along a valid Hamiltonian tour cycle walk. -/
@@ -2101,12 +2632,12 @@ lemma exists_hamiltonian_eulerianCircuit {n : ℕ} (hn : 3 ≤ n) (p : List (Fin
 
 /-- Constructive synthesis of a complete Christofides certificate from MST,
 minimum-weight matching, and Eulerian circuit induction. -/
-theorem nonempty_christofidesCertificate {n : ℕ} (hn : 3 ≤ n) (c : CostFunction n)
-    (h_euler : EulerianWalkInduction n) :
+theorem nonempty_christofidesCertificate {n : ℕ} (hn : 3 ≤ n) (c : CostFunction n) :
+
     Nonempty (ChristofidesCertificate n c) := by
   rcases exists_mst hn c with ⟨T, hMST⟩
   rcases exists_minWeightMatching hn c T with ⟨M, hMin⟩
-  rcases exists_eulerianCircuit T M h_euler with ⟨C, _⟩
+  rcases exists_eulerianCircuit T M with ⟨C, _⟩
   exact ⟨{
     tree := T
     tree_mst := hMST
@@ -2115,35 +2646,35 @@ theorem nonempty_christofidesCertificate {n : ℕ} (hn : 3 ≤ n) (c : CostFunct
     eulerian := C
   }⟩
 
-/-- Existence of a complete Christofides certificate under Eulerian walk induction. -/
-theorem exists_christofidesCertificate {n : ℕ} (hn : 3 ≤ n) (c : CostFunction n)
-    (h_euler : EulerianWalkInduction n) :
+/-- Existence of a complete Christofides certificate. -/
+theorem exists_christofidesCertificate {n : ℕ} (hn : 3 ≤ n) (c : CostFunction n) :
+
     ∃ _cert : ChristofidesCertificate n c, True := by
-  rcases nonempty_christofidesCertificate hn c h_euler with ⟨cert⟩
+  rcases nonempty_christofidesCertificate hn c with ⟨cert⟩
   exact ⟨cert, trivial⟩
 
-/-- Master 3/2-Approximation Theorem (Integer Scaling) synthesizing the full Christofides pipeline:
-There exists a valid tour achieving 2 * cost(p) ≤ 3 * optTourCost c. -/
+/-- Unconditional Synthesized 3/2-Approximation Theorem (Integer Scaling):
+The synthesized Christofides tour achieves 2 * cost(p) ≤ 3 * optTourCost c. -/
 theorem christofides_unconditional_approx_ratio_nat {n : ℕ} (hn : 3 ≤ n) (c : CostFunction n)
-    (hMetric : IsMetricCost c) (h_euler : EulerianWalkInduction n) :
+    (hMetric : IsMetricCost c) :
     ∃ p : List (Fin n), IsTour (completeGraph n) p ∧ 2 * tourCost c p ≤ 3 * optTourCost c := by
-  rcases exists_christofidesCertificate hn c h_euler with ⟨cert, _⟩
+  rcases exists_christofidesCertificate hn c with ⟨cert, _⟩
   refine ⟨christofidesTour cert, christofides_is_tour hn cert, ?_⟩
   exact christofides_approx_ratio_nat hn c hMetric cert
 
-/-- Master 3/2-Approximation Theorem (Real Arithmetic) synthesizing the full Christofides pipeline:
-There exists a valid tour achieving cost(p) ≤ (3/2) * optTourCost c. -/
+/-- Unconditional Synthesized 3/2-Approximation Theorem (Real Arithmetic):
+The synthesized Christofides tour achieves cost(p) ≤ (3/2) * optTourCost c. -/
 theorem christofides_unconditional_approx_ratio {n : ℕ} (hn : 3 ≤ n) (c : CostFunction n)
-    (hMetric : IsMetricCost c) (h_euler : EulerianWalkInduction n) :
+    (hMetric : IsMetricCost c) :
     ∃ p : List (Fin n), IsTour (completeGraph n) p ∧ (tourCost c p : ℝ) ≤ (3 / 2 : ℝ) * (optTourCost c : ℝ) := by
-  rcases exists_christofidesCertificate hn c h_euler with ⟨cert, _⟩
+  rcases exists_christofidesCertificate hn c with ⟨cert, _⟩
   refine ⟨christofidesTour cert, christofides_is_tour hn cert, ?_⟩
   exact christofides_approx_ratio hn c hMetric cert
 
 /-- Alias for optimal tour cost, optionally accepting the vertex bound hn. -/
 abbrev optCost {n : ℕ} (_hn : 3 ≤ n) (c : CostFunction n) : ℕ := optTourCost c
 
-/-- Direct optimal tour witness unconditionally achieving the 3/2-approximation bound (Integer Scaling). -/
+/-- Baseline optimal-tour existence witness (`p_opt`, 1 * OPT ≤ 1.5 * OPT) in integer arithmetic. -/
 theorem tour_approx_ratio_nat_unconditional {n : ℕ} (hn : 3 ≤ n) (c : CostFunction n) :
     ∃ p : List (Fin n), IsTour (completeGraph n) p ∧ 2 * tourCost c p ≤ 3 * optTourCost c := by
   rcases exists_optTour hn c with ⟨p_opt, hp_opt, h_optCost⟩
@@ -2151,7 +2682,7 @@ theorem tour_approx_ratio_nat_unconditional {n : ℕ} (hn : 3 ≤ n) (c : CostFu
   rw [h_optCost]
   omega
 
-/-- Direct optimal tour witness unconditionally achieving the 3/2-approximation bound (Real Arithmetic). -/
+/-- Baseline optimal-tour existence witness (`p_opt`, 1 * OPT ≤ 1.5 * OPT) in real arithmetic. -/
 theorem tour_approx_ratio_unconditional {n : ℕ} (hn : 3 ≤ n) (c : CostFunction n) :
     ∃ p : List (Fin n), IsTour (completeGraph n) p ∧ (tourCost c p : ℝ) ≤ (3 / 2 : ℝ) * (optTourCost c : ℝ) := by
   rcases exists_optTour hn c with ⟨p_opt, hp_opt, h_optCost⟩
@@ -2166,7 +2697,7 @@ theorem tour_approx_ratio_unconditional {n : ℕ} (hn : 3 ≤ n) (c : CostFuncti
 
 end TSP
 
-end OAI
+end IJM
 
 
 

@@ -103,7 +103,7 @@ On clustered Euclidean complete graphs $K_n$ ($n \in \{6, 8, 10, 12\}$) where th
 
 ### 5.1 Complete Graph Subtour Slack Matrices $S_{\text{DFJ}}(n)$ ($n \in \{4, 5, 6, 7\}$)
 
-Directly mirroring `OAI.TSP.DFJCut`, `OAI.TSP.dfjSlack`, `OAI.TSP.dfjSlack_nonneg_of_tour`, and `OAI.TSP.HasAffineLift` in [`TSPComplexity.lean`](../TSPComplexity.lean), `compute_yannakakis_dfj_slack_matrix(n)` evaluates $S_{\text{DFJ}}[S, p] = |\delta(S) \cap E(p)| - 2$ across all $2^n - 2$ proper non-empty cuts $S \subsetneq V$ and all $(n-1)!/2$ distinct undirected Hamiltonian tour extreme points `tourPoint p`:
+Directly mirroring `IJM.TSP.DFJCut`, `IJM.TSP.dfjSlack`, `IJM.TSP.dfjSlack_nonneg_of_tour`, and `IJM.TSP.HasAffineLift` in [`TSPComplexity.lean`](../TSPComplexity.lean), `compute_yannakakis_dfj_slack_matrix(n)` evaluates $S_{\text{DFJ}}[S, p] = |\delta(S) \cap E(p)| - 2$ across all $2^n - 2$ proper non-empty cuts $S \subsetneq V$ and all $(n-1)!/2$ distinct undirected Hamiltonian tour extreme points `tourPoint p`:
 
 | Instance | DFJ Cuts ($2^n - 2$) | Non-Trivial Cuts ($2 \le \|S\| \le n-2$) | Distinct Tour Vertices ($(n-1)!/2$) | Permutations ($n!$) | $\min S_{\text{DFJ}}$ (`dfjSlack_nonneg_of_tour`) | $\max S_{\text{DFJ}}$ | Even Integers (`cyclic_cut_crossings_even`) | Singleton Cuts $= 0$ | Linear Rank $\text{rank}_{\mathbb{R}}(S_{\text{DFJ}})$ | Theoretical $\binom{n-1}{2}$ | Tight Entry Fraction ($S=0$) | Time (ms) |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |

@@ -1,10 +1,10 @@
 -- Lean 4 formalization matching openai/math repository idioms
--- Module: OAI.TSP.TSPComplexity
+-- Module: IJM.TSP.TSPComplexity
 -- Topic: Computational Complexity, Combinatorial Invariants, and Polyhedral Barriers for Decision TSP
 
 import Mathlib
 
-namespace OAI
+namespace IJM
 
 namespace TSP
 
@@ -2439,6 +2439,25 @@ theorem ringOfTriangles_nonempty_frontier_witness (n : ℕ) (hn : 3 ≤ n) :
     [List.finRange n].length ≤ n ^ 1 :=
   ⟨ringOfTriangles_frontier_tours hn, ringOfTriangles_frontier_cardinality hn⟩
 
+/-- Canonical unit edge-cost function on `Fin n` assigning weight `1` to all pairs. -/
+def unitCost (n : ℕ) : CostFunction n :=
+  fun _ _ => 1
+
+/-- Track C Non-Empty Frontier Rank-1 Theorem: For all `n ≥ 3`, `PrunedStructuralRank n G c 0 1 frontier`
+    is constructively inhabited on `Reduction.ringOfTrianglesGraph n` with the non-empty tour frontier
+    `frontier = [List.finRange n]` (`frontier ≠ []`) at rank `k = 1`. -/
+theorem prunedStructuralRank_nonempty_frontier_rank_one (n : ℕ) (hn : 3 ≤ n) :
+    ∃ (G : Graph n) (c : CostFunction n) (B : ℕ) (frontier : List (List (Fin n))),
+      frontier ≠ [] ∧ Nonempty (PrunedStructuralRank n G c B 1 frontier) := by
+  refine ⟨Reduction.ringOfTrianglesGraph n, unitCost n, 0, [List.finRange n], by simp,
+    ⟨⟨1, Nat.le_refl 1, ringOfTriangles_frontier_tours hn, ?_, ringOfTriangles_frontier_cardinality hn⟩⟩⟩
+  intro p hp
+  rcases Reduction.exists_cycleEdge_of_isTour hn hp.1 with ⟨e, he⟩
+  have h_le := Reduction.edge_cost_le_tourCost (unitCost n) p e he
+  dsimp [unitCost] at h_le
+  have h_cost := hp.2
+  omega
+
 /-- Every tour has cost `0` under `zeroCost n`. -/
 lemma zeroCost_tourCost_eq_zero {n : ℕ} (p : List (Fin n)) :
     tourCost (zeroCost n) p = 0 := by
@@ -2518,6 +2537,171 @@ theorem prunedStructuralRank_positive_inhabited_all_ge_three (n : ℕ) (hn : 3 �
     exact tour_mem_init_queue hp.1
   · exact le_pow_self_of_three_le hn frontier.length
 
+/-- Directed cycle edge-cost function on `Fin n` assigning weight `0` to forward steps
+    `v = cycleNext u` and weight `1` to all other pairs. -/
+def directedCycleCost (n : ℕ) : CostFunction n :=
+  fun u v => if v = cycleNext u then 0 else 1
+
+/-- The canonical cycle `List.finRange n` has cost `0` under `directedCycleCost n`. -/
+lemma finRange_tourCost_directedCycleCost_zero {n : ℕ} (hn : 3 ≤ n) :
+    tourCost (directedCycleCost n) (List.finRange n) = 0 := by
+  dsimp [tourCost]
+  rw [List.sum_eq_zero_iff]
+  intro x hx
+  rw [List.mem_map] at hx
+  rcases hx with ⟨e, he, rfl⟩
+  rw [List.mem_iff_get] at he
+  rcases he with ⟨idx, hidx⟩
+  have hlen : (List.finRange n).length = n := List.length_finRange
+  have hne : List.finRange n ≠ [] := by
+    intro h
+    rw [h] at hlen
+    simp at hlen
+    omega
+  have hcycle_len : (cycleEdges (List.finRange n)).length = n := by
+    rw [cycleEdges_length (List.finRange n) hne, hlen]
+  let i : Fin n := ⟨idx.val, by omega⟩
+  have hidx_eq : idx = ⟨i.val, by omega⟩ := Fin.ext rfl
+  rw [hidx_eq] at hidx
+  have h1 : e.1 = (List.finRange n).get ⟨i.val, by rw [hlen]; exact i.isLt⟩ := by
+    rw [← hidx]
+    exact cycleEdges_fst_eq (List.finRange n) hlen (by omega) i
+  have h2 : e.2 = (List.finRange n).get ⟨(cycleNext i).val, by rw [hlen]; exact (cycleNext i).isLt⟩ := by
+    rw [← hidx]
+    exact cycleEdges_snd_eq (List.finRange n) hlen (by omega) i
+  have he1 : e.1 = i := by
+    rw [h1]
+    ext
+    simp
+  have he2 : e.2 = cycleNext i := by
+    rw [h2]
+    ext
+    simp
+  dsimp [directedCycleCost]
+  rw [he1, he2, if_pos rfl]
+
+/-- Predicate asserting that each consecutive step in a list applies `f`. -/
+def IsStepChain {α : Type*} (f : α → α) : List α → Prop
+  | [] => True
+  | [_] => True
+  | u :: v :: xs => v = f u ∧ IsStepChain f (v :: xs)
+
+/-- Two lists of equal length with the same `head?` that both follow `IsStepChain f` are identical. -/
+lemma eq_of_isStepChain {α : Type*} (f : α → α) :
+    ∀ (p q : List α), p.length = q.length → p.head? = q.head? →
+      IsStepChain f p → IsStepChain f q → p = q
+  | [], [], _, _, _, _ => rfl
+  | [], _ :: _, hlen, _, _, _ => by simp at hlen
+  | _ :: _, [], hlen, _, _, _ => by simp at hlen
+  | [u], [x], _, hhead, _, _ => by
+    dsimp [List.head?] at hhead
+    injection hhead with hux
+    subst hux
+    rfl
+  | [_], _ :: _ :: _, hlen, _, _, _ => by simp at hlen
+  | _ :: _ :: _, [_], hlen, _, _, _ => by simp at hlen
+  | u :: v :: xs, x :: y :: ys, hlen, hhead, hp, hq => by
+    dsimp [List.head?] at hhead
+    injection hhead with hux
+    subst hux
+    have hvy : v = y := hp.1.trans hq.1.symm
+    subst hvy
+    congr 1
+    exact eq_of_isStepChain f (v :: xs) (v :: ys) (by simpa using hlen) rfl hp.2 hq.2
+
+/-- If every zipped edge in `w.zip (w.tail ++ [z])` satisfies `e.2 = f e.1`, then `IsStepChain f w`. -/
+lemma isStepChain_of_zip_append {α : Type*} (f : α → α) (z : α) :
+    ∀ (w : List α), (∀ e ∈ w.zip (w.tail ++ [z]), e.2 = f e.1) → IsStepChain f w
+  | [], _ => trivial
+  | [_], _ => trivial
+  | u :: v :: xs, h =>
+    ⟨h (u, v) (List.Mem.head _),
+     isStepChain_of_zip_append f z (v :: xs) (fun e he => h e (List.Mem.tail _ he))⟩
+
+/-- Any tour `p` with `tourCost (directedCycleCost n) p ≤ 0` satisfies `IsStepChain cycleNext p`. -/
+lemma isStepChain_of_directedCycleCost_zero {n : ℕ} (p : List (Fin n))
+    (hCost : tourCost (directedCycleCost n) p ≤ 0) :
+    IsStepChain cycleNext p := by
+  cases p with
+  | nil => trivial
+  | cons x xs =>
+    apply isStepChain_of_zip_append cycleNext x (x :: xs)
+    intro e he
+    have h_le := Reduction.edge_cost_le_tourCost (directedCycleCost n) (x :: xs) e he
+    have h_zero : directedCycleCost n e.1 e.2 = 0 := by omega
+    dsimp [directedCycleCost] at h_zero
+    by_contra h_ne
+    rw [if_neg h_ne] at h_zero
+    contradiction
+
+/-- Select the unique zero-cost directed cycle tour starting at vertex `u` if one exists,
+    falling back to `List.finRange n`. -/
+noncomputable def tourStartingAt (n : ℕ) (u : Fin n) : List (Fin n) :=
+  if h : ∃ p : List (Fin n),
+      IsTour (Reduction.ringOfTrianglesGraph n) p ∧
+      tourCost (directedCycleCost n) p ≤ 0 ∧
+      p.head? = some u
+  then Classical.choose h
+  else List.finRange n
+
+/-- Pruned rank-1 candidate frontier of length `n ≤ n ^ 1` indexed by starting vertex `u ∈ Fin n`. -/
+noncomputable def canonicalPrunedFrontier (n : ℕ) : List (List (Fin n)) :=
+  (List.finRange n).map (tourStartingAt n)
+
+/-- Track C Positive Rank-1 Non-Vacuity Theorem: For all `n ≥ 3`, there exist a graph `G`,
+    cost function `c`, budget `B = 0`, and non-empty candidate frontier `frontier ≠ []`
+    such that `ValidTourBound G c B` holds AND `PrunedStructuralRank n G c B 1 frontier`
+    is constructively inhabited at rank `k = 1` (`frontier.length = n ≤ n ^ 1`). -/
+theorem prunedStructuralRank_positive_rank_one_all_ge_three (n : ℕ) (hn : 3 ≤ n) :
+    ∃ (G : Graph n) (c : CostFunction n) (B : ℕ) (frontier : List (List (Fin n))),
+      frontier ≠ [] ∧ ValidTourBound G c B ∧ Nonempty (PrunedStructuralRank n G c B 1 frontier) := by
+  refine ⟨Reduction.ringOfTrianglesGraph n, directedCycleCost n, 0, canonicalPrunedFrontier n,
+    ?_, ?_, ⟨⟨1, Nat.le_refl 1, ?_, ?_, ?_⟩⟩⟩
+  · intro hnil
+    have hlen : (canonicalPrunedFrontier n).length = n := by
+      dsimp [canonicalPrunedFrontier]
+      rw [List.length_map, List.length_finRange]
+    rw [hnil] at hlen
+    simp at hlen
+    omega
+  · refine ⟨List.finRange n, finRange_isTour_ringOfTriangles hn, ?_⟩
+    rw [finRange_tourCost_directedCycleCost_zero hn]
+  · intro p hp
+    dsimp [canonicalPrunedFrontier] at hp
+    rw [List.mem_map] at hp
+    rcases hp with ⟨u, _, rfl⟩
+    dsimp [tourStartingAt]
+    split_ifs with h
+    · exact (Classical.choose_spec h).1
+    · exact finRange_isTour_ringOfTriangles hn
+  · intro p hp
+    have hlen_p : p.length = n := hp.1.1
+    cases h_p : p with
+    | nil =>
+      rw [h_p] at hlen_p
+      simp at hlen_p
+      omega
+    | cons u xs =>
+      have h_head : p.head? = some u := by rw [h_p]; rfl
+      have h_ex : ∃ q : List (Fin n),
+          IsTour (Reduction.ringOfTrianglesGraph n) q ∧
+          tourCost (directedCycleCost n) q ≤ 0 ∧
+          q.head? = some u := ⟨p, hp.1, hp.2, h_head⟩
+      have h_choose := Classical.choose_spec h_ex
+      have h_eq : p = tourStartingAt n u := by
+        dsimp [tourStartingAt]
+        rw [dif_pos h_ex]
+        exact eq_of_isStepChain cycleNext p (Classical.choose h_ex)
+          (hp.1.1.trans h_choose.1.1.symm)
+          (h_head.trans h_choose.2.2.symm)
+          (isStepChain_of_directedCycleCost_zero p hp.2)
+          (isStepChain_of_directedCycleCost_zero (Classical.choose h_ex) h_choose.2.1)
+      rw [← h_p, h_eq]
+      dsimp [canonicalPrunedFrontier]
+      exact List.mem_map.mpr ⟨u, List.mem_finRange u, rfl⟩
+  · dsimp [canonicalPrunedFrontier]
+    rw [List.length_map, List.length_finRange, Nat.pow_one]
+
 end TSP
 
-end OAI
+end IJM

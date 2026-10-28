@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OAI.TSP.TSPComplexity &mdash; Interactive Lean 4 Documentation</title>
+  <title>IJM.TSP.TSPComplexity &mdash; Interactive Lean 4 Documentation</title>
   <style>
     :root {
       --bg: #0d1117;
@@ -439,13 +439,13 @@
     <!-- Multi-Module Navigation Switcher -->
     <div class="module-nav-container">
       <div class="module-nav-label">Select Module</div>
-      <a href="TSPComplexity.html" class="module-pill active"><span class="pill-title">OAI.TSP.TSPComplexity</span><span class="pill-desc">Tracks A-C: Decision Complexity</span></a><a href="Christofides.html" class="module-pill"><span class="pill-title">OAI.TSP.Christofides</span><span class="pill-desc">Track D: 3/2-Approximation Frontier</span></a>
+      <a href="TSPComplexity.html" class="module-pill active"><span class="pill-title">IJM.TSP.TSPComplexity</span><span class="pill-desc">Tracks A-C: Decision Complexity</span></a><a href="Christofides.html" class="module-pill"><span class="pill-title">IJM.TSP.Christofides</span><span class="pill-desc">Track D: 3/2-Approximation Frontier</span></a>
     </div>
 
     <div class="toc-header">
       <h3 style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 0.5rem;">Sections</h3>
       <ul class="toc-list">
-        <li><a href="#sec-1" class="toc-link">1. Discrete Problem Formulation <span class="toc-count">(7)</span></a></li><li><a href="#sec-2" class="toc-link">2. Foundational Combinatorial Auxiliary Lemmas <span class="toc-count">(6)</span></a></li><li><a href="#sec-3" class="toc-link">3. The Certified Branch-and-Cut State Machine <span class="toc-count">(14)</span></a></li><li><a href="#sec-4" class="toc-link">4. Parameterized Structural Invariant &amp; Complexity <span class="toc-count">(19)</span></a></li><li><a href="#sec-5" class="toc-link">5. Topological Two-Cut Boundary (DFJ Subtour Inequality) <span class="toc-count">(26)</span></a></li><li><a href="#sec-6" class="toc-link">6. Continuous Polyhedral Relaxations &amp; The Extension Complexity Barrier <span class="toc-count">(19)</span></a></li><li><a href="#sec-7" class="toc-link">6. Continuous Polyhedral Relaxations (Petersen $P_{10}$ Witness) <span class="toc-count">(24)</span></a></li><li><a href="#sec-8" class="toc-link">6. Continuous Polyhedral Relaxations (Yannakakis Slack &amp; Lower Bound) <span class="toc-count">(17)</span></a></li><li><a href="#sec-9" class="toc-link">7. Formal 3-SAT Reduction Verification (Ring-of-Triangles &amp; Clause Interlock) <span class="toc-count">(52)</span></a></li><li><a href="#sec-10" class="toc-link">8. Track C: Graph-Pruned Cycle-Separation Rank &amp; Arbitrary-n Decision <span class="toc-count">(15)</span></a></li>
+        <li><a href="#sec-1" class="toc-link">1. Discrete Problem Formulation <span class="toc-count">(7)</span></a></li><li><a href="#sec-2" class="toc-link">2. Foundational Combinatorial Auxiliary Lemmas <span class="toc-count">(6)</span></a></li><li><a href="#sec-3" class="toc-link">3. The Certified Branch-and-Cut State Machine <span class="toc-count">(14)</span></a></li><li><a href="#sec-4" class="toc-link">4. Parameterized Structural Invariant &amp; Complexity <span class="toc-count">(19)</span></a></li><li><a href="#sec-5" class="toc-link">5. Topological Two-Cut Boundary (DFJ Subtour Inequality) <span class="toc-count">(26)</span></a></li><li><a href="#sec-6" class="toc-link">6. Continuous Polyhedral Relaxations &amp; The Extension Complexity Barrier <span class="toc-count">(19)</span></a></li><li><a href="#sec-7" class="toc-link">6. Continuous Polyhedral Relaxations (Petersen $P_{10}$ Witness) <span class="toc-count">(24)</span></a></li><li><a href="#sec-8" class="toc-link">6. Continuous Polyhedral Relaxations (Yannakakis Slack &amp; Lower Bound) <span class="toc-count">(17)</span></a></li><li><a href="#sec-9" class="toc-link">7. Formal 3-SAT Reduction Verification (Ring-of-Triangles &amp; Clause Interlock) <span class="toc-count">(52)</span></a></li><li><a href="#sec-10" class="toc-link">8. Track C: Graph-Pruned Cycle-Separation Rank &amp; Arbitrary-n Decision <span class="toc-count">(26)</span></a></li>
       </ul>
     </div>
 
@@ -456,19 +456,19 @@
   <main class="main">
     <!-- Hero Banner -->
     <header class="hero">
-      <div class="hero-title">OAI.TSP.TSPComplexity</div>
+      <div class="hero-title">IJM.TSP.TSPComplexity</div>
       <div class="hero-subtitle">Computational Complexity Barriers, Certified Branch-and-Cut Semantics, and Polyhedral Limits of Decision TSP</div>
       <div class="metrics-bar">
         <div class="metric-card">
-          <div class="metric-val">199</div>
+          <div class="metric-val">210</div>
           <div class="metric-lbl">Total Declarations</div>
         </div>
         <div class="metric-card">
-          <div class="metric-val">126</div>
+          <div class="metric-val">132</div>
           <div class="metric-lbl">Theorems &amp; Lemmas</div>
         </div>
         <div class="metric-card">
-          <div class="metric-val">73</div>
+          <div class="metric-val">78</div>
           <div class="metric-lbl">Defs &amp; Structures</div>
         </div>
         <div class="metric-card">
@@ -488,9 +488,9 @@
         <input type="text" class="search-input" id="searchInput" placeholder="Search declarations, signatures, or theorems..." onkeyup="filterDecls()">
       </div>
       <div class="filter-chips">
-        <div class="chip active" onclick="setKindFilter('all', this)">All (199)</div>
-        <div class="chip" onclick="setKindFilter('theorem', this)">Theorems (126)</div>
-        <div class="chip" onclick="setKindFilter('def', this)">Defs (73)</div>
+        <div class="chip active" onclick="setKindFilter('all', this)">All (210)</div>
+        <div class="chip" onclick="setKindFilter('theorem', this)">Theorems (132)</div>
+        <div class="chip" onclick="setKindFilter('def', this)">Defs (78)</div>
         <div class="chip" onclick="setKindFilter('landmark', this)">Landmarks (15)</div>
       </div>
     </div>
@@ -6909,9 +6909,9 @@
           <div class="section-header">
             <h2>8. Track C: Graph-Pruned Cycle-Separation Rank &amp; Arbitrary-n Decision</h2>
             <div class="section-counts">
-              <span class="count-pill">15 Declarations</span>
-              <span class="count-pill">11 Theorems</span>
-              <span class="count-pill">4 Definitions</span>
+              <span class="count-pill">26 Declarations</span>
+              <span class="count-pill">17 Theorems</span>
+              <span class="count-pill">9 Definitions</span>
             </div>
           </div>
           <div class="decls-grid">
@@ -7240,6 +7240,69 @@
                 </div>
             </div>
             
+            <div class="decl-card" data-name="unitcost" data-kind="def" data-landmark="false">
+              <div class="decl-header">
+                <div class="decl-title">
+                  <span class="badge badge-def">def</span>
+                  
+                  
+                  <span class="decl-name">unitCost</span>
+                </div>
+                <div class="decl-meta">
+                  <a href="../TSPComplexity.lean#L2443" target="_blank" class="line-link">Line 2443</a>
+                  <button class="btn btn-copy" onclick="copyDecl('unitCost')" title="Copy declaration">Copy</button>
+                  <button class="btn btn-proof" onclick="toggleProof('unitCost')">
+                  <span id="btn-text-unitCost">Show Proof</span>
+                </button>
+                </div>
+              </div>
+              <div class="docstring">Canonical unit edge-cost function on `Fin n` assigning weight `1` to all pairs.</div>
+              <div class="signature-container">
+                <pre class="code-block" id="code-unitCost"><code><span class="kw">def</span> unitCost (n : ℕ) : <span class="ty">CostFunction</span> n</code></pre>
+              </div>
+              <div id="proof-unitCost" class="proof-container hidden">
+                  <pre class="code-block code-proof"><code>:=
+  fun _ _ =&gt; 1</code></pre>
+                </div>
+            </div>
+            
+            <div class="decl-card" data-name="prunedstructuralrank_nonempty_frontier_rank_one" data-kind="theorem" data-landmark="false">
+              <div class="decl-header">
+                <div class="decl-title">
+                  <span class="badge badge-theorem">theorem</span>
+                  
+                  
+                  <span class="decl-name">prunedStructuralRank_nonempty_frontier_rank_one</span>
+                </div>
+                <div class="decl-meta">
+                  <a href="../TSPComplexity.lean#L2449" target="_blank" class="line-link">Line 2449</a>
+                  <button class="btn btn-copy" onclick="copyDecl('prunedStructuralRank_nonempty_frontier_rank_one')" title="Copy declaration">Copy</button>
+                  <button class="btn btn-proof" onclick="toggleProof('prunedStructuralRank_nonempty_frontier_rank_one')">
+                  <span id="btn-text-prunedStructuralRank_nonempty_frontier_rank_one">Show Proof</span>
+                </button>
+                </div>
+              </div>
+              <div class="docstring">Track C Non-Empty Frontier Rank-1 Theorem: For all `n ≥ 3`, `PrunedStructuralRank n G c 0 1 frontier`
+    is constructively inhabited on `Reduction.ringOfTrianglesGraph n` with the non-empty tour frontier
+    `frontier = [List.finRange n]` (`frontier ≠ []`) at rank `k = 1`.</div>
+              <div class="signature-container">
+                <pre class="code-block" id="code-prunedStructuralRank_nonempty_frontier_rank_one"><code><span class="kw">theorem</span> prunedStructuralRank_nonempty_frontier_rank_one (n : ℕ) (hn : 3 <span class="sym">≤</span> n) :
+    <span class="sym">∃</span> (G : <span class="ty">Graph</span> n) (c : <span class="ty">CostFunction</span> n) (B : ℕ) (frontier : <span class="ty">List</span> (<span class="ty">List</span> (<span class="ty">Fin</span> n))),
+      frontier <span class="sym">≠</span> [] <span class="sym">∧</span> Nonempty (PrunedStructuralRank n G c B 1 frontier)</code></pre>
+              </div>
+              <div id="proof-prunedStructuralRank_nonempty_frontier_rank_one" class="proof-container hidden">
+                  <pre class="code-block code-proof"><code>:= <span class="kw">by</span>
+  refine ⟨Reduction.ringOfTrianglesGraph n, unitCost n, 0, [<span class="ty">List</span>.finRange n], <span class="kw">by</span> simp,
+    ⟨⟨1, <span class="ty">Nat</span>.le_refl 1, ringOfTriangles_frontier_tours hn, ?_, ringOfTriangles_frontier_cardinality hn⟩⟩⟩
+  <span class="kw">intro</span> p hp
+  rcases Reduction.exists_cycleEdge_of_isTour hn hp.1 <span class="kw">with</span> ⟨e, he⟩
+  <span class="kw">have</span> h_le := Reduction.edge_cost_le_tourCost (unitCost n) p e he
+  dsimp [unitCost] at h_le
+  <span class="kw">have</span> h_cost := hp.2
+  omega</code></pre>
+                </div>
+            </div>
+            
             <div class="decl-card" data-name="zerocost_tourcost_eq_zero" data-kind="lemma" data-landmark="false">
               <div class="decl-header">
                 <div class="decl-title">
@@ -7249,7 +7312,7 @@
                   <span class="decl-name">zeroCost_tourCost_eq_zero</span>
                 </div>
                 <div class="decl-meta">
-                  <a href="../TSPComplexity.lean#L2443" target="_blank" class="line-link">Line 2443</a>
+                  <a href="../TSPComplexity.lean#L2462" target="_blank" class="line-link">Line 2462</a>
                   <button class="btn btn-copy" onclick="copyDecl('zeroCost_tourCost_eq_zero')" title="Copy declaration">Copy</button>
                   <button class="btn btn-proof" onclick="toggleProof('zeroCost_tourCost_eq_zero')">
                   <span id="btn-text-zeroCost_tourCost_eq_zero">Show Proof</span>
@@ -7281,7 +7344,7 @@
                   <span class="decl-name">pruned_solver_accepts_necklace_all_ge_three</span>
                 </div>
                 <div class="decl-meta">
-                  <a href="../TSPComplexity.lean#L2454" target="_blank" class="line-link">Line 2454</a>
+                  <a href="../TSPComplexity.lean#L2473" target="_blank" class="line-link">Line 2473</a>
                   <button class="btn btn-copy" onclick="copyDecl('pruned_solver_accepts_necklace_all_ge_three')" title="Copy declaration">Copy</button>
                   <button class="btn btn-proof" onclick="toggleProof('pruned_solver_accepts_necklace_all_ge_three')">
                   <span id="btn-text-pruned_solver_accepts_necklace_all_ge_three">Show Proof</span>
@@ -7323,7 +7386,7 @@
                   <span class="decl-name">le_pow_self_and_pos</span>
                 </div>
                 <div class="decl-meta">
-                  <a href="../TSPComplexity.lean#L2473" target="_blank" class="line-link">Line 2473</a>
+                  <a href="../TSPComplexity.lean#L2492" target="_blank" class="line-link">Line 2492</a>
                   <button class="btn btn-copy" onclick="copyDecl('le_pow_self_and_pos')" title="Copy declaration">Copy</button>
                   <button class="btn btn-proof" onclick="toggleProof('le_pow_self_and_pos')">
                   <span id="btn-text-le_pow_self_and_pos">Show Proof</span>
@@ -7357,7 +7420,7 @@
                   <span class="decl-name">le_pow_self_of_three_le</span>
                 </div>
                 <div class="decl-meta">
-                  <a href="../TSPComplexity.lean#L2485" target="_blank" class="line-link">Line 2485</a>
+                  <a href="../TSPComplexity.lean#L2504" target="_blank" class="line-link">Line 2504</a>
                   <button class="btn btn-copy" onclick="copyDecl('le_pow_self_of_three_le')" title="Copy declaration">Copy</button>
                   <button class="btn btn-proof" onclick="toggleProof('le_pow_self_of_three_le')">
                   <span id="btn-text-le_pow_self_of_three_le">Show Proof</span>
@@ -7383,7 +7446,7 @@
                   <span class="decl-name">prunedStructuralRank_positive_inhabited_all_ge_three</span>
                 </div>
                 <div class="decl-meta">
-                  <a href="../TSPComplexity.lean#L2492" target="_blank" class="line-link">Line 2492</a>
+                  <a href="../TSPComplexity.lean#L2511" target="_blank" class="line-link">Line 2511</a>
                   <button class="btn btn-copy" onclick="copyDecl('prunedStructuralRank_positive_inhabited_all_ge_three')" title="Copy declaration">Copy</button>
                   <button class="btn btn-proof" onclick="toggleProof('prunedStructuralRank_positive_inhabited_all_ge_three')">
                   <span id="btn-text-prunedStructuralRank_positive_inhabited_all_ge_three">Show Proof</span>
@@ -7426,6 +7489,357 @@
   · <span class="kw">intro</span> p hp
     <span class="kw">exact</span> tour_mem_init_queue hp.1
   · <span class="kw">exact</span> le_pow_self_of_three_le hn frontier.length</code></pre>
+                </div>
+            </div>
+            
+            <div class="decl-card" data-name="directedcyclecost" data-kind="def" data-landmark="false">
+              <div class="decl-header">
+                <div class="decl-title">
+                  <span class="badge badge-def">def</span>
+                  
+                  
+                  <span class="decl-name">directedCycleCost</span>
+                </div>
+                <div class="decl-meta">
+                  <a href="../TSPComplexity.lean#L2542" target="_blank" class="line-link">Line 2542</a>
+                  <button class="btn btn-copy" onclick="copyDecl('directedCycleCost')" title="Copy declaration">Copy</button>
+                  <button class="btn btn-proof" onclick="toggleProof('directedCycleCost')">
+                  <span id="btn-text-directedCycleCost">Show Proof</span>
+                </button>
+                </div>
+              </div>
+              <div class="docstring">Directed cycle edge-cost function on `Fin n` assigning weight `0` to forward steps
+    `v = cycleNext u` and weight `1` to all other pairs.</div>
+              <div class="signature-container">
+                <pre class="code-block" id="code-directedCycleCost"><code><span class="kw">def</span> directedCycleCost (n : ℕ) : <span class="ty">CostFunction</span> n</code></pre>
+              </div>
+              <div id="proof-directedCycleCost" class="proof-container hidden">
+                  <pre class="code-block code-proof"><code>:=
+  fun u v =&gt; <span class="kw">if</span> v = cycleNext u <span class="kw">then</span> 0 <span class="kw">else</span> 1</code></pre>
+                </div>
+            </div>
+            
+            <div class="decl-card" data-name="finrange_tourcost_directedcyclecost_zero" data-kind="lemma" data-landmark="false">
+              <div class="decl-header">
+                <div class="decl-title">
+                  <span class="badge badge-lemma">lemma</span>
+                  
+                  
+                  <span class="decl-name">finRange_tourCost_directedCycleCost_zero</span>
+                </div>
+                <div class="decl-meta">
+                  <a href="../TSPComplexity.lean#L2546" target="_blank" class="line-link">Line 2546</a>
+                  <button class="btn btn-copy" onclick="copyDecl('finRange_tourCost_directedCycleCost_zero')" title="Copy declaration">Copy</button>
+                  <button class="btn btn-proof" onclick="toggleProof('finRange_tourCost_directedCycleCost_zero')">
+                  <span id="btn-text-finRange_tourCost_directedCycleCost_zero">Show Proof</span>
+                </button>
+                </div>
+              </div>
+              <div class="docstring">The canonical cycle `List.finRange n` has cost `0` under `directedCycleCost n`.</div>
+              <div class="signature-container">
+                <pre class="code-block" id="code-finRange_tourCost_directedCycleCost_zero"><code><span class="kw">lemma</span> finRange_tourCost_directedCycleCost_zero {n : ℕ} (hn : 3 <span class="sym">≤</span> n) :
+    tourCost (directedCycleCost n) (<span class="ty">List</span>.finRange n) = 0</code></pre>
+              </div>
+              <div id="proof-finRange_tourCost_directedCycleCost_zero" class="proof-container hidden">
+                  <pre class="code-block code-proof"><code>:= <span class="kw">by</span>
+  dsimp [tourCost]
+  rw [<span class="ty">List</span>.sum_eq_zero_iff]
+  <span class="kw">intro</span> x hx
+  rw [<span class="ty">List</span>.mem_map] at hx
+  rcases hx <span class="kw">with</span> ⟨e, he, rfl⟩
+  rw [<span class="ty">List</span>.mem_iff_get] at he
+  rcases he <span class="kw">with</span> ⟨idx, hidx⟩
+  <span class="kw">have</span> hlen : (<span class="ty">List</span>.finRange n).length = n := <span class="ty">List</span>.length_finRange
+  <span class="kw">have</span> hne : <span class="ty">List</span>.finRange n <span class="sym">≠</span> [] := <span class="kw">by</span>
+    <span class="kw">intro</span> h
+    rw [h] at hlen
+    simp at hlen
+    omega
+  <span class="kw">have</span> hcycle_len : (cycleEdges (<span class="ty">List</span>.finRange n)).length = n := <span class="kw">by</span>
+    rw [cycleEdges_length (<span class="ty">List</span>.finRange n) hne, hlen]
+  <span class="kw">let</span> i : <span class="ty">Fin</span> n := ⟨idx.val, <span class="kw">by</span> omega⟩
+  <span class="kw">have</span> hidx_eq : idx = ⟨i.val, <span class="kw">by</span> omega⟩ := <span class="ty">Fin</span>.ext rfl
+  rw [hidx_eq] at hidx
+  <span class="kw">have</span> h1 : e.1 = (<span class="ty">List</span>.finRange n).get ⟨i.val, <span class="kw">by</span> rw [hlen]; <span class="kw">exact</span> i.isLt⟩ := <span class="kw">by</span>
+    rw [← hidx]
+    <span class="kw">exact</span> cycleEdges_fst_eq (<span class="ty">List</span>.finRange n) hlen (<span class="kw">by</span> omega) i
+  <span class="kw">have</span> h2 : e.2 = (<span class="ty">List</span>.finRange n).get ⟨(cycleNext i).val, <span class="kw">by</span> rw [hlen]; <span class="kw">exact</span> (cycleNext i).isLt⟩ := <span class="kw">by</span>
+    rw [← hidx]
+    <span class="kw">exact</span> cycleEdges_snd_eq (<span class="ty">List</span>.finRange n) hlen (<span class="kw">by</span> omega) i
+  <span class="kw">have</span> he1 : e.1 = i := <span class="kw">by</span>
+    rw [h1]
+    ext
+    simp
+  <span class="kw">have</span> he2 : e.2 = cycleNext i := <span class="kw">by</span>
+    rw [h2]
+    ext
+    simp
+  dsimp [directedCycleCost]
+  rw [he1, he2, if_pos rfl]</code></pre>
+                </div>
+            </div>
+            
+            <div class="decl-card" data-name="isstepchain" data-kind="def" data-landmark="false">
+              <div class="decl-header">
+                <div class="decl-title">
+                  <span class="badge badge-def">def</span>
+                  
+                  
+                  <span class="decl-name">IsStepChain</span>
+                </div>
+                <div class="decl-meta">
+                  <a href="../TSPComplexity.lean#L2584" target="_blank" class="line-link">Line 2584</a>
+                  <button class="btn btn-copy" onclick="copyDecl('IsStepChain')" title="Copy declaration">Copy</button>
+                  
+                </div>
+              </div>
+              <div class="docstring">Predicate asserting that each consecutive step in a list applies `f`.</div>
+              <div class="signature-container">
+                <pre class="code-block" id="code-IsStepChain"><code><span class="kw">def</span> IsStepChain {α : <span class="ty">Type</span>*} (f : α <span class="sym">→</span> α) : <span class="ty">List</span> α <span class="sym">→</span> <span class="ty">Prop</span>
+  | [] =&gt; True
+  | [_] =&gt; True
+  | u :: v :: xs =&gt; v = f u <span class="sym">∧</span> IsStepChain f (v :: xs)</code></pre>
+              </div>
+              
+            </div>
+            
+            <div class="decl-card" data-name="eq_of_isstepchain" data-kind="lemma" data-landmark="false">
+              <div class="decl-header">
+                <div class="decl-title">
+                  <span class="badge badge-lemma">lemma</span>
+                  
+                  
+                  <span class="decl-name">eq_of_isStepChain</span>
+                </div>
+                <div class="decl-meta">
+                  <a href="../TSPComplexity.lean#L2590" target="_blank" class="line-link">Line 2590</a>
+                  <button class="btn btn-copy" onclick="copyDecl('eq_of_isStepChain')" title="Copy declaration">Copy</button>
+                  
+                </div>
+              </div>
+              <div class="docstring">Two lists of equal length with the same `head?` that both follow `IsStepChain f` are identical.</div>
+              <div class="signature-container">
+                <pre class="code-block" id="code-eq_of_isStepChain"><code><span class="kw">lemma</span> eq_of_isStepChain {α : <span class="ty">Type</span>*} (f : α <span class="sym">→</span> α) :
+    <span class="sym">∀</span> (p q : <span class="ty">List</span> α), p.length = q.length <span class="sym">→</span> p.head? = q.head? <span class="sym">→</span>
+      IsStepChain f p <span class="sym">→</span> IsStepChain f q <span class="sym">→</span> p = q
+  | [], [], _, _, _, _ =&gt; rfl
+  | [], _ :: _, hlen, _, _, _ =&gt; <span class="kw">by</span> simp at hlen
+  | _ :: _, [], hlen, _, _, _ =&gt; <span class="kw">by</span> simp at hlen
+  | [u], [x], _, hhead, _, _ =&gt; <span class="kw">by</span>
+    dsimp [<span class="ty">List</span>.head?] at hhead
+    injection hhead <span class="kw">with</span> hux
+    subst hux
+    rfl
+  | [_], _ :: _ :: _, hlen, _, _, _ =&gt; <span class="kw">by</span> simp at hlen
+  | _ :: _ :: _, [_], hlen, _, _, _ =&gt; <span class="kw">by</span> simp at hlen
+  | u :: v :: xs, x :: y :: ys, hlen, hhead, hp, hq =&gt; <span class="kw">by</span>
+    dsimp [<span class="ty">List</span>.head?] at hhead
+    injection hhead <span class="kw">with</span> hux
+    subst hux
+    <span class="kw">have</span> hvy : v = y := hp.1.trans hq.1.symm
+    subst hvy
+    congr 1
+    <span class="kw">exact</span> eq_of_isStepChain f (v :: xs) (v :: ys) (<span class="kw">by</span> simpa using hlen) rfl hp.2 hq.2</code></pre>
+              </div>
+              
+            </div>
+            
+            <div class="decl-card" data-name="isstepchain_of_zip_append" data-kind="lemma" data-landmark="false">
+              <div class="decl-header">
+                <div class="decl-title">
+                  <span class="badge badge-lemma">lemma</span>
+                  
+                  
+                  <span class="decl-name">isStepChain_of_zip_append</span>
+                </div>
+                <div class="decl-meta">
+                  <a href="../TSPComplexity.lean#L2613" target="_blank" class="line-link">Line 2613</a>
+                  <button class="btn btn-copy" onclick="copyDecl('isStepChain_of_zip_append')" title="Copy declaration">Copy</button>
+                  
+                </div>
+              </div>
+              <div class="docstring">If every zipped edge in `w.zip (w.tail ++ [z])` satisfies `e.2 = f e.1`, then `IsStepChain f w`.</div>
+              <div class="signature-container">
+                <pre class="code-block" id="code-isStepChain_of_zip_append"><code><span class="kw">lemma</span> isStepChain_of_zip_append {α : <span class="ty">Type</span>*} (f : α <span class="sym">→</span> α) (z : α) :
+    <span class="sym">∀</span> (w : <span class="ty">List</span> α), (<span class="sym">∀</span> e <span class="sym">∈</span> w.zip (w.tail ++ [z]), e.2 = f e.1) <span class="sym">→</span> IsStepChain f w
+  | [], _ =&gt; trivial
+  | [_], _ =&gt; trivial
+  | u :: v :: xs, h =&gt;
+    ⟨h (u, v) (<span class="ty">List</span>.Mem.head _),
+     isStepChain_of_zip_append f z (v :: xs) (fun e he =&gt; h e (<span class="ty">List</span>.Mem.tail _ he))⟩</code></pre>
+              </div>
+              
+            </div>
+            
+            <div class="decl-card" data-name="isstepchain_of_directedcyclecost_zero" data-kind="lemma" data-landmark="false">
+              <div class="decl-header">
+                <div class="decl-title">
+                  <span class="badge badge-lemma">lemma</span>
+                  
+                  
+                  <span class="decl-name">isStepChain_of_directedCycleCost_zero</span>
+                </div>
+                <div class="decl-meta">
+                  <a href="../TSPComplexity.lean#L2622" target="_blank" class="line-link">Line 2622</a>
+                  <button class="btn btn-copy" onclick="copyDecl('isStepChain_of_directedCycleCost_zero')" title="Copy declaration">Copy</button>
+                  <button class="btn btn-proof" onclick="toggleProof('isStepChain_of_directedCycleCost_zero')">
+                  <span id="btn-text-isStepChain_of_directedCycleCost_zero">Show Proof</span>
+                </button>
+                </div>
+              </div>
+              <div class="docstring">Any tour `p` with `tourCost (directedCycleCost n) p ≤ 0` satisfies `IsStepChain cycleNext p`.</div>
+              <div class="signature-container">
+                <pre class="code-block" id="code-isStepChain_of_directedCycleCost_zero"><code><span class="kw">lemma</span> isStepChain_of_directedCycleCost_zero {n : ℕ} (p : <span class="ty">List</span> (<span class="ty">Fin</span> n))
+    (hCost : tourCost (directedCycleCost n) p <span class="sym">≤</span> 0) :
+    IsStepChain cycleNext p</code></pre>
+              </div>
+              <div id="proof-isStepChain_of_directedCycleCost_zero" class="proof-container hidden">
+                  <pre class="code-block code-proof"><code>:= <span class="kw">by</span>
+  <span class="kw">cases</span> p <span class="kw">with</span>
+  | nil =&gt; trivial
+  | cons x xs =&gt;
+    <span class="kw">apply</span> isStepChain_of_zip_append cycleNext x (x :: xs)
+    <span class="kw">intro</span> e he
+    <span class="kw">have</span> h_le := Reduction.edge_cost_le_tourCost (directedCycleCost n) (x :: xs) e he
+    <span class="kw">have</span> h_zero : directedCycleCost n e.1 e.2 = 0 := <span class="kw">by</span> omega
+    dsimp [directedCycleCost] at h_zero
+    by_contra h_ne
+    rw [if_neg h_ne] at h_zero
+    contradiction</code></pre>
+                </div>
+            </div>
+            
+            <div class="decl-card" data-name="tourstartingat" data-kind="def" data-landmark="false">
+              <div class="decl-header">
+                <div class="decl-title">
+                  <span class="badge badge-def">def</span>
+                  <span class="badge badge-noncomp">noncomputable</span>
+                  
+                  <span class="decl-name">tourStartingAt</span>
+                </div>
+                <div class="decl-meta">
+                  <a href="../TSPComplexity.lean#L2639" target="_blank" class="line-link">Line 2639</a>
+                  <button class="btn btn-copy" onclick="copyDecl('tourStartingAt')" title="Copy declaration">Copy</button>
+                  <button class="btn btn-proof" onclick="toggleProof('tourStartingAt')">
+                  <span id="btn-text-tourStartingAt">Show Proof</span>
+                </button>
+                </div>
+              </div>
+              <div class="docstring">Select the unique zero-cost directed cycle tour starting at vertex `u` if one exists,
+    falling back to `List.finRange n`.</div>
+              <div class="signature-container">
+                <pre class="code-block" id="code-tourStartingAt"><code>noncomputable <span class="kw">def</span> tourStartingAt (n : ℕ) (u : <span class="ty">Fin</span> n) : <span class="ty">List</span> (<span class="ty">Fin</span> n)</code></pre>
+              </div>
+              <div id="proof-tourStartingAt" class="proof-container hidden">
+                  <pre class="code-block code-proof"><code>:=
+  <span class="kw">if</span> h : <span class="sym">∃</span> p : <span class="ty">List</span> (<span class="ty">Fin</span> n),
+      <span class="ty">IsTour</span> (Reduction.ringOfTrianglesGraph n) p <span class="sym">∧</span>
+      tourCost (directedCycleCost n) p <span class="sym">≤</span> 0 <span class="sym">∧</span>
+      p.head? = <span class="ty">some</span> u
+  <span class="kw">then</span> Classical.choose h
+  <span class="kw">else</span> <span class="ty">List</span>.finRange n</code></pre>
+                </div>
+            </div>
+            
+            <div class="decl-card" data-name="canonicalprunedfrontier" data-kind="def" data-landmark="false">
+              <div class="decl-header">
+                <div class="decl-title">
+                  <span class="badge badge-def">def</span>
+                  <span class="badge badge-noncomp">noncomputable</span>
+                  
+                  <span class="decl-name">canonicalPrunedFrontier</span>
+                </div>
+                <div class="decl-meta">
+                  <a href="../TSPComplexity.lean#L2648" target="_blank" class="line-link">Line 2648</a>
+                  <button class="btn btn-copy" onclick="copyDecl('canonicalPrunedFrontier')" title="Copy declaration">Copy</button>
+                  <button class="btn btn-proof" onclick="toggleProof('canonicalPrunedFrontier')">
+                  <span id="btn-text-canonicalPrunedFrontier">Show Proof</span>
+                </button>
+                </div>
+              </div>
+              <div class="docstring">Pruned rank-1 candidate frontier of length `n ≤ n ^ 1` indexed by starting vertex `u ∈ Fin n`.</div>
+              <div class="signature-container">
+                <pre class="code-block" id="code-canonicalPrunedFrontier"><code>noncomputable <span class="kw">def</span> canonicalPrunedFrontier (n : ℕ) : <span class="ty">List</span> (<span class="ty">List</span> (<span class="ty">Fin</span> n))</code></pre>
+              </div>
+              <div id="proof-canonicalPrunedFrontier" class="proof-container hidden">
+                  <pre class="code-block code-proof"><code>:=
+  (<span class="ty">List</span>.finRange n).map (tourStartingAt n)</code></pre>
+                </div>
+            </div>
+            
+            <div class="decl-card" data-name="prunedstructuralrank_positive_rank_one_all_ge_three" data-kind="theorem" data-landmark="false">
+              <div class="decl-header">
+                <div class="decl-title">
+                  <span class="badge badge-theorem">theorem</span>
+                  
+                  
+                  <span class="decl-name">prunedStructuralRank_positive_rank_one_all_ge_three</span>
+                </div>
+                <div class="decl-meta">
+                  <a href="../TSPComplexity.lean#L2655" target="_blank" class="line-link">Line 2655</a>
+                  <button class="btn btn-copy" onclick="copyDecl('prunedStructuralRank_positive_rank_one_all_ge_three')" title="Copy declaration">Copy</button>
+                  <button class="btn btn-proof" onclick="toggleProof('prunedStructuralRank_positive_rank_one_all_ge_three')">
+                  <span id="btn-text-prunedStructuralRank_positive_rank_one_all_ge_three">Show Proof</span>
+                </button>
+                </div>
+              </div>
+              <div class="docstring">Track C Positive Rank-1 Non-Vacuity Theorem: For all `n ≥ 3`, there exist a graph `G`,
+    cost function `c`, budget `B = 0`, and non-empty candidate frontier `frontier ≠ []`
+    such that `ValidTourBound G c B` holds AND `PrunedStructuralRank n G c B 1 frontier`
+    is constructively inhabited at rank `k = 1` (`frontier.length = n ≤ n ^ 1`).</div>
+              <div class="signature-container">
+                <pre class="code-block" id="code-prunedStructuralRank_positive_rank_one_all_ge_three"><code><span class="kw">theorem</span> prunedStructuralRank_positive_rank_one_all_ge_three (n : ℕ) (hn : 3 <span class="sym">≤</span> n) :
+    <span class="sym">∃</span> (G : <span class="ty">Graph</span> n) (c : <span class="ty">CostFunction</span> n) (B : ℕ) (frontier : <span class="ty">List</span> (<span class="ty">List</span> (<span class="ty">Fin</span> n))),
+      frontier <span class="sym">≠</span> [] <span class="sym">∧</span> <span class="ty">ValidTourBound</span> G c B <span class="sym">∧</span> Nonempty (PrunedStructuralRank n G c B 1 frontier)</code></pre>
+              </div>
+              <div id="proof-prunedStructuralRank_positive_rank_one_all_ge_three" class="proof-container hidden">
+                  <pre class="code-block code-proof"><code>:= <span class="kw">by</span>
+  refine ⟨Reduction.ringOfTrianglesGraph n, directedCycleCost n, 0, canonicalPrunedFrontier n,
+    ?_, ?_, ⟨⟨1, <span class="ty">Nat</span>.le_refl 1, ?_, ?_, ?_⟩⟩⟩
+  · <span class="kw">intro</span> hnil
+    <span class="kw">have</span> hlen : (canonicalPrunedFrontier n).length = n := <span class="kw">by</span>
+      dsimp [canonicalPrunedFrontier]
+      rw [<span class="ty">List</span>.length_map, <span class="ty">List</span>.length_finRange]
+    rw [hnil] at hlen
+    simp at hlen
+    omega
+  · refine ⟨<span class="ty">List</span>.finRange n, finRange_isTour_ringOfTriangles hn, ?_⟩
+    rw [finRange_tourCost_directedCycleCost_zero hn]
+  · <span class="kw">intro</span> p hp
+    dsimp [canonicalPrunedFrontier] at hp
+    rw [<span class="ty">List</span>.mem_map] at hp
+    rcases hp <span class="kw">with</span> ⟨u, _, rfl⟩
+    dsimp [tourStartingAt]
+    split_ifs <span class="kw">with</span> h
+    · <span class="kw">exact</span> (Classical.choose_spec h).1
+    · <span class="kw">exact</span> finRange_isTour_ringOfTriangles hn
+  · <span class="kw">intro</span> p hp
+    <span class="kw">have</span> hlen_p : p.length = n := hp.1.1
+    <span class="kw">cases</span> h_p : p <span class="kw">with</span>
+    | nil =&gt;
+      rw [h_p] at hlen_p
+      simp at hlen_p
+      omega
+    | cons u xs =&gt;
+      <span class="kw">have</span> h_head : p.head? = <span class="ty">some</span> u := <span class="kw">by</span> rw [h_p]; rfl
+      <span class="kw">have</span> h_ex : <span class="sym">∃</span> q : <span class="ty">List</span> (<span class="ty">Fin</span> n),
+          <span class="ty">IsTour</span> (Reduction.ringOfTrianglesGraph n) q <span class="sym">∧</span>
+          tourCost (directedCycleCost n) q <span class="sym">≤</span> 0 <span class="sym">∧</span>
+          q.head? = <span class="ty">some</span> u := ⟨p, hp.1, hp.2, h_head⟩
+      <span class="kw">have</span> h_choose := Classical.choose_spec h_ex
+      <span class="kw">have</span> h_eq : p = tourStartingAt n u := <span class="kw">by</span>
+        dsimp [tourStartingAt]
+        rw [dif_pos h_ex]
+        <span class="kw">exact</span> eq_of_isStepChain cycleNext p (Classical.choose h_ex)
+          (hp.1.1.trans h_choose.1.1.symm)
+          (h_head.trans h_choose.2.2.symm)
+          (isStepChain_of_directedCycleCost_zero p hp.2)
+          (isStepChain_of_directedCycleCost_zero (Classical.choose h_ex) h_choose.2.1)
+      rw [← h_p, h_eq]
+      dsimp [canonicalPrunedFrontier]
+      <span class="kw">exact</span> <span class="ty">List</span>.mem_map.mpr ⟨u, <span class="ty">List</span>.mem_finRange u, rfl⟩
+  · dsimp [canonicalPrunedFrontier]
+    rw [<span class="ty">List</span>.length_map, <span class="ty">List</span>.length_finRange, <span class="ty">Nat</span>.pow_one]</code></pre>
                 </div>
             </div>
             

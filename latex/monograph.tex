@@ -84,7 +84,7 @@ We analyze the fundamental mathematical obstructions governing Decision TSP and 
 (2)~\textbf{PSD Extension Complexity:} Yannakakis slack matrix factorization (\texttt{HasAffineLift}, \texttt{hasAffineLift\_trace\_nonneg}) and conditional super-polynomial PSD dimension scaling (\texttt{tsp\_extension\_complexity\_lower\_bound}).
 (3)~\textbf{NP-Hardness Reductions:} Gadget-parameterized 3-SAT reduction (\texttt{sat\_to\_tsp\_reduction\_correct}), computable variable-triangle orientation codecs (\texttt{orient\allowbreak Single\allowbreak Triangle}, \texttt{tourReadsTrue\_orientSingleTriangle}), and constructive Hamiltonian Cycle $\le_p$ Decision TSP reduction (\texttt{hcReductionCost}, \texttt{hc\_to\_tsp\_reduction\_correct}).
 
-To formalize these phenomena and algorithmic solutions with mathematical certainty, we develop a \textbf{100\% machine-checked formalization in Lean 4} across two major modules (\texttt{TSP\allowbreak Complexity.\allowbreak lean} and \texttt{Christofides.lean}) comprising \textbf{357 cumulative named declarations (245 theorems \& lemmas, 112 definitions \& structures, plus 6 \texttt{Decidable} instances = 363 total kernel declarations), 0 \texttt{sorry}s, 0 \texttt{admit}s, and zero non-standard axioms} across \textbf{4,696 lines of Lean~4 code}. Within this formal corpus, we establish:
+To formalize these phenomena and algorithmic solutions with mathematical certainty, we develop a \textbf{100\% machine-checked formalization in Lean 4} across two major modules (\texttt{TSP\allowbreak Complexity.\allowbreak lean} and \texttt{Christofides.lean}) comprising \textbf{386 cumulative named declarations (268 theorems \& lemmas, 118 definitions \& structures, plus 6 \texttt{Decidable} instances = 392 total kernel declarations), 0 \texttt{sorry}s, 0 \texttt{admit}s, and zero non-standard axioms} across \textbf{5,411 lines of Lean~4 code}. Within this formal corpus, we establish:
 \begin{enumerate}
   \item A \textbf{Certified Subtour-Elimination / Permutation-Frontier State Machine} (\texttt{SolverState}, \texttt{step}, \texttt{run}) with proven fuel-bounded queue clearance (\texttt{queue\_clearance\_halts}), polynomial termination for instances of bounded Cycle-Separation Rank $\kappa(G, c) \le 1$ (\texttt{polynomial\_termination\_rank\_one}), multi-step global soundness (\texttt{tsp\_soundness}), global completeness over the permutation frontier (\texttt{tsp\_completeness}), and exact decision equivalence (\texttt{structural\_solver\_decides\_tsp}).
   \item A discrete topological foundation proving that every Hamiltonian cycle crosses any non-empty proper cut boundary an even number of times ($\ge 2$), formally discharging the \textbf{Dantzig-Fulkerson-Johnson (DFJ) cut condition} (\texttt{dfj\_subtour\_cut\_bound}) via cyclic telescoping integer differences in $\mathbb{Z}_2$.
@@ -92,8 +92,8 @@ To formalize these phenomena and algorithmic solutions with mathematical certain
   \item Active facet tightness on singleton degree cuts (\texttt{petersen\_dfjSlack\_singleton\_zero}) and strict interior slack ($\ge 2/3$) on all non-trivial cuts (\texttt{petersen\_dfjSlack\_nontrivial\_ge\_two\_thirds}) of $P_{10}$.
   \item The \textbf{Yannakakis Subtour Slack Factorization} (\texttt{HasAffineLift}, \texttt{hasAffineLift\_trace\_nonneg}) and the \textbf{Fiorini-Rothvo\ss{} Conditional Semidefinite Dimension Scaling Theorem} (\texttt{tsp\_extension\_complexity\_lower\_bound}), which unpacks the PSD slack factorization from \texttt{HasAffineLift n r} and proves that conditioned on \texttt{Satisfies\allowbreak Fiorini\allowbreak Rothvoss\allowbreak Bound n r C}, the lift dimension satisfies $(n : \mathbb{R})^C < (r : \mathbb{R})$.
   \item Formal NP-hardness reduction verification in \texttt{Reduction}: proving 3-CNF Satisfiability to Decision TSP equivalence parameterized by any valid \texttt{TSPGadget F} (\texttt{Reduction.\allowbreak sat\_to\_tsp\_reduction\_correct}), accompanied by a computable variable-triangle orientation codec (\texttt{orient\allowbreak Single\allowbreak Triangle}, \texttt{tourReadsTrue\_orientSingleTriangle}) and a constructive, oracle-free polynomial-time reduction from Hamiltonian Cycle to Decision TSP (\texttt{hcReductionCost}, \texttt{hc\_to\_tsp\_reduction\_correct}).
-  \item The complete machine-checked formal verification of the celebrated \textbf{Christofides-Serdyukov 3/2-Approximation Algorithm} on Metric TSP (\texttt{Christofides.lean}), formally proving the Master MST Lower Bound, Euler's Handshaking Parity Invariant, Minimum-Weight Perfect Matching 1/2-OPT Upper Bound via alternating decomposition on shortcut cycles, multigraph Eulerian degree parity, Eulerian circuit traversal cost identity, metric shortcutting contraction, and the master 3/2-approximation bound in both $\mathbb{N}$ and $\mathbb{R}$.
-  \item The formalization of \textbf{Track C Support-Pruned Cycle-Separation Rank} (\texttt{PrunedStructuralRank}), establishing exact decision equivalence for arbitrary $n \ge 3$ (\texttt{pruned\_structural\_solver\_decides\_tsp}), constructive non-vacuity for all $n \ge 3$ (\texttt{pruned\allowbreak Structural\allowbreak Rank\_inhabited\_all\_ge\_three}, \texttt{pruned\allowbreak Structural\allowbreak Rank\_positive\_inhabited\_all\_ge\_three}), and a 1-transition acceptance witness on necklace graphs (\texttt{pruned\_solver\_accepts\_necklace\_all\_ge\_three}).
+  \item The complete machine-checked formal verification of the celebrated \textbf{Christofides-Serdyukov 3/2-Approximation Algorithm} on Metric TSP (\texttt{Christofides.lean}), formally proving the Master MST Lower Bound, Euler's Handshaking Parity Invariant, Minimum-Weight Perfect Matching 1/2-OPT Upper Bound via alternating decomposition on shortcut cycles, multigraph Eulerian degree parity, constructive Hierholzer cycle-splicing induction (\texttt{eulerianWalkInduction\_holds}), Eulerian circuit traversal cost identity, metric shortcutting contraction, and the unconditional master 3/2-approximation bound in both $\mathbb{N}$ and $\mathbb{R}$ (\texttt{christofides\_approx\_ratio}, \texttt{christofides\_unconditional\_approx\_ratio}).
+  \item The formalization of \textbf{Track C Support-Pruned Cycle-Separation Rank} (\texttt{PrunedStructuralRank}), establishing exact decision equivalence for arbitrary $n \ge 3$ (\texttt{pruned\_structural\_solver\_decides\_tsp}), constructive rank-1 non-vacuity for all $n \ge 3$ on empty, unsatisfiable, and positive satisfiable tour frontiers (\texttt{pruned\allowbreak Structural\allowbreak Rank\_inhabited\_all\_ge\_three}, \texttt{pruned\allowbreak Structural\allowbreak Rank\_nonempty\_frontier\_rank\_one}, \texttt{pruned\allowbreak Structural\allowbreak Rank\_positive\_rank\_one\_all\_ge\_three}, \texttt{pruned\allowbreak Structural\allowbreak Rank\_positive\_inhabited\_all\_ge\_three}), and a 1-transition acceptance witness on necklace graphs (\texttt{pruned\_solver\_accepts\_necklace\_all\_ge\_three}).
 \end{enumerate}
 
 Finally, we validate our formal theorems using executable Python benchmark engines (\texttt{branch\_and\_cut.py}, \texttt{adversarial\_instances.py}, \texttt{christofides.py}, and \texttt{structural\_rank.py}). Empirically, the fractional Held-Karp LP stalls at $x_e = 2/3$ on $P_{10}$ with zero remaining violated DFJ cuts, branch-and-cut evaluates \textbf{exactly $2^m - 1 = 2^{|V|/3} - 1$ nodes} on unsatisfiable Ring-of-Triangles instances ($m \in \{3, \dots, 9\}$) due to a half-integral LP blind spot ($x_e = 1/2$), contrasting with \textbf{constant 1 node} on bounded Cycle-Separation Rank instances, and empirical benchmarks across all 4 algorithmic components of Christofides confirm 100\% compliance with theoretical bounds.
@@ -448,7 +448,7 @@ The property $\text{StructuralRank } n\ G\ c\ 1$ is constructively inhabited for
 \end{theorem}
 
 \begin{theorem}[\texttt{pruned\allowbreak Structural\allowbreak Rank\_positive\_inhabited\_all\_ge\_three}]
-For every $n \ge 3$, there exist a graph $G$, cost function $c$, budget $B$, rank parameter $k$, and non-empty frontier ($\text{frontier} \neq []$) such that $\text{ValidTourBound } G\ c\ B$ holds alongside $\text{Nonempty }(\text{PrunedStructuralRank } n\ G\ c\ B\ k\ \text{frontier})$:
+For every $n \ge 3$, there exist a graph $G$, cost function $c$, budget $B$, finite rank parameter $k = n!$, and non-empty unanchored permutation frontier ($\text{frontier} \neq []$) such that $\text{ValidTourBound } G\ c\ B$ holds alongside $\text{Nonempty }(\text{PrunedStructuralRank } n\ G\ c\ B\ k\ \text{frontier})$:
 \begin{equation*}
 \begin{aligned}
   \forall n : \mathbb{N},\, n \ge 3 \to \exists (G : \text{Graph } n)\ (c : \text{CostFunction } n)\ (B : \mathbb{N})\ (k : \mathbb{N})\ (\text{frontier} : \text{List } (\text{List } (\text{Fin } n))), \\
@@ -467,12 +467,12 @@ For any vertex count $n$, graph $G$, cost function $c$, budget $B$, and rank-1 s
 \end{equation*}
 \end{theorem}
 
-\begin{theorem}[\texttt{pruned\allowbreak Structural\allowbreak Rank\_inhabited\_all\_ge\_three}]
-For all $n \ge 3$, the property $\text{PrunedStructuralRank } n\ G\ c\ B\ 1\ \text{frontier}$ is constructively inhabited:
+\begin{theorem}[\texttt{pruned\allowbreak Structural\allowbreak Rank\_inhabited\_all\_ge\_three}, \texttt{pruned\allowbreak Structural\allowbreak Rank\_nonempty\_frontier\_rank\_one} \& \texttt{pruned\allowbreak Structural\allowbreak Rank\_positive\_rank\_one\_all\_ge\_three}]
+For all $n \ge 3$, the rank-1 property $\text{PrunedStructuralRank } n\ G\ c\ B\ 1\ \text{frontier}$ ($|\text{frontier}| \le n^1$) is constructively inhabited across three regimes: (i)~on $\text{emptyGraph } n$ ($\text{frontier} = []$), (ii)~on $\text{ringOfTrianglesGraph } n$ under $\text{unitCost } n$ ($B = 0$, $\text{frontier} = [\text{List.finRange } n]$), and (iii)~positively on $\text{ringOfTrianglesGraph } n$ under $\text{directedCycleCost } n$ ($B = 0$, $\text{frontier} = \text{canonicalPrunedFrontier } n$ of length $n \le n^1$), simultaneously satisfying $\text{frontier} \neq []$, $\text{ValidTourBound } G\ c\ B$, and $\text{Nonempty }(\text{PrunedStructuralRank } n\ G\ c\ B\ 1\ \text{frontier})$:
 \begin{equation*}
 \begin{aligned}
   \forall n \ge 3,\, \exists (G : \text{Graph } n)\ (c : \text{CostFunction } n)\ (B : \mathbb{N})\ (\text{frontier} : \text{List }(\text{List }(\text{Fin } n))), \\
-  \text{Nonempty }(\text{PrunedStructuralRank } n\ G\ c\ B\ 1\ \text{frontier}).
+  \text{frontier} \neq [] \land \text{ValidTourBound } G\ c\ B \land \text{Nonempty }(\text{PrunedStructuralRank } n\ G\ c\ B\ 1\ \text{frontier}).
 \end{aligned}
 \end{equation*}
 \end{theorem}
@@ -887,8 +887,8 @@ $K_7$ & 126 & 360 & \texttt{0.0} & \texttt{4.0} & \textbf{True} & \textbf{15} & 
 \textbf{Graph Family} & \textbf{Vertices ($n$)} & $c_0$ & \textbf{B\&B Nodes} & $\hat{\kappa}$ & \textbf{Status} \\
 \midrule
 Family 1: Bounded-Rank Necklace & $9 \dots 24$ & 1 & 1 & \textbf{0} & \texttt{accepted} ($\le n^1$) \\
-Family 2: Clustered $K_n$ & $6 \dots 12$ & $>1$ & 1 & \textbf{0} & \texttt{accepted} (dynamic cuts) \\
-Family 3: Adversarial $G_{\text{path}}$ & $9 \dots 24$ & $n/3$ & $2^{n/3}-1$ & $\Theta(n/\log n)$ & \texttt{rejected} (unbounded) \\
+Family 2: Clustered $K_n$ & $9 \dots 24$ & $2$ & 1 & \textbf{0} & \texttt{accepted} (dynamic cuts) \\
+Family 3: Adversarial $G_{\text{path}}$ & $9 \dots 24$ & $n/3$ & $2^{n/3}-1$ & $1 \dots 2$ ($\Theta(n/\log n)$) & \texttt{rejected} (unbounded) \\
 \bottomrule
 \end{tabular}%
 }
@@ -898,9 +898,9 @@ Family 3: Adversarial $G_{\text{path}}$ & $9 \dots 24$ & $n/3$ & $2^{n/3}-1$ & $
 \section{The Approximation Frontier: Machine-Checked Christofides-Serdyukov 3/2-Approximation in Lean 4}
 % ==============================================================================
 
-While Sections 1--7 established the computational barriers of unconstrained subtour patching and proved super-polynomial extension complexity lower bounds for polyhedral relaxations on general graphs, the celebrated \textbf{Christofides-Serdyukov algorithm} (1976/1978) demonstrates that under the geometric assumption of \textbf{metric costs} ($c(u, w) \le c(u, v) + c(v, w)$), polynomial-time algorithms achieve a strict $\frac{3}{2}$-approximation ratio.
+While Sections 1--7 established the computational barriers of unconstrained subtour patching and formalized conditional super-polynomial extension complexity lower bounds for polyhedral relaxations on general graphs, the celebrated \textbf{Christofides-Serdyukov algorithm} (1976/1978) demonstrates that under the geometric assumption of \textbf{metric costs} ($c(u, w) \le c(u, v) + c(v, w)$), polynomial-time algorithms achieve a strict $\frac{3}{2}$-approximation ratio.
 
-In Track~D, we establish the complete, end-to-end formal machine-checked verification of this landmark approximation theorem in Lean~4 (\texttt{Christofides.lean}), comprising \textbf{158 verified declarations (119 theorems/lemmas, 39 definitions/structures), 0 \texttt{sorry}s, and 0 \texttt{admit}s} across 2,173 lines of code. All polyhedral and combinatorial inequalities of the pipeline are machine-checked conditioned on an explicit combinatorial certificate $\text{cert} : \text{ChristofidesCertificate } n\ c$, which bundles $(\text{tree}, \text{tree\_mst}, \text{matching}, \text{matching\_min}, \text{eulerian})$. Beyond the certified interface, certificate existence is unconditionally discharged via constructive finite existence theorems (\texttt{exists\_mst}, \texttt{exists\_min\allowbreak Weight\allowbreak Matching}, \texttt{exists\_eulerian\allowbreak Circuit}, \texttt{nonempty\_christofides\allowbreak Certificate}, and \texttt{exists\_christofides\allowbreak Certificate}), culminating in the unconditional master approximation theorem \texttt{christofides\_unconditional\_approx\_ratio}.
+In Track~D, we establish the formal machine-checked verification of this landmark approximation theorem in Lean~4 (\texttt{Christofides.lean}), comprising \textbf{176 verified declarations (136 theorems/lemmas, 40 definitions/structures), 0 \texttt{sorry}s, and 0 \texttt{admit}s} across 2,704 lines of code. All polyhedral and combinatorial inequalities of the pipeline are machine-checked conditioned on an explicit combinatorial certificate $\text{cert} : \text{ChristofidesCertificate } n\ c$, which bundles $(\text{tree}, \text{tree\_mst}, \text{matching}, \text{matching\_min}, \text{eulerian})$. Beyond the certified interface, certificate existence is unconditionally discharged in the Lean~4 kernel via constructive finite minimization (\texttt{exists\_mst}, \texttt{exists\_min\allowbreak Weight\allowbreak Matching}) and constructive Hierholzer cycle-splicing induction (\texttt{eulerianWalkInduction\_holds}, \texttt{exists\_eulerian\allowbreak Circuit}, \texttt{nonempty\_christofides\allowbreak Certificate}, and \texttt{exists\_christofides\allowbreak Certificate}), culminating in the unconditional synthesized master approximation theorem \texttt{christofides\_unconditional\_approx\_ratio}.
 
 \subsection{Algorithmic Pipeline \& Pipeline Graphics}
 The algorithm operates through six constructively verifiable algorithmic stages, illustrated in Figure~\ref{fig:christofides_pipeline}:
@@ -967,17 +967,17 @@ The algorithm operates through six constructively verifiable algorithmic stages,
 
 \subsection{Formal Mathematical Pipeline}
 \begin{enumerate}
-  \item \textbf{Master MST Lower Bound ($c(T_{\text{mst}}) \le \mathrm{OPT}$):} Let $\pi^*$ be an optimal Hamiltonian tour. Deleting any edge $\{v_i, v_{i+1}\}$ yields a spanning path $P$, which is a spanning tree on $n$ vertices. Spanning trees are verified to be self-loop free via \texttt{SpanningTree.loopless}, and constructive existence of an MST on any non-empty metric space is guaranteed by \texttt{exists\_mst}. By minimality of $T_{\text{mst}}$, $c(T_{\text{mst}}) \le c(P) \le c(\pi^*) = \mathrm{OPT}$ (\texttt{OAI.TSP.MSTCost\_le\_OPT}).
-  \item \textbf{Euler's Handshaking Parity ($|O| \in 2\mathbb{N}$):} $\sum_{v \in V} \deg_T(v) = 2|E(T)| = 2(n-1)$. Since the total degree sum is even, the subset of odd-degree vertices $O = \{v \in V \mid \deg_T(v) \equiv 1 \pmod 2\}$ must have even cardinality (\texttt{OAI.TSP.even\_card\_oddDegreeVertices}).
-  \item \textbf{Matching $\frac{1}{2}$-OPT Upper Bound ($c(M) \le \frac{1}{2}\mathrm{OPT}$):} Projecting $\pi^*$ onto $O$ by metric shortcutting yields an even cycle $C_O$ of length $2k$ with $c(C_O) \le c(\pi^*) = \mathrm{OPT}$. $C_O$ decomposes into two edge-disjoint matchings $M_1, M_2$ satisfying $c(M_1) + c(M_2) = c(C_O) \le \mathrm{OPT}$ (\texttt{OAI.TSP.cycle\_matchings\_cost\_sum}). Finite minimization guarantees the constructive existence of a minimum-weight perfect matching on $O$ via \texttt{exists\_min\allowbreak Weight\allowbreak Matching}. Thus, the minimum-weight matching $M$ satisfies $c(M) \le \min(c(M_1), c(M_2)) \le \frac{1}{2}\mathrm{OPT}$ (\texttt{OAI.TSP.matchingCost\_le\_half\_OPT}).
-  \item \textbf{Multigraph Eulerian Degree Parity:} For each vertex $v \in V$, $\deg_H(v) = \deg_T(v) + \deg_M(v)$ is even, since odd vertices in $T$ receive degree $1$ in $M$ while even vertices receive degree $0$ (\texttt{OAI.TSP.multigraph\_degree\_even}).
-  \item \textbf{Eulerian Circuit Traversal Cost:} The existence of an Eulerian circuit on $H$ is guaranteed by \texttt{exists\_eulerian\allowbreak Circuit}. The traversal cost of circuit $W$ on multigraph $H$ is conserved: $c(W) = c(T) + c(M)$ (\texttt{OAI.TSP.circuitCost\_eq\_treeCost\_add\_matchingCost}).
-  \item \textbf{Metric Shortcutting \& Refactored Tour Definition:} Shortcutting $W$ to visit vertices only once yields a valid Hamiltonian tour. In \texttt{Christofides.lean}, the tour is defined directly from the certificate as $\text{christofidesTour } \text{cert} = \text{shortcutCircuit } \text{cert}.\text{eulerian}.\text{walk}$ (\texttt{OAI.TSP.christofides\_is\_tour}), and by sublist walk contraction under metric costs, $c(\text{christofidesTour } \text{cert}) \le c(W)$ (\texttt{OAI.TSP.shortcut\_tourCost\_le\_circuitCost}).
+  \item \textbf{Master MST Lower Bound ($c(T_{\text{mst}}) \le \mathrm{OPT}$):} Let $\pi^*$ be an optimal Hamiltonian tour. Deleting any edge $\{v_i, v_{i+1}\}$ yields a spanning path $P$, which is a spanning tree on $n$ vertices. Spanning trees are verified to be self-loop free via \texttt{SpanningTree.loopless}, and constructive existence of an MST on any non-empty metric space is guaranteed by \texttt{exists\_mst}. By minimality of $T_{\text{mst}}$, $c(T_{\text{mst}}) \le c(P) \le c(\pi^*) = \mathrm{OPT}$ (\texttt{IJM.TSP.MSTCost\_le\_OPT}).
+  \item \textbf{Euler's Handshaking Parity ($|O| \in 2\mathbb{N}$):} $\sum_{v \in V} \deg_T(v) = 2|E(T)| = 2(n-1)$. Since the total degree sum is even, the subset of odd-degree vertices $O = \{v \in V \mid \deg_T(v) \equiv 1 \pmod 2\}$ must have even cardinality (\texttt{IJM.TSP.even\_card\_oddDegreeVertices}).
+  \item \textbf{Matching $\frac{1}{2}$-OPT Upper Bound ($c(M) \le \frac{1}{2}\mathrm{OPT}$):} Projecting $\pi^*$ onto $O$ by metric shortcutting yields an even cycle $C_O$ of length $2k$ with $c(C_O) \le c(\pi^*) = \mathrm{OPT}$. $C_O$ decomposes into two edge-disjoint matchings $M_1, M_2$ satisfying $c(M_1) + c(M_2) = c(C_O) \le \mathrm{OPT}$ (\texttt{IJM.TSP.cycle\_matchings\_cost\_sum}). Finite minimization guarantees the constructive existence of a minimum-weight perfect matching on $O$ via \texttt{exists\_min\allowbreak Weight\allowbreak Matching}. Thus, the minimum-weight matching $M$ satisfies $c(M) \le \min(c(M_1), c(M_2)) \le \frac{1}{2}\mathrm{OPT}$ (\texttt{IJM.TSP.matchingCost\_le\_half\_OPT}).
+  \item \textbf{Multigraph Eulerian Degree Parity:} For each vertex $v \in V$, $\deg_H(v) = \deg_T(v) + \deg_M(v)$ is even, since odd vertices in $T$ receive degree $1$ in $M$ while even vertices receive degree $0$ (\texttt{IJM.TSP.multigraph\_degree\_even}).
+  \item \textbf{Eulerian Circuit Traversal Cost:} By constructive Hierholzer cycle-splicing induction (\texttt{eulerianWalkInduction\_holds}), the existence of an Eulerian circuit on $H$ is unconditionally proved by \texttt{exists\_eulerian\allowbreak Circuit}. The traversal cost of circuit $W$ on multigraph $H$ is conserved: $c(W) = c(T) + c(M)$ (\texttt{IJM.TSP.circuitCost\_eq\_treeCost\_add\_matchingCost}).
+  \item \textbf{Metric Shortcutting \& Refactored Tour Definition:} Shortcutting $W$ to visit vertices only once yields a valid Hamiltonian tour. In \texttt{Christofides.lean}, the tour is defined directly from the certificate as $\text{christofidesTour } \text{cert} = \text{shortcutCircuit } \text{cert}.\text{eulerian}.\text{walk}$ (\texttt{IJM.TSP.christofides\_is\_tour}), and by sublist walk contraction under metric costs, $c(\text{christofidesTour } \text{cert}) \le c(W)$ (\texttt{IJM.TSP.shortcut\_tourCost\_le\_circuitCost}).
   \item \textbf{Master $\frac{3}{2}$-Approximation Guarantee:}
   \[
   \mathrm{tourCost}(c, \text{christofidesTour } \text{cert}) \le c(W) = c(T) + c(M) \le \mathrm{OPT} + \frac{1}{2}\mathrm{OPT} = \frac{3}{2}\mathrm{OPT}
   \]
-  formally proven conditioned on $(\text{cert} : \text{ChristofidesCertificate } n\ c)$ in both $\mathbb{N}$ (\texttt{OAI.TSP.\allowbreak christofides\_approx\_ratio\_nat}) and $\mathbb{R}$ (\texttt{OAI.TSP.christofides\_approx\_ratio}). Combining tree, matching, and circuit existence establishes certificate inhabitation and existence (\texttt{nonempty\_christofides\allowbreak Certificate}, \texttt{exists\_christofides\allowbreak Certificate}), directly yielding the unconditional master approximation theorem \texttt{christofides\_unconditional\_approx\_ratio}.
+  formally proven conditioned on $(\text{cert} : \text{ChristofidesCertificate } n\ c)$ in both $\mathbb{N}$ (\texttt{IJM.TSP.\allowbreak christofides\_approx\_ratio\_nat}) and $\mathbb{R}$ (\texttt{IJM.TSP.christofides\_approx\_ratio}). Combining unconditional tree, matching, and Eulerian circuit existence (\texttt{eulerianWalkInduction\_holds}) establishes unconditional certificate synthesis (\texttt{nonempty\_christofides\allowbreak Certificate}, \texttt{exists\_christofides\allowbreak Certificate}), yielding the unconditional master approximation theorem \texttt{christofides\_unconditional\_approx\_ratio}.
 \end{enumerate}
 
 \subsection{Empirical Benchmark Validation}
@@ -1020,7 +1020,7 @@ Euclidean 2D $n=12$ & 12 & 1865 & 1207 & 3072 & 3060 & 2621 & \textbf{1.1675} & 
 \toprule
 \textbf{Module \& Architectural Section} & \textbf{Line Span} & \textbf{Theorems / Lemmas} & \textbf{Defs / Structs} & \textbf{Open \texttt{sorry}s} \\
 \midrule
-\multicolumn{5}{l}{\textbf{Module 1: \texttt{OAI.TSP.TSPComplexity} (Tracks A--C: Decision Complexity, +6 \texttt{Decidable} Instances)}} \\
+\multicolumn{5}{l}{\textbf{Module 1: \texttt{IJM.TSP.TSPComplexity} (Tracks A--C: Decision Complexity, +6 \texttt{Decidable} Instances)}} \\
 \S 1. Discrete Problem Formulation & 26--61 & 0 & 7 & \textbf{0} \\
 \S 2. Foundational Combinatorial Lemmas & 62--92 & 6 & 0 & \textbf{0} \\
 \S 3. Certified Branch-and-Cut State Machine & 93--295 & 9 & 5 & \textbf{0} \\
@@ -1028,19 +1028,19 @@ Euclidean 2D $n=12$ & 12 & 1865 & 1207 & 3072 & 3060 & 2621 & \textbf{1.1675} & 
 \S 5. Topological Two-Cut Boundary (DFJ) & 579--996 & 18 & 8 & \textbf{0} \\
 \S 6. Continuous Polyhedral Relaxations & 997--1932 & 41 & 19 & \textbf{0} \\
 \S 7. Formal 3-SAT \& HC Reduction Verification & 1933--2317 & 30 & 22 & \textbf{0} \\
-\S 8. Track C: Graph-Pruned Cycle-Separation Rank & 2318--2523 & 11 & 4 & \textbf{0} \\
-\textit{Subtotal \texttt{TSP\allowbreak Complexity.\allowbreak lean} (199 Named Declarations)} & \textit{1--2523} & \textit{126} & \textit{73} & \textbf{0} \\
+\S 8. Track C: Graph-Pruned Cycle-Separation Rank & 2318--2707 & 17 & 9 & \textbf{0} \\
+\textit{Subtotal \texttt{TSP\allowbreak Complexity.\allowbreak lean} (210 Named Declarations)} & \textit{1--2707} & \textit{132} & \textit{78} & \textbf{0} \\
 \midrule
-\multicolumn{5}{l}{\textbf{Module 2: \texttt{OAI.TSP.Christofides} (Track D: 3/2-Approximation Guarantee)}} \\
+\multicolumn{5}{l}{\textbf{Module 2: \texttt{IJM.TSP.Christofides} (Track D: 3/2-Approximation Guarantee)}} \\
 \S 1--4. Metric Spaces \& Edge Aggregations & 1--401 & 26 & 12 & \textbf{0} \\
 \S 5--7. Spanning Trees \& MST Lower Bound & 402--708 & 17 & 7 & \textbf{0} \\
 \S 8--10. Degree Parity \& Handshaking & 709--840 & 9 & 2 & \textbf{0} \\
 \S 11--14. Perfect Matchings \& 1/2-OPT Bound & 841--1629 & 36 & 8 & \textbf{0} \\
 \S 15--18. Eulerian Multigraphs \& Shortcutting & 1630--1965 & 18 & 6 & \textbf{0} \\
-\S 19--20. Master 3/2-Approx Invariant \& Synthesis Bridge & 1966--2173 & 13 & 4 & \textbf{0} \\
-\textit{Subtotal \texttt{Christofides.lean} (158 Named Declarations)} & \textit{1--2173} & \textit{119} & \textit{39} & \textbf{0} \\
+\S 19--20. Master 3/2-Approx Invariant \& Synthesis Bridge & 1966--2704 & 30 & 5 & \textbf{0} \\
+\textit{Subtotal \texttt{Christofides.lean} (176 Named Declarations)} & \textit{1--2704} & \textit{136} & \textit{40} & \textbf{0} \\
 \midrule
-\textbf{PROJECT CUMULATIVE TOTAL} & \textbf{1--4696} & \textbf{245} & \textbf{112} & \textbf{0 (357 Verified)} \\
+\textbf{PROJECT CUMULATIVE TOTAL} & \textbf{1--5411} & \textbf{268} & \textbf{118} & \textbf{0 (386 Verified)} \\
 \bottomrule
 \end{tabular}%
 }
@@ -1056,13 +1056,13 @@ The repository synchronizes two JSON challenge specifications matching the forma
 \subsection{Axiom Audit}
 The formalization relies exclusively on the three standard foundational axioms of Lean 4 / Mathlib:
 (1) \texttt{propext}, (2) \texttt{Quot.sound}, and (3) \texttt{Classical.choice}.
-Zero custom axioms, zero unverified assumptions, and zero \texttt{sorry}/\texttt{admit} statements exist anywhere across all 357 verified declarations.
+Zero custom axioms, zero unverified kernel assumptions, and zero \texttt{sorry}/\texttt{admit} statements exist anywhere across all 386 verified declarations.
 
 % ==============================================================================
 \section{Conclusions \& Open Problems}
 % ==============================================================================
 
-This monograph provides a unified, machine-checked synthesis of computational complexity barriers, polyhedral relaxations, certified branch-and-cut semantics, and polynomial-time approximation algorithms for the Traveling Salesperson Problem. We established the discrete topological parity foundations of DFJ cuts, the strict Held-Karp integrality gap on $P_{10}$, the conditional PSD extension complexity dimension scaling bound, formal 3-SAT and Hamiltonian Cycle reductions, Track C graph-pruned cycle-separation rank for arbitrary $n \ge 3$, and the complete 3/2-approximation guarantee of the Christofides-Serdyukov algorithm across \textbf{357 verified declarations in Lean~4 with zero \texttt{sorry}s}.
+This monograph provides a unified, machine-checked synthesis of computational complexity barriers, polyhedral relaxations, certified branch-and-cut semantics, and polynomial-time approximation algorithms for the Traveling Salesperson Problem. We established the discrete topological parity foundations of DFJ cuts, the strict Held-Karp integrality gap on $P_{10}$, the conditional PSD extension complexity dimension scaling bound, formal 3-SAT and Hamiltonian Cycle reductions, Track C graph-pruned cycle-separation rank for arbitrary $n \ge 3$, and the complete 3/2-approximation guarantee of the Christofides-Serdyukov algorithm across \textbf{359 verified declarations in Lean~4 with zero \texttt{sorry}s}.
 
 \textbf{Open Directions:}
 \begin{enumerate}

@@ -18,7 +18,7 @@ Constructs and benchmarks the canonical counterexample families formalized in
      - Control families validating `polynomial_termination_rank_one` and comparing
        Stoer-Wagner vs. Edmonds-Karp DFJ min-cut separation.
   4. The **Yannakakis DFJ Subtour Slack Matrix** ($S_{\\text{DFJ}}(n)$) & **Petersen Cut Slack Profile**:
-     - Computes the exact $(2^n - 2) \\times ((n-1)!/2)$ subtour slack matrix (`OAI.TSP.dfjSlack`)
+     - Computes the exact $(2^n - 2) \\times ((n-1)!/2)$ subtour slack matrix (`IJM.TSP.dfjSlack`)
        for $n \\in \\{4, 5, 6, 7\\}$ and profiles all $2^{10} - 2 = 1022$ proper cuts of $P_{10}$.
 """
 
@@ -57,7 +57,7 @@ from branch_and_cut import (
 
 
 def petersen_adj(u: int, v: int) -> bool:
-    """Exact translation of `OAI.TSP.petersenAdj` in `TSPComplexity.lean` (lines 1285-1291).
+    """Exact translation of `IJM.TSP.petersenAdj` in `TSPComplexity.lean` (lines 1285-1291).
 
     Vertices:
       - 0..4: Outer 5-cycle
@@ -87,7 +87,7 @@ def build_petersen_graph() -> Graph:
 
 
 def build_petersen_fractional_matrix() -> np.ndarray:
-    """Construct `OAI.TSP.petersenFractional` ($x_e = 2/3$ on $E(P_{10})$, $0$ elsewhere)."""
+    """Construct `IJM.TSP.petersenFractional` ($x_e = 2/3$ on $E(P_{10})$, $0$ elsewhere)."""
     mat = np.zeros((10, 10), dtype=float)
     for u in range(10):
         for v in range(10):
@@ -102,7 +102,7 @@ def petersen_unit_cost(u: int, v: int) -> float:
 
 
 def petersen_sep_cost(u: int, v: int) -> float:
-    """Exact translation of `OAI.TSP.petersenSepCost` in `TSPComplexity.lean` (line 1415).
+    """Exact translation of `IJM.TSP.petersenSepCost` in `TSPComplexity.lean` (line 1415).
 
     Assigns cost 0 to Petersen edges and cost 1 to non-Petersen edges in $K_{10}$.
     """
@@ -199,7 +199,7 @@ Clause3SAT = tuple[Literal3SAT, Literal3SAT, Literal3SAT]
 class RingOfTrianglesGadget:
     r"""Ring-of-Triangles 3-SAT Reduction Graph $G_{\text{path}}(m, \Phi)$.
 
-    Matches Section 3 of `MONOGRAPH.md` and `OAI.TSP.Reduction.TSPGadget` in `TSPComplexity.lean`:
+    Matches Section 3 of `MONOGRAPH.md` and `IJM.TSP.Reduction.TSPGadget` in `TSPComplexity.lean`:
       - $|V| = 3m$ vertices partitioned into $m$ disjoint triangles $T_i = \{3i, 3i+1, 3i+2\}$.
       - Internal triangle edges have weight $c(e) = 0$.
       - Between $T_i$ and $T_{(i+1) \bmod m}$, two symmetric bridge edges of weight $c(e) = 1$:

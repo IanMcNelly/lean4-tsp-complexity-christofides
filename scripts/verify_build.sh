@@ -158,7 +158,7 @@ with open(sys.argv[2], "r", encoding="utf-8") as f:
 
 missing = []
 for thm in meta.get("theorem_names", []):
-    short_name = re.sub(r"^OAI\.TSP\.(Reduction\.)?", "", thm)
+    short_name = re.sub(r"^IJM\.TSP\.(Reduction\.)?", "", thm)
     pat = rf"\b(theorem|lemma)\s+{re.escape(short_name)}\b"
     if not re.search(pat, code):
         missing.append(thm)

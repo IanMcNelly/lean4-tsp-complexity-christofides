@@ -1,6 +1,6 @@
 """Executable Reference Engine for the Held-Karp LP Relaxation & Certified Branch-and-Cut State Machine.
 
-Corresponds directly to the formal Lean 4 specifications in `OAI.TSP` (`TSPComplexity.lean`):
+Corresponds directly to the formal Lean 4 specifications in `IJM.TSP` (`TSPComplexity.lean`):
   - `Graph`, `CostFunction`, `cycleEdges`, `tourCost`, `IsTour`, `ValidTourBound`
   - `HeldKarpPoint`, `DegreeConservation`, `SubtourCutConstraint`, `cutCapacity`
   - `DFJCut`, `dfjSlack`, `HasAffineLift`
@@ -17,7 +17,6 @@ import math
 import time
 from typing import Callable, Iterable, Literal, Sequence
 
-import networkx as nx
 import numpy as np
 from scipy.optimize import linprog
 
@@ -35,7 +34,7 @@ def canonical_edge(u: int, v: int) -> Edge:
 class Graph:
     """Simple undirected loopless finite graph on vertex set `Fin n = {0, ..., n - 1}`.
 
-    Matches `OAI.TSP.Graph n` in `TSPComplexity.lean`.
+    Matches `IJM.TSP.Graph n` in `TSPComplexity.lean`.
     """
 
     n: int
@@ -90,7 +89,7 @@ CostFunction = Callable[[int, int], float]
 def cycle_edges(p: Sequence[int]) -> list[ tuple[int, int] ]:
     """Ordered sequence of cycle edges formed by adjacent elements in a circular list.
 
-    Matches `OAI.TSP.cycleEdges` in `TSPComplexity.lean`.
+    Matches `IJM.TSP.cycleEdges` in `TSPComplexity.lean`.
     """
     if not p:
         return []
@@ -101,7 +100,7 @@ def cycle_edges(p: Sequence[int]) -> list[ tuple[int, int] ]:
 def tour_cost(cost_fn: CostFunction, p: Sequence[int]) -> float:
     """Total traversal cost of the cycle edge sequence.
 
-    Matches `OAI.TSP.tourCost` in `TSPComplexity.lean`.
+    Matches `IJM.TSP.tourCost` in `TSPComplexity.lean`.
     """
     return float(sum(cost_fn(u, v) for u, v in cycle_edges(p)))
 
@@ -109,7 +108,7 @@ def tour_cost(cost_fn: CostFunction, p: Sequence[int]) -> float:
 def is_tour(graph: Graph, p: Sequence[int]) -> bool:
     """Verify whether `p` is a valid Hamiltonian tour on `graph`.
 
-    Matches `OAI.TSP.IsTour` in `TSPComplexity.lean`:
+    Matches `IJM.TSP.IsTour` in `TSPComplexity.lean`:
       `p.length = n ∧ p.Nodup ∧ (∀ e ∈ cycleEdges p, G.adj e.1 e.2)`
     """
     if len(p) != graph.n:
@@ -383,7 +382,7 @@ def separate_dfj_subtour_cuts(
 
 @dataclass(frozen=True)
 class HeldKarpVerification:
-    """Verification report corresponding to `OAI.TSP.HeldKarpPoint n` in `TSPComplexity.lean`."""
+    """Verification report corresponding to `IJM.TSP.HeldKarpPoint n` in `TSPComplexity.lean`."""
 
     is_valid: bool
     symmetric: bool
@@ -696,7 +695,7 @@ def solve_held_karp_lp(
 
 
 class SearchStatusKind(str, Enum):
-    """Matches `OAI.TSP.SearchStatus` constructors in `TSPComplexity.lean`."""
+    """Matches `IJM.TSP.SearchStatus` constructors in `TSPComplexity.lean`."""
 
     SEARCHING = "searching"
     ACCEPTED = "accepted"
@@ -705,7 +704,7 @@ class SearchStatusKind(str, Enum):
 
 @dataclass(frozen=True)
 class SearchStatus:
-    """Tagged status corresponding to `OAI.TSP.SearchStatus n`."""
+    """Tagged status corresponding to `IJM.TSP.SearchStatus n`."""
 
     kind: SearchStatusKind
     witness: list[int] | None = None
@@ -738,7 +737,7 @@ class BranchNode:
 class SolverState:
     """Certified Branch-and-Cut state configuration.
 
-    Directly mirrors `OAI.TSP.SolverState n` in `TSPComplexity.lean`:
+    Directly mirrors `IJM.TSP.SolverState n` in `TSPComplexity.lean`:
       - `status : SearchStatus n`
       - `queue : List (BranchNode)`
       - `bestCost : Option float`
@@ -767,7 +766,7 @@ class SolverState:
     def init(n: int) -> SolverState:
         """Initialize the solver state with the root branch node `[BranchNode()]`.
 
-        Matches `OAI.TSP.SolverState.init` in `TSPComplexity.lean`.
+        Matches `IJM.TSP.SolverState.init` in `TSPComplexity.lean`.
         """
         return SolverState(
             n=n,
@@ -815,7 +814,7 @@ def step(
 ) -> SolverState:
     """Single transition step of the certified Branch-and-Cut solver.
 
-    Directly mirrors `OAI.TSP.step` in `TSPComplexity.lean`:
+    Directly mirrors `IJM.TSP.step` in `TSPComplexity.lean`:
       - Terminal states (`accepted`, `rejected`) are fixed points (`run_accepted_stable`, `run_rejected_stable`).
       - An empty queue (`queue = []`) transitions immediately to `accepted` (if `best_tour` exists)
         or `rejected` (`step_queue_nil_halts`).
@@ -940,7 +939,7 @@ def run(
 ) -> SolverState:
     """Multi-step fuel-bounded execution of the Branch-and-Cut state machine.
 
-    Directly mirrors `OAI.TSP.run` in `TSPComplexity.lean`:
+    Directly mirrors `IJM.TSP.run` in `TSPComplexity.lean`:
       ```lean
       def run (G : Graph n) (c : CostFunction n) (B : ℕ) (fuel : ℕ) (s : SolverState n) : SolverState n
       ```
@@ -1039,7 +1038,7 @@ def run_benchmark(
 def enumerate_dfj_cuts(n: int) -> list[frozenset[int]]:
     r"""Enumerate all $2^n - 2$ proper non-empty cuts $S \in \text{DFJCut}(n)$ ($1 \le |S| \le n - 1$).
 
-    Directly corresponds to `OAI.TSP.DFJCut n := {S : Finset (Fin n) // S.Nonempty ∧ S ≠ Finset.univ}`
+    Directly corresponds to `IJM.TSP.DFJCut n := {S : Finset (Fin n) // S.Nonempty ∧ S ≠ Finset.univ}`
     in `TSPComplexity.lean`.
     """
     cuts: list[frozenset[int]] = []
@@ -1054,7 +1053,7 @@ def enumerate_canonical_tours(n: int) -> list[tuple[int, ...]]:
     r"""Enumerate all $(n-1)! / 2$ distinct undirected Hamiltonian tour cycles on $K_n$ ($n \ge 3$).
 
     Fixes `p[0] = 0` and breaks reversal symmetry via `p[1] < p[-1]`, producing a 1-to-1
-    bijection with the extreme points `tourPoint p` of `OAI.TSP.TSPPolytope n`.
+    bijection with the extreme points `tourPoint p` of `IJM.TSP.TSPPolytope n`.
     """
     if n < 3:
         raise ValueError("Hamiltonian tour enumeration requires n >= 3")
@@ -1066,7 +1065,7 @@ def enumerate_canonical_tours(n: int) -> list[tuple[int, ...]]:
 
 
 def tour_point_matrix(n: int, p: Sequence[int]) -> np.ndarray:
-    """Construct the symmetric $n \\times n$ incidence matrix `OAI.TSP.tourPoint p`."""
+    """Construct the symmetric $n \\times n$ incidence matrix `IJM.TSP.tourPoint p`."""
     mat = np.zeros((n, n), dtype=float)
     for u, v in cycle_edges(p):
         mat[u, v] = 1.0
@@ -1075,7 +1074,7 @@ def tour_point_matrix(n: int, p: Sequence[int]) -> np.ndarray:
 
 
 def cut_capacity(x_matrix: np.ndarray, cut_s: frozenset[int]) -> float:
-    r"""Compute `OAI.TSP.cutCapacity x S` $= \sum_{u \in S} \sum_{v \in V \setminus S} x_{uv}$."""
+    r"""Compute `IJM.TSP.cutCapacity x S` $= \sum_{u \in S} \sum_{v \in V \setminus S} x_{uv}$."""
     n = x_matrix.shape[0]
     s_idx = sorted(cut_s)
     comp_idx = [v for v in range(n) if v not in cut_s]
@@ -1085,7 +1084,7 @@ def cut_capacity(x_matrix: np.ndarray, cut_s: frozenset[int]) -> float:
 
 
 def dfj_slack(x_matrix: np.ndarray, cut_s: frozenset[int]) -> float:
-    """Compute `OAI.TSP.dfjSlack x S := cutCapacity x S.1 - 2`."""
+    """Compute `IJM.TSP.dfjSlack x S := cutCapacity x S.1 - 2`."""
     return cut_capacity(x_matrix, cut_s) - 2.0
 
 

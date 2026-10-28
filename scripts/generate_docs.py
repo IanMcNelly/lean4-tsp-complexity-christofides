@@ -3,7 +3,7 @@
 Interactive Documentation Generator for Decision TSP & Approximation Research (Lean 4)
 Generates self-contained, responsive HTML documentation with syntax highlighting,
 instant search, kind filtering, section jumping, and collapsible proof trees for
-both OAI.TSP.TSPComplexity (196 declarations) and OAI.TSP.Christofides (141 declarations).
+both IJM.TSP.TSPComplexity (196 declarations) and IJM.TSP.Christofides (141 declarations).
 """
 
 import os
@@ -19,7 +19,7 @@ DOCS_DIR = os.path.join(RESEARCH_DIR, "docs")
 MODULE_SPECS = [
     {
         "id": "tsp_complexity",
-        "title": "OAI.TSP.TSPComplexity",
+        "title": "IJM.TSP.TSPComplexity",
         "subtitle": "Computational Complexity Barriers, Certified Branch-and-Cut Semantics, and Polyhedral Limits of Decision TSP",
         "lean_file": "TSPComplexity.lean",
         "json_file": "TSPComplexity.json",
@@ -28,7 +28,7 @@ MODULE_SPECS = [
     },
     {
         "id": "christofides",
-        "title": "OAI.TSP.Christofides",
+        "title": "IJM.TSP.Christofides",
         "subtitle": "Machine-Checked Formal Verification of the Christofides-Serdyukov 3/2-Approximation Algorithm in Lean 4",
         "lean_file": "Christofides.lean",
         "json_file": "Christofides.json",
@@ -47,7 +47,7 @@ def parse_lean_module(lean_path, json_path):
         with open(json_path, "r", encoding="utf-8") as f:
             data = json.load(f)
             for name in data.get("theorem_names", []):
-                short = re.sub(r"^OAI\.TSP\.(Reduction\.)?", "", name)
+                short = re.sub(r"^IJM\.TSP\.(Reduction\.)?", "", name)
                 landmark_theorems.add(short)
                 landmark_theorems.add(name)
 
