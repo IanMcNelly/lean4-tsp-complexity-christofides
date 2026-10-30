@@ -683,7 +683,7 @@ lemma cycle_delta_sum_zero {n : ℕ} (hn : 1 ≤ n) (b : Fin n → Bool) :
     (cycleNextEquiv n hn).sum_comp (fun j => boolToInt (b j))
   rw [h_shift, sub_self]
 
-lemma cycleDelta_zmod_two (b : Fin n → Bool) (i : Fin n) :
+lemma cycleDelta_zmod_two {n : ℕ} (b : Fin n → Bool) (i : Fin n) :
     ((|cycleDelta b i| : ℤ) : ZMod 2) = (cycleDelta b i : ZMod 2) := by
   dsimp [cycleDelta, boolToInt]
   cases b i <;> cases b (cycleNext i) <;> decide
@@ -696,7 +696,7 @@ lemma abs_delta_mod_two_eq_sum_mod_two {n : ℕ} (b : Fin n → Bool) :
   intro i _
   exact cycleDelta_zmod_two b i
 
-lemma abs_cycleDelta_eq_ite (b : Fin n → Bool) (i : Fin n) :
+lemma abs_cycleDelta_eq_ite {n : ℕ} (b : Fin n → Bool) (i : Fin n) :
     |cycleDelta b i| = if isBoundaryStep b i then (1 : ℤ) else 0 := by
   have h : ∀ (x y : Bool), |(if y then (1 : ℤ) else 0) - (if x then (1 : ℤ) else 0)| = (if (x ≠ y) then (1 : ℤ) else 0) := by
     decide
@@ -1169,7 +1169,12 @@ lemma tourPoint_degree_two {n : ℕ} (p : List (Fin n)) (hn : 3 ≤ n)
   have he2_eq : edgeAt (cyclePrev (by omega) k) = (u2, v) := by
     ext
     · rw [cycleEdges_fst_eq p hlen (by omega) (cyclePrev (by omega) k)]
-    · rw [cycleEdges_snd_eq p hlen (by omega) (cyclePrev (by omega) k), cycleNext_cyclePrev (by omega), hk_eq]
+    · rw [cycleEdges_snd_eq p hlen (by omega) (cyclePrev (by omega) k)]
+      have h_prev : cycleNext (cyclePrev (by omega) k) = k := cycleNext_cyclePrev (by omega) k
+      have h_eq_k : (⟨(cycleNext (cyclePrev (by omega) k)).val, by rw [hlen]; exact (cycleNext (cyclePrev (by omega) k)).isLt⟩ : Fin p.length) =
+                     ⟨k.val, by rw [hlen]; exact k.isLt⟩ := by
+        ext; exact congrArg Fin.val h_prev
+      rw [congrArg p.get h_eq_k, hk_eq]
   have he2_in : (u2, v) ∈ cycleEdges p := by
     rw [← he2_eq]
     exact List.get_mem (cycleEdges p) _
