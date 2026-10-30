@@ -1173,7 +1173,9 @@ lemma tourPoint_degree_two {n : ℕ} (p : List (Fin n)) (hn : 3 ≤ n)
       have h_prev : cycleNext (cyclePrev (by omega) k) = k := cycleNext_cyclePrev (by omega) k
       have h_eq_k : (⟨(cycleNext (cyclePrev (by omega) k)).val, by rw [hlen]; exact (cycleNext (cyclePrev (by omega) k)).isLt⟩ : Fin p.length) =
                      ⟨k.val, by rw [hlen]; exact k.isLt⟩ := by
-        ext; exact congrArg Fin.val h_prev
+        apply Fin.ext
+        dsimp
+        rw [h_prev]
       rw [congrArg p.get h_eq_k, hk_eq]
   have he2_in : (u2, v) ∈ cycleEdges p := by
     rw [← he2_eq]
