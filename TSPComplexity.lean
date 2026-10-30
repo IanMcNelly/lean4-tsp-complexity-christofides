@@ -1536,8 +1536,7 @@ lemma petersenFractional_unit_le (u v : Fin 10) :
 
 lemma petersen_degrees_three (v : Fin 10) :
     (Finset.filter (petersenAdj v) Finset.univ).card = 3 := by
-  revert v
-  decide
+  revert v; decide
 
 lemma petersenFractional_degrees : DegreeConservation petersenFractional := by
   intro v
@@ -1785,8 +1784,7 @@ lemma dfjSlack_nonneg_of_tour {n : ℕ} (G : Graph n) (p : List (Fin n))
 /-- Any singleton vertex subset `{v}` on `Fin 10` is a proper subset of `Finset.univ`. -/
 lemma petersen_singleton_proper (v : Fin 10) :
     ({v} : Finset (Fin 10)) ≠ Finset.univ := by
-  revert v
-  decide
+  revert v; decide
 
 /-- Canonical singleton DFJ cut `S = {v}` on `Fin 10`. -/
 def petersenSingletonCut (v : Fin 10) : DFJCut 10 :=
@@ -1795,8 +1793,7 @@ def petersenSingletonCut (v : Fin 10) : DFJCut 10 :=
 /-- Every singleton cut `{v}` in the 3-regular Petersen graph crosses exactly 3 edges. -/
 lemma petersen_singleton_cut_card_three (v : Fin 10) :
     ((({v} : Finset (Fin 10)) ×ˢ (Finset.univ \ {v})).filter (fun e => petersenAdj e.1 e.2)).card = 3 := by
-  revert v
-  decide
+  revert v; decide
 
 /-- The continuous Held-Karp cut capacity of `petersenFractional` across any singleton `{v}` is exactly 2. -/
 lemma petersen_cutCapacity_singleton (v : Fin 10) :
@@ -2078,15 +2075,13 @@ lemma ringOfTrianglesAdj_iff_ne {n : ℕ} (u v : Fin n) :
 
 lemma ringOfTrianglesAdj_symm {n : ℕ} (u v : Fin n) :
     ringOfTrianglesAdj u v → ringOfTrianglesAdj v u := by
-  intro h
-  cases h with
-  | inl h1 => exact Or.inl (isInternalTriangleEdge_symm u v h1)
-  | inr h2 => exact Or.inr (isBridgeEdge_symm u v h2)
+  rintro (⟨h1, h2⟩ | ⟨h1, h2⟩)
+  · exact Or.inl ⟨h1.symm, h2.symm⟩
+  · exact Or.inr ⟨h1.symm, h2.symm⟩
 
 lemma ringOfTrianglesAdj_loopless {n : ℕ} (u : Fin n) :
     ¬ ringOfTrianglesAdj u u := by
-  rw [ringOfTrianglesAdj_iff_ne]
-  exact fun h => h rfl
+  rintro (⟨h, _⟩ | ⟨h, _⟩) <;> exact h rfl
 
 /-- The Ring-of-Triangles gadget graph decomposed into internal triangle edges and inter-triangle bridges. -/
 def ringOfTrianglesGraph (n : ℕ) : Graph n where

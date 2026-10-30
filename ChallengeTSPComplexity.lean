@@ -71,7 +71,7 @@ noncomputable def step {n : ℕ} (G : Graph n) (c : CostFunction n) (B : ℕ) (s
       | some t => ⟨.accepted t, [], s.bestCost, s.bestTour, s.steps + 1⟩
       | none => ⟨.rejected, [], none, none, s.steps + 1⟩
     | p :: ps =>
-      if _hp : IsTour G p ∧ tourCost c p ≤ B then
+      if hp : IsTour G p ∧ tourCost c p ≤ B then
         ⟨.accepted p, ps, some (tourCost c p), some p, s.steps + 1⟩
       else ⟨.searching, ps, s.bestCost, s.bestTour, s.steps + 1⟩
 
