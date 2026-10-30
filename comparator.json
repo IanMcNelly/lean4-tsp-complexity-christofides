@@ -1,0 +1,28 @@
+{
+  "challenge_module": "ChallengeChristofides",
+  "solution_module": "Christofides",
+  "theorem_names": [
+    "IJM.TSP.MSTCost_le_OPT",
+    "IJM.TSP.even_card_oddDegreeVertices",
+    "IJM.TSP.perfectMatching_card_two_mul",
+    "IJM.TSP.matchingCost_le_half_OPT",
+    "IJM.TSP.multigraph_degree_even",
+    "IJM.TSP.circuitCost_eq_treeCost_add_matchingCost",
+    "IJM.TSP.shortcutCircuit_isTour",
+    "IJM.TSP.shortcut_tourCost_le_circuitCost",
+    "IJM.TSP.christofides_circuit_approx_ratio_nat",
+    "IJM.TSP.christofides_circuit_approx_ratio",
+    "IJM.TSP.christofides_approx_ratio_nat",
+    "IJM.TSP.christofides_approx_ratio",
+    "IJM.TSP.exists_christofidesCertificate",
+    "IJM.TSP.christofides_certificate_approx_ratio_nat_unconditional",
+    "IJM.TSP.christofides_certificate_approx_ratio_unconditional"
+  ],
+  "definition_names": [],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ],
+  "enable_nanoda": true
+}

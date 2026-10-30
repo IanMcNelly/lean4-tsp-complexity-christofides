@@ -1,6 +1,6 @@
 {
-  "challenge_module": "IJM.TSP.TSPComplexity",
-  "solution_module": "IJM.Combinatorics.TSP.Main",
+  "challenge_module": "ChallengeTSPComplexity",
+  "solution_module": "TSPComplexity",
   "theorem_names": [
     "IJM.TSP.queue_clearance_halts",
     "IJM.TSP.polynomial_termination_rank_one",
@@ -12,34 +12,19 @@
     "IJM.TSP.tour_is_held_karp_point",
     "IJM.TSP.held_karp_strictly_contains_tsp_polytope",
     "IJM.TSP.petersen_dfjSlack_singleton_zero",
+    "IJM.TSP.petersen_dfjSlack_nontrivial_ge_two_thirds",
     "IJM.TSP.tsp_extension_complexity_lower_bound",
     "IJM.TSP.Reduction.sat_to_tsp_reduction_correct",
+    "IJM.TSP.Reduction.hc_to_tsp_reduction_correct",
     "IJM.TSP.pruned_structural_solver_decides_tsp",
     "IJM.TSP.prunedStructuralRank_inhabited_all_ge_three",
     "IJM.TSP.pruned_solver_accepts_necklace_all_ge_three"
   ],
-  "definition_names": [
-    "IJM.TSP.Graph",
-    "IJM.TSP.CostFunction",
-    "IJM.TSP.IsTour",
-    "IJM.TSP.ValidTourBound",
-    "IJM.TSP.DecidesTSP",
-    "IJM.TSP.SolverState",
-    "IJM.TSP.step",
-    "IJM.TSP.run",
-    "IJM.TSP.StructuralRank",
-    "IJM.TSP.HeldKarpPoint",
-    "IJM.TSP.TSPPolytope",
-    "IJM.TSP.DFJCut",
-    "IJM.TSP.dfjSlack",
-    "IJM.TSP.HasAffineLift",
-    "IJM.TSP.SatisfiesFioriniRothvossBound",
-    "IJM.TSP.PrunedStructuralRank"
-  ],
+  "definition_names": [],
   "permitted_axioms": [
     "propext",
     "Quot.sound",
     "Classical.choice"
   ],
-  "enable_nanoda": false
+  "enable_nanoda": true
 }

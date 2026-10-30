@@ -1,0 +1,335 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/mathlib-initiative/formalization.yaml/main/schema/formalization.schema.json
+version: "v0.4"
+
+project:
+  name: "Machine-Checked Christofides 3/2-Approximation and Polyhedral Complexity Barriers for the Traveling Salesperson Problem in Lean 4"
+  description: >-
+    This formalization develops a machine-checked theory of the Traveling Salesperson
+    Problem (TSP) on finite undirected graphs over Fin n in Lean 4 across two principal
+    modules. First, in Christofides.lean (compared against ChallengeChristofides.lean),
+    we formalize the complete Christofides-Serdyukov 3/2-approximation algorithm for
+    Metric TSP: the Minimum Spanning Tree (MST) lower bound (cost(T) <= OPT), Euler's
+    handshaking parity invariant for odd-degree vertices, the minimum-weight perfect
+    matching upper bound on odd-degree vertices (2 * cost(M) <= OPT) via alternating
+    matching decomposition of shortcut cycles, multigraph degree parity of T U M,
+    constructive existence of Eulerian circuits via Hierholzer cycle splicing and
+    complete Christofides certificates, metric walk shortcutting contraction, and the
+    unconditional 3/2-approximation guarantee in both exact integer scaling and real
+    arithmetic. Second, in TSPComplexity.lean (compared against ChallengeTSPComplexity.lean),
+    we formalize polyhedral and complexity-theoretic barriers for Decision TSP: a
+    fuel-bounded branch-and-cut state machine with verified soundness, completeness,
+    and support-pruned cycle-separation rank decision equivalence; the Dantzig-Fulkerson-Johnson
+    (DFJ) subtour cut inequality (every valid tour crosses any proper nonempty cut at
+    least twice); the continuous Held-Karp LP relaxation embedding; a machine-checked
+    proof that the 10-vertex Petersen graph fractional assignment (x_e = 2/3) strictly
+    separates the Held-Karp relaxation from the integral TSP polytope with zero slack on
+    singleton cuts and slack >= 2/3 on all nontrivial cuts; Yannakakis DFJ slack matrix
+    nonnegativity and conditional Fiorini-Rothvoss PSD extension complexity scaling; and
+    polynomial-time reductions from Hamiltonian Cycle and gadget-parameterized 3-SAT to
+    Decision TSP.
+  authors:
+    - "Ian McNelly"
+  license: "Apache-2.0"
+  responsible_maintainers:
+    - "Ian McNelly"
+
+classification:
+  arxiv:
+    - "cs.DS"
+    - "cs.CC"
+    - "math.CO"
+    - "cs.LO"
+  msc2020:
+    - "68W25"
+    - "68Q17"
+    - "90C27"
+    - "05C45"
+    - "03B35"
+
+sources:
+  - title: "Worst-Case Analysis of a New Heuristic for the Travelling Salesman Problem"
+    authors:
+      - "Nicos Christofides"
+    id: "https://apps.dtic.mil/sti/citations/ADA025602"
+    type: "paper"
+    location: "Technical Report 388, Graduate School of Industrial Administration, Carnegie-Mellon University (1976)"
+    relationship: "formalizes"
+    note: "Formalizes the 3/2-approximation guarantee for Metric TSP via MST, minimum-weight perfect matching on odd-degree vertices, Eulerian multigraph circuit, and metric shortcutting in Christofides.lean."
+    author_endorsement: "n/a"
+
+  - title: "O nekotorykh ekstremal'nykh obkhodakh v grafakh (On some extremal walks in graphs)"
+    authors:
+      - "Anatoliy I. Serdyukov"
+    type: "paper"
+    location: "Upravlyaemye Sistemy 17 (1978), 76-79 (submitted 1976)"
+    relationship: "formalizes"
+    note: "Independent discovery of the 3/2-approximation algorithm for Metric TSP formalized in Christofides.lean."
+    author_endorsement: "n/a"
+
+  - title: "Solution of a Large-Scale Traveling-Salesman Problem"
+    authors:
+      - "George Dantzig"
+      - "Ray Fulkerson"
+      - "Selmer Johnson"
+    id: "https://doi.org/10.1287/opre.2.4.393"
+    type: "paper"
+    location: "Journal of the Operations Research Society of America 2(4) (1954), 393-410"
+    relationship: "formalizes"
+    note: "Formalizes the DFJ subtour elimination cut constraints and the two-cut boundary theorem (dfj_subtour_cut_bound) in TSPComplexity.lean."
+    author_endorsement: "n/a"
+
+  - title: "The Traveling-Salesman Problem and Minimum Spanning Trees"
+    authors:
+      - "Michael Held"
+      - "Richard M. Karp"
+    id: "https://doi.org/10.1287/opre.18.6.1138"
+    type: "paper"
+    location: "Operations Research 18(6) (1970), 1138-1162"
+    relationship: "formalizes"
+    note: "Formalizes the continuous Held-Karp linear programming relaxation (HeldKarpPoint), tour embedding (tour_is_held_karp_point), and Petersen P_10 integrality gap separation (held_karp_strictly_contains_tsp_polytope) in TSPComplexity.lean."
+    author_endorsement: "n/a"
+
+  - title: "Expressing Combinatorial Optimization Problems by Linear Programs"
+    authors:
+      - "Mihalis Yannakakis"
+    id: "https://doi.org/10.1016/0022-0000(91)90024-Y"
+    type: "paper"
+    location: "Journal of Computer and System Sciences 43(3) (1991), 441-466"
+    relationship: "adapts"
+    note: "Formalizes the DFJ subtour slack matrix (dfjSlack), nonnegativity on Held-Karp points and integral tours, and affine PSD slack factorizations (HasAffineLift) in TSPComplexity.lean."
+    author_endorsement: "n/a"
+
+  - title: "Exponential Lower Bounds for Polytopes in Combinatorial Optimization"
+    authors:
+      - "Samuel Fiorini"
+      - "Serge Massar"
+      - "Sebastian Pokutta"
+      - "Hans Raj Tiwary"
+      - "Ronald de Wolf"
+    id: "https://doi.org/10.1145/2716307"
+    type: "paper"
+    location: "Journal of the ACM 62(2), Article 17 (2015)"
+    relationship: "adapts"
+    note: "Provides the extension complexity framework adapted in the conditional scaling theorem tsp_extension_complexity_lower_bound under SatisfiesFioriniRothvossBound."
+    author_endorsement: "n/a"
+
+related_formalizations: []
+
+status:
+  scope: >-
+    Finite graphs are represented over Fin n with integer edge costs CostFunction n := Fin n -> Fin n -> Nat
+    (and real-valued LP vectors FractionalAssignment n := Fin n -> Fin n -> Real). In Christofides.lean,
+    the entire 3/2-approximation pipeline is formalized unconditionally for all n >= 3 and any metric cost
+    function IsMetricCost c, including constructive finite existence proofs for MSTs, minimum-weight perfect
+    matchings on odd-degree vertices, and Eulerian circuits (exists_christofidesCertificate,
+    christofides_certificate_approx_ratio_nat_unconditional, christofides_certificate_approx_ratio_unconditional).
+    In TSPComplexity.lean: (1) On the unpruned full permutation frontier SolverState.init n (of length n!),
+    the rank-1 bound n! <= n^1 in StructuralRank n G c 1 holds only for n <= 2; Section 8 resolves this by
+    introducing support-pruned frontiers (PrunedStructuralRank), proving exact decision equivalence and
+    constructive non-vacuity for all n >= 3 (pruned_structural_solver_decides_tsp,
+    prunedStructuralRank_inhabited_all_ge_three). (2) The Held-Karp integrality gap on the 10-vertex Petersen
+    graph (held_karp_strictly_contains_tsp_polytope) and its exact DFJ slack profile are proved unconditionally.
+    (3) The super-polynomial PSD extension complexity theorem (tsp_extension_complexity_lower_bound) is proved
+    conditionally from the explicit hypothesis SatisfiesFioriniRothvossBound n r C. (4) The 3-SAT reduction
+    (sat_to_tsp_reduction_correct) is parameterized by a valid TSPGadget F specification, complemented by an
+    unconditional constructive reduction from Hamiltonian Cycle to Decision TSP (hc_to_tsp_reduction_correct).
+  sorry_count: 0
+  sorry_in_definitions: 0
+  axioms:
+    - "propext"
+    - "Quot.sound"
+    - "Classical.choice"
+
+automation:
+  methods:
+    - method: "agent"
+      models:
+        - "Gemini"
+      framework: "Antigravity"
+      tool_setup: "AI-assisted interactive proof engineering with Lean 4 kernel verification, automated zero-sorry regex auditing, and Python empirical benchmark cross-checking."
+      cost:
+        wall_time: "multi-session research development"
+        spend_usd: "subscription-based"
+        hardware: "local workstation and GitHub Actions CI"
+      prompting_notes: "Iterative lemma decomposition, tactic refinement, and post-audit strengthening of unconditional existence theorems."
+  spend_usd: "subscription-based"
+  notes: "Human-directed formalization architecture with AI agent proof synthesis; all 388 declarations across Christofides.lean and TSPComplexity.lean are machine-checked by Lean 4 with zero sorries."
+
+fidelity:
+  divergences: >-
+    Graphs are formalized over canonical finite vertex types Fin n with integer edge weights
+    for combinatorial definitions and coerced to Real for LP relaxations and 3/2 ratio statements.
+    In TSPComplexity.lean, the Fiorini-Rothvoss dimension bound is stated as an explicit hypothesis
+    (SatisfiesFioriniRothvossBound), and the 3-SAT reduction is parameterized by the TSPGadget structure
+    alongside the concrete Hamiltonian Cycle reduction hc_to_tsp_reduction_correct.
+
+review:
+  status: "self-assessed"
+  reviewers: []
+  notes: "Audited via automated statement-to-source alignment checks, Python reference implementations (benchmarks/), and zero-sorry Lean 4 kernel verification."
+
+alignment:
+  namespace: "IJM.TSP"
+  statements:
+    - source: "Christofides (1976), MST lower bound cost(T_mst) <= OPT"
+      lean: "IJM.TSP.MSTCost_le_OPT"
+      module: "Christofides"
+      status: "proved"
+      note: "Proved by deleting one edge from an optimal Hamiltonian tour to form a spanning path tree."
+    - source: "Euler's Handshaking Parity Invariant on odd-degree vertices"
+      lean: "IJM.TSP.even_card_oddDegreeVertices"
+      module: "Christofides"
+      status: "proved"
+      note: "Proved for arbitrary loopless undirected edge finsets on Fin n."
+    - source: "Perfect matching cardinality invariant 2 * |M| = |S|"
+      lean: "IJM.TSP.perfectMatching_card_two_mul"
+      module: "Christofides"
+      status: "proved"
+      note: "Proved by double-counting incident matching edges across S."
+    - source: "Christofides (1976), minimum-weight perfect matching bound 2 * cost(M) <= OPT"
+      lean: "IJM.TSP.matchingCost_le_half_OPT"
+      module: "Christofides"
+      status: "proved"
+      note: "Proved by shortcutting an optimal tour to the even-cardinality odd-degree vertex set and decomposing into two alternating matchings."
+    - source: "Christofides (1976), Eulerian multigraph even degree invariant"
+      lean: "IJM.TSP.multigraph_degree_even"
+      module: "Christofides"
+      status: "proved"
+      note: "Every vertex in the multigraph union T U M has even degree."
+    - source: "Christofides (1976), Eulerian circuit cost identity"
+      lean: "IJM.TSP.circuitCost_eq_treeCost_add_matchingCost"
+      module: "Christofides"
+      status: "proved"
+      note: "The walk cost of any Eulerian circuit of T U M equals cost(T) + cost(M)."
+    - source: "Christofides (1976), validity of metric shortcutting on Eulerian circuits"
+      lean: "IJM.TSP.shortcutCircuit_isTour"
+      module: "Christofides"
+      status: "proved"
+      note: "Removing duplicate vertices from the closed Eulerian walk yields a valid Hamiltonian tour of K_n."
+    - source: "Christofides (1976), triangle-inequality contraction under shortcutting"
+      lean: "IJM.TSP.shortcut_tourCost_le_circuitCost"
+      module: "Christofides"
+      status: "proved"
+      note: "Proved via sublist walk-cost monotonicity under IsMetricCost."
+    - source: "Christofides (1976) & Serdyukov (1976), 3/2-approximation on circuit components (Nat)"
+      lean: "IJM.TSP.christofides_circuit_approx_ratio_nat"
+      module: "Christofides"
+      status: "proved"
+      note: "Establishes 2 * tourCost c (shortcutCircuit W.walk) <= 3 * optTourCost c."
+    - source: "Christofides (1976) & Serdyukov (1976), 3/2-approximation on circuit components (Real)"
+      lean: "IJM.TSP.christofides_circuit_approx_ratio"
+      module: "Christofides"
+      status: "proved"
+      note: "Establishes tourCost c (shortcutCircuit W.walk) <= (3/2) * optTourCost c over Real."
+    - source: "Christofides (1976) & Serdyukov (1976), certificate 3/2-approximation (Nat)"
+      lean: "IJM.TSP.christofides_approx_ratio_nat"
+      module: "Christofides"
+      status: "proved"
+      note: "Applies the circuit approximation bound to any bundled ChristofidesCertificate."
+    - source: "Christofides (1976) & Serdyukov (1976), certificate 3/2-approximation (Real)"
+      lean: "IJM.TSP.christofides_approx_ratio"
+      module: "Christofides"
+      status: "proved"
+      note: "Real-valued 3/2-approximation guarantee for christofidesTour cert."
+    - source: "Constructive existence of MST, min-weight matching, and Eulerian circuit"
+      lean: "IJM.TSP.exists_christofidesCertificate"
+      module: "Christofides"
+      status: "proved"
+      note: "Proves that ChristofidesCertificate n c is constructively inhabited for all n >= 3 via finite extremum selection and Hierholzer cycle splicing."
+    - source: "Christofides (1976) & Serdyukov (1976), unconditional 3/2-approximation theorem (Nat)"
+      lean: "IJM.TSP.christofides_certificate_approx_ratio_nat_unconditional"
+      module: "Christofides"
+      status: "proved"
+      note: "Unconditionally constructs a ChristofidesCertificate whose shortcut tour is a valid tour with 2 * cost <= 3 * OPT."
+    - source: "Christofides (1976) & Serdyukov (1976), unconditional 3/2-approximation theorem (Real)"
+      lean: "IJM.TSP.christofides_certificate_approx_ratio_unconditional"
+      module: "Christofides"
+      status: "proved"
+      note: "Unconditionally constructs a ChristofidesCertificate whose shortcut tour is a valid tour with cost <= (3/2) * OPT."
+    - source: "Monograph Section 3, fuel-bounded state machine halting"
+      lean: "IJM.TSP.queue_clearance_halts"
+      module: "TSPComplexity"
+      status: "proved"
+      note: "Proves that run halts whenever fuel >= queue.length + 1."
+    - source: "Monograph Section 4, rank-1 termination on unpruned frontier"
+      lean: "IJM.TSP.polynomial_termination_rank_one"
+      module: "TSPComplexity"
+      status: "proved"
+      note: "Proves termination in n + 1 steps under StructuralRank n G c 1 (which restricts unpruned init to n <= 2)."
+    - source: "Monograph Section 4, multi-step solver soundness"
+      lean: "IJM.TSP.tsp_soundness"
+      module: "TSPComplexity"
+      status: "proved"
+      note: "Any accepted tour witness returned by run is a valid Hamiltonian tour within budget B."
+    - source: "Monograph Section 4, multi-step solver completeness"
+      lean: "IJM.TSP.tsp_completeness"
+      module: "TSPComplexity"
+      status: "proved"
+      note: "If ValidTourBound G c B holds, run over SolverState.init n accepts a valid tour."
+    - source: "Monograph Section 4, rank-1 decision equivalence on unpruned frontier"
+      lean: "IJM.TSP.structural_solver_decides_tsp"
+      module: "TSPComplexity"
+      status: "proved"
+      note: "Decision equivalence under StructuralRank n G c 1."
+    - source: "Monograph Section 4, constructive non-vacuity of StructuralRank"
+      lean: "IJM.TSP.structuralRank_inhabited"
+      module: "TSPComplexity"
+      status: "proved"
+      note: "Constructive witness inhabiting StructuralRank at n = 1."
+    - source: "Dantzig-Fulkerson-Johnson (1954), two-cut subtour elimination bound"
+      lean: "IJM.TSP.dfj_subtour_cut_bound"
+      module: "TSPComplexity"
+      status: "proved"
+      note: "Every valid Hamiltonian tour on n >= 3 vertices crosses any proper nonempty vertex cut S at least twice."
+    - source: "Held-Karp (1970), embedding of integral tours into Held-Karp polytope"
+      lean: "IJM.TSP.tour_is_held_karp_point"
+      module: "TSPComplexity"
+      status: "proved"
+      note: "Every valid Hamiltonian tour indicator vector satisfies all Held-Karp degree-2 and DFJ subtour cut constraints."
+    - source: "Held-Karp (1970), strict integrality gap via the 10-vertex Petersen graph"
+      lean: "IJM.TSP.held_karp_strictly_contains_tsp_polytope"
+      module: "TSPComplexity"
+      status: "proved"
+      note: "Proves that the 10-vertex Petersen fractional point (x_e = 2/3) lies in HeldKarpPoint 10 but outside TSPPolytope 10."
+    - source: "Yannakakis (1991) & Monograph Section 6, active facet tightness on P_10 singleton cuts"
+      lean: "IJM.TSP.petersen_dfjSlack_singleton_zero"
+      module: "TSPComplexity"
+      status: "proved"
+      note: "Every singleton cut on P_10 has zero DFJ slack at x_e = 2/3."
+    - source: "Yannakakis (1991) & Monograph Section 6, strict interior slack on nontrivial P_10 cuts"
+      lean: "IJM.TSP.petersen_dfjSlack_nontrivial_ge_two_thirds"
+      module: "TSPComplexity"
+      status: "proved"
+      note: "Every nontrivial cut (2 <= |S| <= 8) on P_10 has DFJ slack >= 2/3."
+    - source: "Fiorini et al. (2015), super-polynomial PSD extension complexity scaling"
+      lean: "IJM.TSP.tsp_extension_complexity_lower_bound"
+      module: "TSPComplexity"
+      status: "adapted"
+      note: "Proves r > n^C for all n >= n_0 conditioned on HasAffineLift n r and SatisfiesFioriniRothvossBound n r C."
+    - source: "3-SAT to Decision TSP gadget reduction"
+      lean: "IJM.TSP.Reduction.sat_to_tsp_reduction_correct"
+      module: "TSPComplexity"
+      status: "adapted"
+      note: "Proves equivalence between 3-SAT satisfiability and ValidTourBound for any valid TSPGadget F."
+    - source: "Hamiltonian Cycle to Decision TSP polynomial-time reduction"
+      lean: "IJM.TSP.Reduction.hc_to_tsp_reduction_correct"
+      module: "TSPComplexity"
+      status: "proved"
+      note: "Unconditional reduction mapping Hamiltonian Cycle on G to Decision TSP with 0/1 edge weights and budget 0."
+    - source: "Monograph Section 8, arbitrary-n decision equivalence under PrunedStructuralRank"
+      lean: "IJM.TSP.pruned_structural_solver_decides_tsp"
+      module: "TSPComplexity"
+      status: "proved"
+      note: "Proves exact polynomial-step decision equivalence over support-pruned candidate frontiers for arbitrary n."
+    - source: "Monograph Section 8, constructive non-vacuity of PrunedStructuralRank for all n >= 3"
+      lean: "IJM.TSP.prunedStructuralRank_inhabited_all_ge_three"
+      module: "TSPComplexity"
+      status: "proved"
+      note: "Constructively inhabits PrunedStructuralRank n G c B 1 frontier for all n >= 3."
+    - source: "Monograph Section 8, 1-step acceptance on necklace graphs for all n >= 3"
+      lean: "IJM.TSP.pruned_solver_accepts_necklace_all_ge_three"
+      module: "TSPComplexity"
+      status: "proved"
+      note: "Constructive acceptance witness on ringOfTrianglesGraph n for all n >= 3."
+
+acknowledgements: "The Lean 4 and Mathlib communities, the Lean Focused Research Organization (Lean FRO), and the Palomar Registry maintainers."

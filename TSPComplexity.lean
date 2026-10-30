@@ -2,7 +2,11 @@
 -- Module: IJM.TSP.TSPComplexity
 -- Topic: Computational Complexity, Combinatorial Invariants, and Polyhedral Barriers for Decision TSP
 
-import Mathlib
+module
+
+public import Mathlib
+
+@[expose] public section
 
 namespace IJM
 

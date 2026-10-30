@@ -3,7 +3,11 @@
 -- Topic: Metric Foundations, Walk Contraction, Spanning Trees, Handshaking Lemma, Degree Parity, Perfect Matchings, Eulerian Multigraphs, Shortcutting, and Master 3/2-Approximation Bound
 -- Track D: Complete Formal Verification (Phases 1-6)
 
-import Mathlib
+module
+
+public import Mathlib
+
+@[expose] public section
 
 namespace IJM
 
@@ -2670,6 +2674,31 @@ theorem christofides_unconditional_approx_ratio {n : ℕ} (hn : 3 ≤ n) (c : Co
   rcases exists_christofidesCertificate hn c with ⟨cert, _⟩
   refine ⟨christofidesTour cert, christofides_is_tour hn cert, ?_⟩
   exact christofides_approx_ratio hn c hMetric cert
+
+/-- Unconditional Christofides Certificate & 3/2-Approximation Theorem (Integer Scaling):
+For every metric cost function on `n ≥ 3` vertices, there exists a complete `ChristofidesCertificate`
+(MST, minimum-weight perfect matching on odd-degree MST vertices, and Eulerian circuit of their union)
+whose shortcut tour `christofidesTour cert` is a valid Hamiltonian tour satisfying
+`2 * tourCost c (christofidesTour cert) ≤ 3 * optTourCost c`. -/
+theorem christofides_certificate_approx_ratio_nat_unconditional {n : ℕ} (hn : 3 ≤ n) (c : CostFunction n)
+    (hMetric : IsMetricCost c) :
+    ∃ cert : ChristofidesCertificate n c,
+      IsTour (completeGraph n) (christofidesTour cert) ∧
+      2 * tourCost c (christofidesTour cert) ≤ 3 * optTourCost c := by
+  rcases exists_christofidesCertificate hn c with ⟨cert, _⟩
+  exact ⟨cert, christofides_is_tour hn cert, christofides_approx_ratio_nat hn c hMetric cert⟩
+
+/-- Unconditional Christofides Certificate & 3/2-Approximation Theorem (Real Arithmetic):
+For every metric cost function on `n ≥ 3` vertices, there exists a complete `ChristofidesCertificate`
+whose shortcut tour `christofidesTour cert` is a valid Hamiltonian tour satisfying
+`(tourCost c (christofidesTour cert) : ℝ) ≤ (3 / 2 : ℝ) * (optTourCost c : ℝ)`. -/
+theorem christofides_certificate_approx_ratio_unconditional {n : ℕ} (hn : 3 ≤ n) (c : CostFunction n)
+    (hMetric : IsMetricCost c) :
+    ∃ cert : ChristofidesCertificate n c,
+      IsTour (completeGraph n) (christofidesTour cert) ∧
+      (tourCost c (christofidesTour cert) : ℝ) ≤ (3 / 2 : ℝ) * (optTourCost c : ℝ) := by
+  rcases exists_christofidesCertificate hn c with ⟨cert, _⟩
+  exact ⟨cert, christofides_is_tour hn cert, christofides_approx_ratio hn c hMetric cert⟩
 
 /-- Alias for optimal tour cost, optionally accepting the vertex bound hn. -/
 abbrev optCost {n : ℕ} (_hn : 3 ≤ n) (c : CostFunction n) : ℕ := optTourCost c

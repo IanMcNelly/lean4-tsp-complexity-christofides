@@ -7,11 +7,8 @@ package «tsp_research» where
   leanOptions := #[⟨`autoImplicit, false⟩]
 
 require mathlib from git
-  "https://github.com/leanprover-community/mathlib4.git" @ "d13f23b723b8a846827a245b89c10fc7d3f11612"
-
-require «doc-gen4» from git
-  "https://github.com/leanprover/doc-gen4.git" @ "953c8992d174b4e56955e01e101d46668c68f2bb"
+  "https://github.com/leanprover-community/mathlib4.git" @ "v4.35.0-rc2"
 
 @[default_target]
 lean_lib «TSPComplexity» where
-  roots := #[`TSPComplexity, `Christofides]
+  roots := #[`TSPComplexity, `Christofides, `ChallengeTSPComplexity, `ChallengeChristofides]
