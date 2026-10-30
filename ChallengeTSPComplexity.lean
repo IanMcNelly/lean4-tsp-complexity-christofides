@@ -138,7 +138,8 @@ def petersenAdj (u v : Fin 10) : Prop :=
     (((u.val - 5) + 2) % 5 = v.val - 5 ∨ ((v.val - 5) + 2) % 5 = u.val - 5)) ∨
    (u.val < 5 ∧ 5 ≤ v.val ∧ v.val = u.val + 5) ∨
    (5 ≤ u.val ∧ v.val < 5 ∧ u.val = v.val + 5))
-instance (u v : Fin 10) : Decidable (petersenAdj u v) := by unfold petersenAdj; infer_instance
+instance (u v : Fin 10) : Decidable (petersenAdj u v) :=
+  inferInstanceAs (Decidable (_ ∧ ((_ ∧ _ ∧ (_ ∨ _)) ∨ (_ ∧ _ ∧ (_ ∨ _)) ∨ (_ ∧ _ ∧ _) ∨ (_ ∧ _ ∧ _))))
 noncomputable def petersenFractional : FractionalAssignment 10 :=
   fun u v => if petersenAdj u v then (2 / 3 : ℝ) else 0
 
