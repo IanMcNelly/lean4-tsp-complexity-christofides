@@ -246,13 +246,19 @@ noncomputable def prunedStructuralTSPSolver (n : ℕ) (G : Graph n) (c : CostFun
   | .accepted _ => true | _ => false
 
 theorem queue_clearance_halts {n : ℕ} (G : Graph n) (c : CostFunction n) (B : ℕ) :
-    ∀ (fuel : ℕ) (s : SolverState n), s.queue.length + 1 ≤ fuel →
+    ∀ (fuel : ℕ) (s : SolverState n),
+      s.status = SearchStatus.searching →
+      s.queue.length + 1 ≤ fuel →
       (run G c B fuel s).status ≠ SearchStatus.searching := by sorry
 theorem polynomial_termination_rank_one {n : ℕ} (G : Graph n) (c : CostFunction n) (B : ℕ)
-    (hRank : StructuralRank n G c 1) :
-    (run G c B (n + 1) (SolverState.init n)).status ≠ SearchStatus.searching := by sorry
-theorem tsp_soundness (n : ℕ) (G : Graph n) (c : CostFunction n) (B : ℕ) (fuel : ℕ) (w : List (Fin n))
-    (hAcc : (run G c B fuel (SolverState.init n)).status = .accepted w) : ValidTourBound G c B := by sorry
+    (s₀ : SolverState n) (hSearch : s₀.status = .searching)
+    (hBound : s₀.queue.length ≤ n) (hn : 1 ≤ n) :
+    (run G c B (n + 1) s₀).status ≠ SearchStatus.searching := by sorry
+theorem tsp_soundness (n : ℕ) (G : Graph n) (c : CostFunction n) (B : ℕ)
+    (fuel : ℕ) (w : List (Fin n)) (s₀ : SolverState n)
+    (hSearch : s₀.status = .searching) (hInit : s₀.bestTour = none) :
+    (run G c B fuel s₀).status = .accepted w →
+    ValidTourBound G c B := by sorry
 theorem tsp_completeness (n : ℕ) (G : Graph n) (c : CostFunction n) (B : ℕ) (hValid : ValidTourBound G c B) :
     ∃ (fuel : ℕ) (w : List (Fin n)), (run G c B fuel (SolverState.init n)).status = .accepted w := by sorry
 theorem structural_solver_decides_tsp (n : ℕ) (G : Graph n) (c : CostFunction n) (B : ℕ)
