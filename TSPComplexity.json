@@ -25,6 +25,7 @@
     "IJM.TSP.pruned_structural_solver_decides_tsp",
     "IJM.TSP.prunedStructuralRank_inhabited_all_ge_three",
     "IJM.TSP.sparseNecklaceGraph_six_not_complete",
+    "IJM.TSP.sparseNecklaceAdj_loopless",
     "IJM.TSP.pruned_solver_accepts_sparseNecklace_all_ge_three"
   ],
   "definition_names": [],

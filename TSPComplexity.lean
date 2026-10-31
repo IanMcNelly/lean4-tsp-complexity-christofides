@@ -2639,21 +2639,12 @@ lemma sparseNecklaceAdj_symm {n : ℕ} (u v : Fin n) :
 
 lemma sparseNecklaceAdj_loopless {n : ℕ} (hn : 3 ≤ n) (u : Fin n) :
     ¬ sparseNecklaceAdj u u := by
-  rintro ((h1 | h2) | h3)
-  · have this : u.val = (cycleNext u).val := congrArg Fin.val h1
-    dsimp [cycleNext] at this
-    have hlt := u.isLt
-    by_cases h_wrap : u.val + 1 < n
-    · rw [Nat.mod_eq_of_lt h_wrap] at this; omega
-    · have h_eq : u.val + 1 = n := by omega
-      rw [h_eq, Nat.mod_self] at this; omega
-  · have this : u.val = (cycleNext u).val := congrArg Fin.val h2
-    dsimp [cycleNext] at this
-    have hlt := u.isLt
-    by_cases h_wrap : u.val + 1 < n
-    · rw [Nat.mod_eq_of_lt h_wrap] at this; omega
-    · have h_eq : u.val + 1 = n := by omega
-      rw [h_eq, Nat.mod_self] at this; omega
+  intro h
+  rcases h with ((h1 | h2) | h3)
+  · have hne : cycleNext u ≠ u := cycleNext_ne_self (by omega) u
+    exact hne h1.symm
+  · have hne : cycleNext u ≠ u := cycleNext_ne_self (by omega) u
+    exact hne h2.symm
   · exact h3.1 rfl
 
 /-- The genuine sparse necklace graph on `Fin n` for `n ≥ 3`. -/

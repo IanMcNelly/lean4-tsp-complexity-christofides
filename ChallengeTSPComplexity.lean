@@ -228,23 +228,7 @@ lemma sparseNecklaceAdj_symm {n : ℕ} (u v : Fin n) :
   · exact Or.inr (Reduction.isInternalTriangleEdge_symm u v h3)
 
 lemma sparseNecklaceAdj_loopless {n : ℕ} (hn : 3 ≤ n) (u : Fin n) :
-    ¬ sparseNecklaceAdj u u := by
-  rintro ((h1 | h2) | h3)
-  · have this : u.val = (cycleNext u).val := congrArg Fin.val h1
-    dsimp [cycleNext] at this
-    have hlt := u.isLt
-    by_cases h_wrap : u.val + 1 < n
-    · rw [Nat.mod_eq_of_lt h_wrap] at this; omega
-    · have h_eq : u.val + 1 = n := by omega
-      rw [h_eq, Nat.mod_self] at this; omega
-  · have this : u.val = (cycleNext u).val := congrArg Fin.val h2
-    dsimp [cycleNext] at this
-    have hlt := u.isLt
-    by_cases h_wrap : u.val + 1 < n
-    · rw [Nat.mod_eq_of_lt h_wrap] at this; omega
-    · have h_eq : u.val + 1 = n := by omega
-      rw [h_eq, Nat.mod_self] at this; omega
-  · exact h3.1 rfl
+    ¬ sparseNecklaceAdj u u := by sorry
 
 def sparseNecklaceGraph (n : ℕ) (hn : 3 ≤ n) : Graph n where
   adj := sparseNecklaceAdj
@@ -271,74 +255,54 @@ noncomputable def prunedStructuralTSPSolver (n : ℕ) (G : Graph n) (c : CostFun
 theorem queue_clearance_halts {n : ℕ} (G : Graph n) (c : CostFunction n) (B : ℕ) :
     ∀ (fuel : ℕ) (s : SolverState n), s.status = SearchStatus.searching → s.queue.length + 1 ≤ fuel →
       (run G c B fuel s).status ≠ SearchStatus.searching := by sorry
-
 theorem polynomial_termination_rank_one {n : ℕ} (G : Graph n) (c : CostFunction n) (B : ℕ)
     (s₀ : SolverState n) (hSearch : s₀.status = .searching) (hBound : s₀.queue.length ≤ n) (hn : 1 ≤ n) :
     (run G c B (n + 1) s₀).status ≠ SearchStatus.searching := by sorry
-
 theorem tsp_soundness (n : ℕ) (G : Graph n) (c : CostFunction n) (B : ℕ)
     (fuel : ℕ) (w : List (Fin n)) (s₀ : SolverState n) (hSearch : s₀.status = .searching) (hInit : s₀.bestTour = none) :
     (run G c B fuel s₀).status = .accepted w → ValidTourBound G c B := by sorry
-
 theorem tsp_completeness (n : ℕ) (G : Graph n) (c : CostFunction n) (B : ℕ) (hValid : ValidTourBound G c B) :
     ∃ (fuel : ℕ) (w : List (Fin n)), (run G c B fuel (SolverState.init n)).status = .accepted w := by sorry
-
 theorem structural_solver_decides_tsp (n : ℕ) (G : Graph n) (c : CostFunction n) (B : ℕ)
     (hRank : StructuralRank n G c 1) : structuralTSPSolver n G c B = true ↔ ValidTourBound G c B := by sorry
-
 theorem structuralRank_inhabited :
     ∃ (n : ℕ) (G : Graph n) (c : CostFunction n), 1 ≤ n ∧ Nonempty (StructuralRank n G c 1) := by sorry
-
 theorem dfj_subtour_cut_bound {n : ℕ} (G : Graph n) (p : List (Fin n)) (hn : 3 ≤ n) (hTour : IsTour G p)
     (S : Finset (Fin n)) (hS_nonempty : S.Nonempty) (hS_proper : S ≠ Finset.univ) :
     2 ≤ (tourCutEdges p S).length := by sorry
-
 theorem tour_is_held_karp_point {n : ℕ} (G : Graph n) (p : List (Fin n)) (hn : 3 ≤ n) (hTour : IsTour G p) :
     ∃ hk : HeldKarpPoint n, hk.x = tourPoint p := by sorry
-
 lemma fractionalCost_tourPoint_le_tourCost {n : ℕ} {G : Graph n}
     (c : CostFunction n) (hc : SymmetricCost c) (p : List (Fin n)) (hn : 3 ≤ n) (hTour : IsTour G p) :
     fractionalCost c (tourPoint p) ≤ (tourCost c p : ℝ) := by sorry
-
 theorem petersenFractional_not_mem_tspPolytope :
     petersenFractional ∉ TSPPolytope 10 := by sorry
-
 theorem petersen_strictly_separates_held_karp :
     petersenFractional ∈ {x | ∃ hk : HeldKarpPoint 10, hk.x = x} ∧ petersenFractional ∉ TSPPolytope 10 := by sorry
-
 theorem petersen_dfjSlack_singleton_zero (v : Fin 10) :
     dfjSlack petersenFractional (petersenSingletonCut v) = 0 := by sorry
-
 theorem petersen_dfjSlack_nontrivial_ge_two_thirds (S : DFJCut 10)
     (hS_ge_two : 2 ≤ S.1.card) (hS_le_eight : S.1.card ≤ 8) :
     (2 / 3 : ℝ) ≤ dfjSlack petersenFractional S := by sorry
-
 theorem petersenMetricCost_isMetric : IsMetricCost petersenMetricCost := by sorry
-
 theorem petersen_metric_tourCost_ge_eleven (p : List (Fin 10)) (hlen : p.length = 10) (hnodup : p.Nodup) :
     11 ≤ tourCost petersenMetricCost p := by sorry
-
 theorem petersen_heldKarp_metric_integrality_gap :
     (∃ hk : HeldKarpPoint 10, fractionalCost petersenMetricCost hk.x ≤ 10) ∧
     (∀ p : List (Fin 10), p.length = 10 → p.Nodup → 11 ≤ tourCost petersenMetricCost p) := by sorry
-
 theorem hasAffineLift_trace_nonneg {n r : ℕ} (G : Graph n) (p : List (Fin n))
     (hn : 3 ≤ n) (hTour : IsTour G p) (S : DFJCut n) (hLift : HasAffineLift n r) :
     ∃ (A : DFJCut n → Matrix (Fin r) (Fin r) ℝ) (B : List (Fin n) → Matrix (Fin r) (Fin r) ℝ),
       (A S).PosSemidef ∧ (B p).PosSemidef ∧ 0 ≤ Matrix.trace (A S * B p) := by sorry
-
 theorem tsp_extension_complexity_lower_bound :
     ∀ C : ℝ, 0 < C → ∃ n₀ : ℕ, 4 ≤ n₀ ∧ ∀ n : ℕ, n₀ ≤ n → ∀ r : ℕ,
       HasAffineLift n r → SatisfiesFioriniRothvossBound n r C → (n : ℝ) ^ C < (r : ℝ) := by sorry
-
 theorem pruned_structural_solver_decides_tsp (n : ℕ) (G : Graph n) (c : CostFunction n)
     (B : ℕ) (frontier : List (List (Fin n))) (hRank : PrunedStructuralRank n G c B 1 frontier) :
     prunedStructuralTSPSolver n G c B frontier = true ↔ ValidTourBound G c B := by sorry
-
 theorem prunedStructuralRank_inhabited_all_ge_three (n : ℕ) (hn : 3 ≤ n) :
     ∃ (G : Graph n) (c : CostFunction n) (B : ℕ) (frontier : List (List (Fin n))),
       Nonempty (PrunedStructuralRank n G c B 1 frontier) := by sorry
-
 theorem pruned_solver_accepts_sparseNecklace_all_ge_three (n : ℕ) (hn : 3 ≤ n) :
     (run (sparseNecklaceGraph n hn) (zeroCost n) 0 (stepBudget n 1)
       (SolverState.initPruned [List.finRange n])).status =
