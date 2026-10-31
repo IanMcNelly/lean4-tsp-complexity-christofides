@@ -162,11 +162,6 @@ def isInternalTriangleEdge {n : ℕ} (u v : Fin n) : Prop := u ≠ v ∧ triangl
 instance {n : ℕ} (u v : Fin n) : Decidable (isInternalTriangleEdge u v) :=
   inferInstanceAs (Decidable (u ≠ v ∧ triangleIdx u = triangleIdx v))
 
-lemma isInternalTriangleEdge_symm {n : ℕ} (u v : Fin n) :
-    isInternalTriangleEdge u v → isInternalTriangleEdge v u := by
-  intro ⟨hne, hidx⟩
-  exact ⟨hne.symm, hidx.symm⟩
-
 def isBridgeEdge {n : ℕ} (u v : Fin n) : Prop := u ≠ v ∧ triangleIdx u ≠ triangleIdx v
 def ringOfTrianglesAdj {n : ℕ} (u v : Fin n) : Prop := isInternalTriangleEdge u v ∨ isBridgeEdge u v
 
@@ -225,7 +220,7 @@ lemma sparseNecklaceAdj_symm {n : ℕ} (u v : Fin n) :
   rintro ((h1 | h2) | h3)
   · exact Or.inl (Or.inr h1)
   · exact Or.inl (Or.inl h2)
-  · exact Or.inr (Reduction.isInternalTriangleEdge_symm u v h3)
+  · exact Or.inr ⟨h3.1.symm, h3.2.symm⟩
 
 lemma sparseNecklaceAdj_loopless {n : ℕ} (hn : 3 ≤ n) (u : Fin n) :
     ¬ sparseNecklaceAdj u u := by sorry

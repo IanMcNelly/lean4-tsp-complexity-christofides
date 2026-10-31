@@ -7677,7 +7677,7 @@
   rintro ((h1 | h2) | h3)
   · <span class="kw">exact</span> Or.inl (Or.inr h1)
   · <span class="kw">exact</span> Or.inl (Or.inl h2)
-  · <span class="kw">exact</span> Or.inr (Reduction.isInternalTriangleEdge_symm u v h3)</code></pre>
+  · <span class="kw">exact</span> Or.inr ⟨h3.1.symm, h3.2.symm⟩</code></pre>
                 </div>
             </div>
             
