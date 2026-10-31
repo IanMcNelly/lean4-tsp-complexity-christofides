@@ -2385,52 +2385,6 @@ def ringOfTrianglesGraph (n : ℕ) : Graph n where
   symm := ringOfTrianglesAdj_symm
   loopless := ringOfTrianglesAdj_loopless
 
-/-- Adjacency predicate for the genuinely sparse necklace graph on `Fin n` (addressing Palomar audit Finding #2).
-    Combines directed cycle / cyclic 2-regular edges with internal variable-triangle edges. -/
-def sparseNecklaceAdj {n : ℕ} (u v : Fin n) : Prop :=
-  (v = cycleNext u ∨ u = cycleNext v) ∨ isInternalTriangleEdge u v
-
-instance {n : ℕ} (u v : Fin n) : Decidable (sparseNecklaceAdj u v) :=
-  inferInstanceAs (Decidable ((v = cycleNext u ∨ u = cycleNext v) ∨ isInternalTriangleEdge u v))
-
-lemma sparseNecklaceAdj_symm {n : ℕ} (u v : Fin n) :
-    sparseNecklaceAdj u v → sparseNecklaceAdj v u := by
-  rintro ((h1 | h2) | h3)
-  · exact Or.inl (Or.inr h1)
-  · exact Or.inl (Or.inl h2)
-  · exact Or.inr (isInternalTriangleEdge_symm u v h3)
-
-lemma sparseNecklaceAdj_loopless {n : ℕ} (hn : 3 ≤ n) (u : Fin n) :
-    ¬ sparseNecklaceAdj u u := by
-  intro h
-  rcases h with ((h1 | h2) | h3)
-  · have hne : cycleNext u ≠ u := cycleNext_ne_self (by omega) u
-    exact hne h1.symm
-  · have hne : cycleNext u ≠ u := cycleNext_ne_self (by omega) u
-    exact hne h2.symm
-  · exact h3.1 rfl
-
-/-- The genuine sparse necklace graph on `Fin n` for `n ≥ 3`. -/
-def sparseNecklaceGraph (n : ℕ) (hn : 3 ≤ n) : Graph n where
-  adj := sparseNecklaceAdj
-  symm := sparseNecklaceAdj_symm
-  loopless := sparseNecklaceAdj_loopless hn
-
-/-- Constructive non-completeness witness: `sparseNecklaceGraph 6` is genuinely non-complete,
-    containing no edge between vertex 1 and vertex 4. -/
-theorem sparseNecklaceGraph_six_not_complete :
-    ¬ (sparseNecklaceGraph 6 (by omega)).adj ⟨1, by omega⟩ ⟨4, by omega⟩ := by
-  intro h
-  dsimp [sparseNecklaceGraph, sparseNecklaceAdj] at h
-  rcases h with ((h1 | h2) | h3)
-  · revert h1
-    decide
-  · revert h2
-    decide
-  · dsimp [isInternalTriangleEdge, triangleIdx] at h3
-    revert h3
-    decide
-
 /-- Syntactic variable-triangle orientation reader: returns `true` iff the tour traverses
     the forward entry edge `3i → 3i+1` of triangle `T_i`. -/
 def tourReadsTrue {n : ℕ} (p : List (Fin n)) (varIdx : ℕ) : Bool :=
@@ -2668,7 +2622,51 @@ theorem hc_to_tsp_reduction_correct {n : ℕ} (hn : 3 ≤ n) (G : Graph n) [Deci
 
 end Reduction
 
-export Reduction (sparseNecklaceAdj sparseNecklaceGraph sparseNecklaceGraph_six_not_complete)
+/-- Adjacency predicate for the genuinely sparse necklace graph on `Fin n` (addressing Palomar audit Finding #2).
+    Combines directed cycle / cyclic 2-regular edges with internal variable-triangle edges. -/
+def sparseNecklaceAdj {n : ℕ} (u v : Fin n) : Prop :=
+  (v = cycleNext u ∨ u = cycleNext v) ∨ Reduction.isInternalTriangleEdge u v
+
+instance {n : ℕ} (u v : Fin n) : Decidable (sparseNecklaceAdj u v) :=
+  inferInstanceAs (Decidable ((v = cycleNext u ∨ u = cycleNext v) ∨ Reduction.isInternalTriangleEdge u v))
+
+lemma sparseNecklaceAdj_symm {n : ℕ} (u v : Fin n) :
+    sparseNecklaceAdj u v → sparseNecklaceAdj v u := by
+  rintro ((h1 | h2) | h3)
+  · exact Or.inl (Or.inr h1)
+  · exact Or.inl (Or.inl h2)
+  · exact Or.inr (Reduction.isInternalTriangleEdge_symm u v h3)
+
+lemma sparseNecklaceAdj_loopless {n : ℕ} (hn : 3 ≤ n) (u : Fin n) :
+    ¬ sparseNecklaceAdj u u := by
+  intro h
+  rcases h with ((h1 | h2) | h3)
+  · have hne : cycleNext u ≠ u := cycleNext_ne_self (by omega) u
+    exact hne h1.symm
+  · have hne : cycleNext u ≠ u := cycleNext_ne_self (by omega) u
+    exact hne h2.symm
+  · exact h3.1 rfl
+
+/-- The genuine sparse necklace graph on `Fin n` for `n ≥ 3`. -/
+def sparseNecklaceGraph (n : ℕ) (hn : 3 ≤ n) : Graph n where
+  adj := sparseNecklaceAdj
+  symm := sparseNecklaceAdj_symm
+  loopless := sparseNecklaceAdj_loopless hn
+
+/-- Constructive non-completeness witness: `sparseNecklaceGraph 6` is genuinely non-complete,
+    containing no edge between vertex 1 and vertex 4. -/
+theorem sparseNecklaceGraph_six_not_complete :
+    ¬ (sparseNecklaceGraph 6 (by omega)).adj ⟨1, by omega⟩ ⟨4, by omega⟩ := by
+  intro h
+  dsimp [sparseNecklaceGraph, sparseNecklaceAdj] at h
+  rcases h with ((h1 | h2) | h3)
+  · revert h1
+    decide
+  · revert h2
+    decide
+  · dsimp [Reduction.isInternalTriangleEdge, Reduction.triangleIdx] at h3
+    revert h3
+    decide
 
 /-!
 ## 8. Track C: Graph-Pruned Cycle-Separation Rank & Arbitrary-n Decision

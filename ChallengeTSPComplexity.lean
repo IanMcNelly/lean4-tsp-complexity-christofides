@@ -211,11 +211,19 @@ structure TSPGadget (F : Formula) where
 def hcReductionCost {n : ℕ} (G : Graph n) [DecidableRel G.adj] : CostFunction n :=
   fun u v => if G.adj u v then 0 else 1
 
+theorem sat_to_tsp_reduction_correct (F : Formula) (gadget : TSPGadget F) :
+    Satisfiable F ↔ ValidTourBound gadget.graph gadget.cost gadget.budget := by sorry
+
+theorem hc_to_tsp_reduction_correct {n : ℕ} (hn : 3 ≤ n) (G : Graph n) [DecidableRel G.adj] :
+    (∃ p : List (Fin n), IsTour G p) ↔ ValidTourBound (ringOfTrianglesGraph n) (hcReductionCost G) 0 := by sorry
+
+end Reduction
+
 def sparseNecklaceAdj {n : ℕ} (u v : Fin n) : Prop :=
-  (v = cycleNext u ∨ u = cycleNext v) ∨ isInternalTriangleEdge u v
+  (v = cycleNext u ∨ u = cycleNext v) ∨ Reduction.isInternalTriangleEdge u v
 
 instance {n : ℕ} (u v : Fin n) : Decidable (sparseNecklaceAdj u v) :=
-  inferInstanceAs (Decidable ((v = cycleNext u ∨ u = cycleNext v) ∨ isInternalTriangleEdge u v))
+  inferInstanceAs (Decidable ((v = cycleNext u ∨ u = cycleNext v) ∨ Reduction.isInternalTriangleEdge u v))
 
 lemma sparseNecklaceAdj_symm {n : ℕ} (u v : Fin n) : sparseNecklaceAdj u v → sparseNecklaceAdj v u := by sorry
 lemma sparseNecklaceAdj_loopless {n : ℕ} (hn : 3 ≤ n) (u : Fin n) : ¬ sparseNecklaceAdj u u := by sorry
@@ -227,16 +235,6 @@ def sparseNecklaceGraph (n : ℕ) (hn : 3 ≤ n) : Graph n where
 
 theorem sparseNecklaceGraph_six_not_complete :
     ¬ (sparseNecklaceGraph 6 (by omega)).adj ⟨1, by omega⟩ ⟨4, by omega⟩ := by sorry
-
-theorem sat_to_tsp_reduction_correct (F : Formula) (gadget : TSPGadget F) :
-    Satisfiable F ↔ ValidTourBound gadget.graph gadget.cost gadget.budget := by sorry
-
-theorem hc_to_tsp_reduction_correct {n : ℕ} (hn : 3 ≤ n) (G : Graph n) [DecidableRel G.adj] :
-    (∃ p : List (Fin n), IsTour G p) ↔ ValidTourBound (ringOfTrianglesGraph n) (hcReductionCost G) 0 := by sorry
-
-end Reduction
-
-export Reduction (sparseNecklaceAdj sparseNecklaceGraph sparseNecklaceGraph_six_not_complete)
 
 def SolverState.initPruned {n : ℕ} (frontier : List (List (Fin n))) : SolverState n :=
   ⟨SearchStatus.searching, frontier, none, none, 0⟩
