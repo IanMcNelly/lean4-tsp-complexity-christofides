@@ -255,9 +255,11 @@ if ($SkipLean) {
             $pinfo.UseShellExecute = $false
 
             $proc = [System.Diagnostics.Process]::Start($pinfo)
-            $stdout = $proc.StandardOutput.ReadToEnd()
-            $stderr = $proc.StandardError.ReadToEnd()
+            $stdoutTask = $proc.StandardOutput.ReadToEndAsync()
+            $stderrTask = $proc.StandardError.ReadToEndAsync()
             $proc.WaitForExit()
+            $stdout = $stdoutTask.GetAwaiter().GetResult()
+            $stderr = $stderrTask.GetAwaiter().GetResult()
             $sw.Stop()
 
             if ($proc.ExitCode -eq 0) {

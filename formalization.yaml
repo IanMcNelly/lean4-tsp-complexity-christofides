@@ -16,17 +16,25 @@ project:
     complete Christofides certificates, metric walk shortcutting contraction, and the
     unconditional 3/2-approximation guarantee in both exact integer scaling and real
     arithmetic. Second, in TSPComplexity.lean (compared against ChallengeTSPComplexity.lean),
-    we formalize polyhedral and complexity-theoretic barriers for Decision TSP: a
-    fuel-bounded branch-and-cut state machine with verified soundness, completeness,
-    and support-pruned cycle-separation rank decision equivalence; the Dantzig-Fulkerson-Johnson
-    (DFJ) subtour cut inequality (every valid tour crosses any proper nonempty cut at
-    least twice); the continuous Held-Karp LP relaxation embedding; a machine-checked
-    proof that the 10-vertex Petersen graph fractional assignment (x_e = 2/3) strictly
-    separates the Held-Karp relaxation from the integral TSP polytope with zero slack on
-    singleton cuts and slack >= 2/3 on all nontrivial cuts; Yannakakis DFJ slack matrix
-    nonnegativity and conditional Fiorini-Rothvoss PSD extension complexity scaling; and
-    polynomial-time reductions from Hamiltonian Cycle and gadget-parameterized 3-SAT to
-    Decision TSP.
+    we formalize polyhedral and complexity-theoretic barriers for Decision TSP: edge weights
+    are directed traversal costs with explicit symmetric (SymmetricCost) and metric
+    (IsMetricCost, TriangleInequality) predicates, with the fractional Held-Karp relaxation
+    lower bound (fractionalCost_tourPoint_le_tourCost) proved for all symmetric costs;
+    a fuel-bounded permutation-frontier search procedure with certified polynomial clearance
+    over small pre-certified frontiers, generalized to support-pruned candidate frontiers
+    (PrunedStructuralRank) with exact decision equivalence for arbitrary n; the
+    Dantzig-Fulkerson-Johnson (DFJ) subtour cut inequality (every valid tour crosses any
+    proper nonempty cut at least twice); the continuous Held-Karp LP relaxation embedding;
+    a machine-checked proof that the 10-vertex Petersen graph fractional assignment (x_e = 2/3)
+    unconditionally strictly separates the Held-Karp relaxation from the integral TSP
+    polytope with zero slack on singleton cuts and slack >= 2/3 on all nontrivial cuts;
+    an unconditional 11/10 metric integrality gap witness under the shortest-path graphic
+    metric (petersenMetricCost); Yannakakis DFJ slack matrix unconditional PSD trace
+    nonnegativity (hasAffineLift_trace_nonneg) and conditional Fiorini-Rothvoss PSD extension
+    complexity scaling; an unconditional constructive polynomial reduction from Hamiltonian
+    Cycle on a ring-of-triangles host graph; a conditional gadget-soundness specification for
+    3-SAT; and a genuinely sparse necklace graph (sparseNecklaceGraph) with certified
+    non-completeness (sparseNecklaceGraph_six_not_complete) and 1-step solver acceptance.
   authors:
     - "Ian McNelly"
   license: "Apache-2.0"
@@ -86,7 +94,7 @@ sources:
     type: "paper"
     location: "Operations Research 18(6) (1970), 1138-1162"
     relationship: "formalizes"
-    note: "Formalizes the continuous Held-Karp linear programming relaxation (HeldKarpPoint), tour embedding (tour_is_held_karp_point), and Petersen P_10 integrality gap separation (held_karp_strictly_contains_tsp_polytope) in TSPComplexity.lean."
+    note: "Formalizes the continuous Held-Karp linear programming relaxation (HeldKarpPoint), tour embedding (tour_is_held_karp_point), and unconditional Petersen P_10 integrality gap separation (petersenFractional_not_mem_tspPolytope, petersen_strictly_separates_held_karp, petersen_heldKarp_metric_integrality_gap) in TSPComplexity.lean."
     author_endorsement: "n/a"
 
   - title: "Expressing Combinatorial Optimization Problems by Linear Programs"
@@ -96,7 +104,7 @@ sources:
     type: "paper"
     location: "Journal of Computer and System Sciences 43(3) (1991), 441-466"
     relationship: "adapts"
-    note: "Formalizes the DFJ subtour slack matrix (dfjSlack), nonnegativity on Held-Karp points and integral tours, and affine PSD slack factorizations (HasAffineLift) in TSPComplexity.lean."
+    note: "Formalizes the DFJ subtour slack matrix (dfjSlack), nonnegativity on Held-Karp points and integral tours, unconditional PSD trace nonnegativity (hasAffineLift_trace_nonneg), and affine PSD slack factorizations (HasAffineLift) in TSPComplexity.lean."
     author_endorsement: "n/a"
 
   - title: "Exponential Lower Bounds for Polytopes in Combinatorial Optimization"
@@ -117,22 +125,35 @@ related_formalizations: []
 
 status:
   scope: >-
-    Finite graphs are represented over Fin n with integer edge costs CostFunction n := Fin n -> Fin n -> Nat
-    (and real-valued LP vectors FractionalAssignment n := Fin n -> Fin n -> Real). In Christofides.lean,
-    the entire 3/2-approximation pipeline is formalized unconditionally for all n >= 3 and any metric cost
-    function IsMetricCost c, including constructive finite existence proofs for MSTs, minimum-weight perfect
-    matchings on odd-degree vertices, and Eulerian circuits (exists_christofidesCertificate,
-    christofides_certificate_approx_ratio_nat_unconditional, christofides_certificate_approx_ratio_unconditional).
-    In TSPComplexity.lean: (1) On the unpruned full permutation frontier SolverState.init n (of length n!),
-    the rank-1 bound n! <= n^1 in StructuralRank n G c 1 holds only for n <= 2; Section 8 resolves this by
-    introducing support-pruned frontiers (PrunedStructuralRank), proving exact decision equivalence and
-    constructive non-vacuity for all n >= 3 (pruned_structural_solver_decides_tsp,
-    prunedStructuralRank_inhabited_all_ge_three). (2) The Held-Karp integrality gap on the 10-vertex Petersen
-    graph (held_karp_strictly_contains_tsp_polytope) and its exact DFJ slack profile are proved unconditionally.
-    (3) The super-polynomial PSD extension complexity theorem (tsp_extension_complexity_lower_bound) is proved
-    conditionally from the explicit hypothesis SatisfiesFioriniRothvossBound n r C. (4) The 3-SAT reduction
-    (sat_to_tsp_reduction_correct) is parameterized by a valid TSPGadget F specification, complemented by an
-    unconditional constructive reduction from Hamiltonian Cycle to Decision TSP (hc_to_tsp_reduction_correct).
+    Finite graphs are represented over Fin n with integer edge costs CostFunction n := Fin n -> Fin n -> Nat,
+    which define directed traversal weights along cycle edges (with real-valued LP vectors FractionalAssignment n
+    := Fin n -> Fin n -> Real). In Christofides.lean, the entire 3/2-approximation pipeline is formalized
+    unconditionally for all n >= 3 and any metric cost function IsMetricCost c, including constructive finite
+    existence proofs for MSTs, minimum-weight perfect matchings on odd-degree vertices, and Eulerian circuits
+    (exists_christofidesCertificate, christofides_certificate_approx_ratio_nat_unconditional,
+    christofides_certificate_approx_ratio_unconditional). In TSPComplexity.lean: (1) Edge costs are directed
+    traversal weights with explicit symmetric (SymmetricCost) and metric (IsMetricCost, TriangleInequality)
+    predicates, and the fractional Held-Karp objective lower bound fractionalCost_tourPoint_le_tourCost is proved
+    for all symmetric costs. (2) The state machine is a fuel-bounded permutation-frontier search procedure
+    (step, run) with certified polynomial clearance over small pre-certified frontiers (the rank-1 bound
+    n! <= n^1 in StructuralRank n G c 1 holds on the full permutation frontier for n <= 2); Section 8 resolves
+    this by introducing support-pruned candidate frontiers (PrunedStructuralRank), proving exact decision
+    equivalence and constructive non-vacuity for all n >= 3 (pruned_structural_solver_decides_tsp,
+    prunedStructuralRank_inhabited_all_ge_three). (3) The genuine sparse necklace graph sparseNecklaceGraph n hn
+    provides a sparse 2-regular cycle host with internal variable triangles, certified non-complete at n = 6
+    (sparseNecklaceGraph_six_not_complete) and accepted in 1 step for all n >= 3
+    (pruned_solver_accepts_sparseNecklace_all_ge_three). (4) The Held-Karp separation on the 10-vertex Petersen
+    graph (petersenFractional_not_mem_tspPolytope, petersen_strictly_separates_held_karp) and its exact DFJ slack
+    profile (petersen_dfjSlack_singleton_zero, petersen_dfjSlack_nontrivial_ge_two_thirds) are proved
+    unconditionally. (5) Under the graphic shortest-path metric petersenMetricCost (proved metric via
+    petersenMetricCost_isMetric), the Held-Karp relaxation achieves cost <= 10 while every integral Hamiltonian tour
+    incurs cost >= 11 (petersen_metric_tourCost_ge_eleven), establishing an unconditional >= 11/10 metric integrality
+    gap (petersen_heldKarp_metric_integrality_gap). (6) Any affine PSD lift HasAffineLift n r unconditionally induces
+    nonnegative trace inner products across all DFJ cuts and valid tours (hasAffineLift_trace_nonneg), with super-polynomial
+    PSD extension complexity (tsp_extension_complexity_lower_bound) proved conditionally under
+    SatisfiesFioriniRothvossBound n r C. (7) 3-SAT is formalized as a conditional gadget-soundness specification
+    (sat_to_tsp_reduction_correct) parameterized by TSPGadget F, complemented by an unconditional constructed
+    polynomial-time reduction from Hamiltonian Cycle to Decision TSP (hc_to_tsp_reduction_correct).
   sorry_count: 0
   sorry_in_definitions: 0
   axioms:
@@ -153,15 +174,15 @@ automation:
         hardware: "local workstation and GitHub Actions CI"
       prompting_notes: "Iterative lemma decomposition, tactic refinement, and post-audit strengthening of unconditional existence theorems."
   spend_usd: "subscription-based"
-  notes: "Human-directed formalization architecture with AI agent proof synthesis; all 388 declarations across Christofides.lean and TSPComplexity.lean are machine-checked by Lean 4 with zero sorries."
+  notes: "Human-directed formalization architecture with AI agent proof synthesis; all 413 declarations across Christofides.lean and TSPComplexity.lean are machine-checked by Lean 4 with zero sorries."
 
 fidelity:
   divergences: >-
     Graphs are formalized over canonical finite vertex types Fin n with integer edge weights
-    for combinatorial definitions and coerced to Real for LP relaxations and 3/2 ratio statements.
-    In TSPComplexity.lean, the Fiorini-Rothvoss dimension bound is stated as an explicit hypothesis
-    (SatisfiesFioriniRothvossBound), and the 3-SAT reduction is parameterized by the TSPGadget structure
-    alongside the concrete Hamiltonian Cycle reduction hc_to_tsp_reduction_correct.
+    defining directed traversal costs along cycle edges, coerced to Real for LP relaxations and 3/2 ratio statements,
+    with explicit SymmetricCost and IsMetricCost predicates. In TSPComplexity.lean, the Fiorini-Rothvoss dimension bound
+    is stated as an explicit hypothesis (SatisfiesFioriniRothvossBound), and the 3-SAT reduction is parameterized by
+    the TSPGadget structure alongside the concrete Hamiltonian Cycle reduction hc_to_tsp_reduction_correct.
 
 review:
   status: "self-assessed"
@@ -286,11 +307,11 @@ alignment:
       module: "TSPComplexity"
       status: "proved"
       note: "Every valid Hamiltonian tour indicator vector satisfies all Held-Karp degree-2 and DFJ subtour cut constraints."
-    - source: "Held-Karp (1970), strict integrality gap via the 10-vertex Petersen graph"
-      lean: "IJM.TSP.held_karp_strictly_contains_tsp_polytope"
+    - source: "Held-Karp (1970) & Monograph Section 6, fractional relaxation lower bound for symmetric costs"
+      lean: "IJM.TSP.fractionalCost_tourPoint_le_tourCost"
       module: "TSPComplexity"
       status: "proved"
-      note: "Proves that the 10-vertex Petersen fractional point (x_e = 2/3) lies in HeldKarpPoint 10 but outside TSPPolytope 10."
+      note: "Proves that fractionalCost c (tourPoint p) <= tourCost c p for any symmetric cost function and valid tour on n >= 3."
     - source: "Yannakakis (1991) & Monograph Section 6, active facet tightness on P_10 singleton cuts"
       lean: "IJM.TSP.petersen_dfjSlack_singleton_zero"
       module: "TSPComplexity"
@@ -301,6 +322,36 @@ alignment:
       module: "TSPComplexity"
       status: "proved"
       note: "Every nontrivial cut (2 <= |S| <= 8) on P_10 has DFJ slack >= 2/3."
+    - source: "Held-Karp (1970) & Monograph Section 6, Petersen fractional point non-membership in TSP polytope"
+      lean: "IJM.TSP.petersenFractional_not_mem_tspPolytope"
+      module: "TSPComplexity"
+      status: "proved"
+      note: "Proves that petersenFractional lies strictly outside TSPPolytope 10 using the non-negative separator certificate."
+    - source: "Held-Karp (1970) & Monograph Section 6, strict separation of Held-Karp relaxation from TSP polytope"
+      lean: "IJM.TSP.petersen_strictly_separates_held_karp"
+      module: "TSPComplexity"
+      status: "proved"
+      note: "Unconditionally proves that petersenFractional is a valid Held-Karp point strictly outside TSPPolytope 10."
+    - source: "Monograph Section 6, metric properties of Petersen graphic shortest-path cost"
+      lean: "IJM.TSP.petersenMetricCost_isMetric"
+      module: "TSPComplexity"
+      status: "proved"
+      note: "Proves that petersenMetricCost is symmetric, zero on the diagonal, and satisfies the triangle inequality."
+    - source: "Monograph Section 6, integral tour lower bound under Petersen graphic metric"
+      lean: "IJM.TSP.petersen_metric_tourCost_ge_eleven"
+      module: "TSPComplexity"
+      status: "proved"
+      note: "Proves that every integral Hamiltonian tour on Fin 10 has cost at least 11 under petersenMetricCost."
+    - source: "Monograph Section 6, unconditional 11/10 metric integrality gap witness"
+      lean: "IJM.TSP.petersen_heldKarp_metric_integrality_gap"
+      module: "TSPComplexity"
+      status: "proved"
+      note: "Proves that the Held-Karp relaxation has cost <= 10 while all integral tours cost >= 11 under petersenMetricCost."
+    - source: "Yannakakis (1991) & Monograph Section 6, unconditional PSD trace nonnegativity"
+      lean: "IJM.TSP.hasAffineLift_trace_nonneg"
+      module: "TSPComplexity"
+      status: "proved"
+      note: "Proves that any affine PSD lift HasAffineLift n r unconditionally induces 0 <= Matrix.trace (A S * B p)."
     - source: "Fiorini et al. (2015), super-polynomial PSD extension complexity scaling"
       lean: "IJM.TSP.tsp_extension_complexity_lower_bound"
       module: "TSPComplexity"
@@ -326,10 +377,15 @@ alignment:
       module: "TSPComplexity"
       status: "proved"
       note: "Constructively inhabits PrunedStructuralRank n G c B 1 frontier for all n >= 3."
-    - source: "Monograph Section 8, 1-step acceptance on necklace graphs for all n >= 3"
-      lean: "IJM.TSP.pruned_solver_accepts_necklace_all_ge_three"
+    - source: "Monograph Section 8, constructive non-completeness witness for sparse necklace graph"
+      lean: "IJM.TSP.sparseNecklaceGraph_six_not_complete"
       module: "TSPComplexity"
       status: "proved"
-      note: "Constructive acceptance witness on ringOfTrianglesGraph n for all n >= 3."
+      note: "Proves that sparseNecklaceGraph 6 is genuinely non-complete by exhibiting a non-edge between vertex 1 and vertex 4."
+    - source: "Monograph Section 8, 1-step acceptance on sparse necklace graphs for all n >= 3"
+      lean: "IJM.TSP.pruned_solver_accepts_sparseNecklace_all_ge_three"
+      module: "TSPComplexity"
+      status: "proved"
+      note: "Constructive acceptance witness on sparseNecklaceGraph n hn for all n >= 3."
 
 acknowledgements: "The Lean 4 and Mathlib communities, the Lean Focused Research Organization (Lean FRO), and the Palomar Registry maintainers."

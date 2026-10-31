@@ -19,12 +19,12 @@ set_option maxRecDepth 2000000
 
 This module formalizes:
 1. The discrete Decision Traveling Salesperson Problem (TSP) on undirected graphs.
-2. A certified branch-and-cut / subtour elimination state machine with verified step mechanics.
+2. A fuel-bounded permutation-frontier search state machine with verified step mechanics.
 3. Fully machine-checked proofs of state transition correctness and fuel-bounded queue clearance.
 4. Topological parity foundations of the Dantzig-Fulkerson-Johnson (DFJ) two-cut condition.
 5. The continuous Held-Karp LP relaxation and the fractional extreme point integrality gap.
-6. The Fiorini-Rothvoß-Yannakakis super-polynomial extension complexity lower bound.
-7. Polynomial reduction scaffolding connecting Decision TSP to 3-SAT.
+6. The Fiorini-Rothvoß-Yannakakis super-polynomial extension complexity lower bound under assumed dimension scaling.
+7. Polynomial reduction scaffolding connecting Decision TSP to 3-SAT (conditional gadget soundness) and Hamiltonian Cycle (oracle-free constructive reduction).
 -/
 
 /-!
@@ -39,6 +39,34 @@ structure Graph (n : ℕ) where
 
 /-- Non-negative edge weight function. -/
 def CostFunction (n : ℕ) := Fin n → Fin n → ℕ
+
+/-- Canonical zero edge-cost function on `Fin n`. -/
+def zeroCost (n : ℕ) : CostFunction n :=
+  fun _ _ => 0
+
+/-- Canonical unit edge-cost function on `Fin n` assigning weight `1` to all pairs. -/
+def unitCost (n : ℕ) : CostFunction n :=
+  fun _ _ => 1
+
+/-- Symmetric cost function: cost is invariant under edge direction. -/
+def SymmetricCost {n : ℕ} (c : CostFunction n) : Prop :=
+  ∀ u v, c u v = c v u
+
+/-- Triangle inequality: cost of direct step is bounded by indirect path. -/
+def TriangleInequality {n : ℕ} (c : CostFunction n) : Prop :=
+  ∀ u v w, c u w ≤ c u v + c v w
+
+/-- Metric cost function on `Fin n`: symmetric, zero on the diagonal, and satisfying the triangle inequality. -/
+def IsMetricCost {n : ℕ} (c : CostFunction n) : Prop :=
+  SymmetricCost c ∧ (∀ u, c u u = 0) ∧ TriangleInequality c
+
+/-- The zero cost function is symmetric. -/
+theorem zeroCost_symmetric (n : ℕ) : SymmetricCost (zeroCost n) :=
+  fun _ _ => rfl
+
+/-- The unit cost function is symmetric. -/
+theorem unitCost_symmetric (n : ℕ) : SymmetricCost (unitCost n) :=
+  fun _ _ => rfl
 
 /-- Ordered sequence of cycle edges formed by adjacent elements in a circular list. -/
 def cycleEdges {n : ℕ} (p : List (Fin n)) : List (Fin n × Fin n) :=
@@ -95,7 +123,7 @@ lemma cycleEdges_length {n : ℕ} (p : List (Fin n)) (h : p ≠ []) :
     simp
 
 /-!
-## 3. The Certified Branch-and-Cut State Machine
+## 3. Fuel-Bounded Permutation-Frontier Search State Machine
 -/
 
 inductive SearchStatus (n : ℕ) where
@@ -104,7 +132,9 @@ inductive SearchStatus (n : ℕ) where
   | rejected
   deriving DecidableEq
 
-/-- Search state configuration of the subtour elimination state machine. -/
+/-- Search state configuration of the fuel-bounded permutation-frontier search state machine.
+    Tracks candidate permutation queue `queue`, current search status, best-known cost and tour,
+    and cumulative transition step counter. -/
 structure SolverState (n : ℕ) where
   status : SearchStatus n
   queue : List (List (Fin n))
@@ -114,11 +144,14 @@ structure SolverState (n : ℕ) where
 
 open scoped Classical
 
-/-- Initial search state with full permutation frontier. -/
+/-- Initial search state with full permutation frontier `(List.finRange n).permutations`. -/
 noncomputable def SolverState.init (n : ℕ) : SolverState n :=
   ⟨SearchStatus.searching, (List.finRange n).permutations, none, none, 0⟩
 
-/-- Single transition step of the certified solver. -/
+/-- Single transition step of the fuel-bounded permutation-frontier search:
+    tests candidate permutations against tour validity (`IsTour G p`) and cost budget (`tourCost c p ≤ B`),
+    transitions to `accepted` upon finding a valid tour within budget, and removes tested candidates
+    from the queue. -/
 noncomputable def step {n : ℕ} (G : Graph n) (c : CostFunction n) (B : ℕ)
     (s : SolverState n) : SolverState n :=
   match s.status with
@@ -136,7 +169,7 @@ noncomputable def step {n : ℕ} (G : Graph n) (c : CostFunction n) (B : ℕ)
       else
         ⟨.searching, ps, s.bestCost, s.bestTour, s.steps + 1⟩
 
-/-- Multi-step execution bounded by a fuel budget. -/
+/-- Multi-step permutation-frontier search execution bounded by an explicit fuel budget. -/
 noncomputable def run {n : ℕ} (G : Graph n) (c : CostFunction n) (B : ℕ)
     (fuel : ℕ) (s : SolverState n) : SolverState n :=
   match fuel with
@@ -301,7 +334,7 @@ theorem queue_clearance_halts {n : ℕ} (G : Graph n) (c : CostFunction n) (B : 
 ## 4. Parameterized Structural Invariant & Complexity
 -/
 
-/-- Cycle-Separation Rank: bounds the combinatorial width of the subtour branch tree.
+/-- Cycle-Separation Rank: bounds the combinatorial width of the permutation frontier.
     Note: On the unpruned initial permutation frontier `SolverState.init n`, the queue length is `n!`,
     so `queue.length ≤ n ^ 1` restricts `StructuralRank n G c 1` on `init` to `n ≤ 2`. -/
 structure StructuralRank (n : ℕ) (G : Graph n) (c : CostFunction n) (k : ℕ) where
@@ -539,10 +572,6 @@ def emptyGraph (n : ℕ) : Graph n where
   adj := fun _ _ => False
   symm := fun _ _ h => h
   loopless := fun _ h => h
-
-/-- Canonical zero edge-cost function on `Fin n`. -/
-def zeroCost (n : ℕ) : CostFunction n :=
-  fun _ _ => 0
 
 /-- Canonical witness that `StructuralRank` holds at `n = 0, k = 0` (`0! = 1 ≤ 0^0`). -/
 def structuralRank_zero_witness (G : Graph 0) (c : CostFunction 0) :
@@ -1732,11 +1761,10 @@ lemma convex_halfspace_sep :
   rw [h_lin]
   nlinarith
 
-theorem held_karp_strictly_contains_tsp_polytope :
-    ∃ n : ℕ, 4 ≤ n ∧ ∃ hk : HeldKarpPoint n,
-      hk.x ∉ TSPPolytope n := by
-  use 10
-  refine ⟨by omega, ⟨petersenHK, ?_⟩⟩
+/-- The fractional Petersen assignment `petersenFractional` lies strictly outside the TSP polytope
+    `TSPPolytope 10`, separated by the non-negative certificate functional `petersenSepCost`. -/
+theorem petersenFractional_not_mem_tspPolytope :
+    petersenFractional ∉ TSPPolytope 10 := by
   intro h_in_poly
   dsimp [TSPPolytope] at h_in_poly
   have h_sub : { x : FractionalAssignment 10 | ∃ p : List (Fin 10), p.length = 10 ∧ p.Nodup ∧ x = tourPoint p } ⊆
@@ -1748,9 +1776,272 @@ theorem held_karp_strictly_contains_tsp_polytope :
   have h_in_half := h_hull_sub h_in_poly
   dsimp at h_in_half
   have h_cost_zero := petersenSepCost_fractional_zero
-  dsimp [petersenHK] at h_in_half
   rw [h_cost_zero] at h_in_half
   linarith
+
+/-- Landmark separation: `petersenFractional` is a valid Held-Karp point that strictly separates
+    the Held-Karp relaxation from the integer TSP polytope (addressing Palomar audit Finding #4). -/
+theorem petersen_strictly_separates_held_karp :
+    petersenFractional ∈ {x | ∃ hk : HeldKarpPoint 10, hk.x = x} ∧ petersenFractional ∉ TSPPolytope 10 :=
+  ⟨⟨petersenHK, rfl⟩, petersenFractional_not_mem_tspPolytope⟩
+
+theorem held_karp_strictly_contains_tsp_polytope :
+    ∃ n : ℕ, 4 ≤ n ∧ ∃ hk : HeldKarpPoint n,
+      hk.x ∉ TSPPolytope n :=
+  ⟨10, by omega, ⟨petersenHK, petersenFractional_not_mem_tspPolytope⟩⟩
+
+/-- Sum of edge indicator costs over any list of pairs is bounded above by the list cost. -/
+lemma list_sum_indicator_le {n : ℕ} (L : List (Fin n × Fin n)) (c : CostFunction n) :
+    (∑ u : Fin n, ∑ v : Fin n, (if (u, v) ∈ L then (c u v : ℝ) else 0)) ≤
+    ((L.map (fun e => (c e.1 e.2 : ℝ))).sum) := by
+  induction L with
+  | nil =>
+    have h_zero : ∀ u v : Fin n, (if (u, v) ∈ ([] : List (Fin n × Fin n)) then (c u v : ℝ) else 0) = 0 := by
+      intro u v
+      simp only [List.not_mem_nil, ite_false]
+    simp_rw [h_zero, Finset.sum_const_zero, List.map_nil, List.sum_nil]
+    exact le_rfl
+  | cons hd tl ih =>
+    have h_split (u v : Fin n) :
+        (if (u, v) ∈ hd :: tl then (c u v : ℝ) else 0) ≤
+        (if (u, v) = hd then (c u v : ℝ) else 0) + (if (u, v) ∈ tl then (c u v : ℝ) else 0) := by
+      have h_nonneg : 0 ≤ (c u v : ℝ) := Nat.cast_nonneg (c u v)
+      split_ifs with h1 h2 h3 <;> try linarith
+      cases List.mem_cons.mp h1 with
+      | inl h => contradiction
+      | inr h => contradiction
+    have h_sum_step :
+        (∑ u : Fin n, ∑ v : Fin n, (if (u, v) ∈ hd :: tl then (c u v : ℝ) else 0)) ≤
+        (∑ u : Fin n, ∑ v : Fin n, ((if (u, v) = hd then (c u v : ℝ) else 0) +
+                                    (if (u, v) ∈ tl then (c u v : ℝ) else 0))) :=
+      Finset.sum_le_sum fun u _ => Finset.sum_le_sum fun v _ => h_split u v
+    have h_distrib :
+        (∑ u : Fin n, ∑ v : Fin n, ((if (u, v) = hd then (c u v : ℝ) else 0) +
+                                    (if (u, v) ∈ tl then (c u v : ℝ) else 0))) =
+        (∑ u : Fin n, ∑ v : Fin n, if (u, v) = hd then (c u v : ℝ) else 0) +
+        (∑ u : Fin n, ∑ v : Fin n, if (u, v) ∈ tl then (c u v : ℝ) else 0) := by
+      simp_rw [Finset.sum_add_distrib]
+    have h_hd_eval : (∑ u : Fin n, ∑ v : Fin n, if (u, v) = hd then (c u v : ℝ) else 0) = (c hd.1 hd.2 : ℝ) := by
+      have h_inner (u : Fin n) :
+          (∑ v : Fin n, if (u, v) = hd then (c u v : ℝ) else 0) =
+          if u = hd.1 then (c hd.1 hd.2 : ℝ) else 0 := by
+        by_cases hu : u = hd.1
+        · subst hu
+          rw [if_pos rfl]
+          have h_term (v : Fin n) : (if (hd.1, v) = hd then (c hd.1 v : ℝ) else 0) =
+                                     if v = hd.2 then (c hd.1 hd.2 : ℝ) else 0 := by
+            by_cases hv : v = hd.2
+            · subst hv
+              have h_eq : (hd.1, hd.2) = hd := Prod.ext rfl rfl
+              rw [if_pos h_eq, if_pos rfl]
+            · have h_ne : (hd.1, v) ≠ hd := by
+                intro h
+                have := congrArg Prod.snd h
+                exact hv this
+              rw [if_neg h_ne, if_neg hv]
+          simp_rw [h_term]
+          rw [Finset.sum_ite_eq', if_pos (Finset.mem_univ hd.2)]
+        · rw [if_neg hu]
+          have h_all_zero : ∀ v : Fin n, (if (u, v) = hd then (c u v : ℝ) else 0) = 0 := by
+            intro v
+            have h_ne : (u, v) ≠ hd := by
+              intro h
+              have := congrArg Prod.fst h
+              exact hu this
+            rw [if_neg h_ne]
+          simp_rw [h_all_zero, Finset.sum_const_zero]
+      simp_rw [h_inner]
+      rw [Finset.sum_ite_eq', if_pos (Finset.mem_univ hd.1)]
+    rw [List.map_cons, List.sum_cons]
+    linarith [h_sum_step, h_distrib, h_hd_eval, ih]
+
+lemma list_map_sum_nat_cast {n : ℕ} (L : List (Fin n × Fin n)) (c : CostFunction n) :
+    ((L.map (fun e => (c e.1 e.2 : ℝ))).sum) = ((L.map (fun e => c e.1 e.2)).sum : ℝ) := by
+  induction L with
+  | nil => simp
+  | cons hd tl ih =>
+    simp only [List.map_cons, List.sum_cons, Nat.cast_add]
+    rw [ih]
+
+/-- For any symmetric cost function `c` and valid tour `p` on `n ≥ 3` vertices,
+    the fractional Held-Karp relaxation objective `fractionalCost c (tourPoint p)`
+    is bounded above by the integer tour cost `tourCost c p` (addressing Palomar audit Finding #6). -/
+lemma fractionalCost_tourPoint_le_tourCost {n : ℕ} {G : Graph n}
+    (c : CostFunction n) (hc : SymmetricCost c) (p : List (Fin n))
+    (hn : 3 ≤ n) (hTour : IsTour G p) :
+    fractionalCost c (tourPoint p) ≤ (tourCost c p : ℝ) := by
+  dsimp [fractionalCost]
+  have h_le (u v : Fin n) :
+      (c u v : ℝ) * tourPoint p u v ≤
+      (if (u, v) ∈ cycleEdges p then (c u v : ℝ) else 0) +
+      (if (v, u) ∈ cycleEdges p then (c v u : ℝ) else 0) := by
+    dsimp [tourPoint]
+    by_cases h1 : (u, v) ∈ cycleEdges p
+    · rw [if_pos (Or.inl h1), if_pos h1]
+      by_cases h2 : (v, u) ∈ cycleEdges p
+      · rw [if_pos h2, mul_one]
+        have : 0 ≤ (c v u : ℝ) := Nat.cast_nonneg (c v u)
+        linarith
+      · rw [if_neg h2, mul_one, add_zero]
+    · by_cases h2 : (v, u) ∈ cycleEdges p
+      · rw [if_pos (Or.inr h2), if_neg h1, if_pos h2, mul_one, zero_add]
+        have h_symm := hc u v
+        rw [h_symm]
+      · have h_neither : ¬ ((u, v) ∈ cycleEdges p ∨ (v, u) ∈ cycleEdges p) := by
+          intro h_or
+          cases h_or with
+          | inl h => exact h1 h
+          | inr h => exact h2 h
+        rw [if_neg h_neither, if_neg h1, if_neg h2, mul_zero, add_zero]
+  have h_sum_le :
+      (∑ u : Fin n, ∑ v : Fin n, (c u v : ℝ) * tourPoint p u v) ≤
+      ∑ u : Fin n, ∑ v : Fin n,
+        ((if (u, v) ∈ cycleEdges p then (c u v : ℝ) else 0) +
+         (if (v, u) ∈ cycleEdges p then (c v u : ℝ) else 0)) :=
+    Finset.sum_le_sum fun u _ => Finset.sum_le_sum fun v _ => h_le u v
+  have h_distrib :
+      (∑ u : Fin n, ∑ v : Fin n,
+        ((if (u, v) ∈ cycleEdges p then (c u v : ℝ) else 0) +
+         (if (v, u) ∈ cycleEdges p then (c v u : ℝ) else 0))) =
+      (∑ u : Fin n, ∑ v : Fin n, if (u, v) ∈ cycleEdges p then (c u v : ℝ) else 0) +
+      (∑ u : Fin n, ∑ v : Fin n, if (v, u) ∈ cycleEdges p then (c v u : ℝ) else 0) := by
+    simp_rw [Finset.sum_add_distrib]
+  have h_symm_sum :
+      (∑ u : Fin n, ∑ v : Fin n, if (v, u) ∈ cycleEdges p then (c v u : ℝ) else 0) =
+      (∑ u : Fin n, ∑ v : Fin n, if (u, v) ∈ cycleEdges p then (c u v : ℝ) else 0) := by
+    rw [Finset.sum_comm]
+  have h_bound := list_sum_indicator_le (cycleEdges p) c
+  have h_cast := list_map_sum_nat_cast (cycleEdges p) c
+  have h_tourCost : ((cycleEdges p).map (fun e => c e.1 e.2)).sum = tourCost c p := rfl
+  rw [h_tourCost] at h_cast
+  rw [h_cast] at h_bound
+  have h_total :
+      (∑ u : Fin n, ∑ v : Fin n, (c u v : ℝ) * tourPoint p u v) ≤ 2 * (tourCost c p : ℝ) := by
+    linarith [h_sum_le, h_distrib, h_symm_sum, h_bound]
+  linarith
+
+/-- Shortest-path graphic metric on the Petersen graph: cost `0` for identical vertices,
+    `1` for adjacent vertices, and `2` for non-adjacent distinct vertices (diameter 2). -/
+def petersenMetricCost : CostFunction 10 :=
+  fun u v => if u = v then 0 else if petersenAdj u v then 1 else 2
+
+/-- The graphic metric on the Petersen graph is symmetric. -/
+theorem petersenMetricCost_symmetric : SymmetricCost petersenMetricCost := by
+  intro u v
+  dsimp [petersenMetricCost]
+  by_cases h_eq : u = v
+  · subst h_eq
+    rfl
+  · have h_eq_symm : v ≠ u := Ne.symm h_eq
+    rw [if_neg h_eq, if_neg h_eq_symm]
+    by_cases h_adj : petersenAdj u v
+    · have h_adj_symm : petersenAdj v u := (petersenAdj_symm u v).mp h_adj
+      rw [if_pos h_adj, if_pos h_adj_symm]
+    · have h_adj_symm : ¬ petersenAdj v u := fun h => h_adj ((petersenAdj_symm v u).mp h)
+      rw [if_neg h_adj, if_neg h_adj_symm]
+
+/-- The graphic metric on the Petersen graph has zero diagonal (loopless). -/
+theorem petersenMetricCost_loopless (u : Fin 10) : petersenMetricCost u u = 0 := by
+  dsimp [petersenMetricCost]
+  simp
+
+/-- The graphic metric on the Petersen graph satisfies the triangle inequality. -/
+theorem petersenMetricCost_triangle : TriangleInequality petersenMetricCost := by
+  intro u v w
+  revert u v w
+  decide
+
+/-- The graphic metric cost on the Petersen graph is a valid metric cost function. -/
+theorem petersenMetricCost_isMetric : IsMetricCost petersenMetricCost :=
+  ⟨petersenMetricCost_symmetric, petersenMetricCost_loopless, petersenMetricCost_triangle⟩
+
+/-- Auxiliary lemma: sum of elements in a list whose values are each at least 1 is bounded below by list length. -/
+lemma list_sum_ge_length {α : Type*} : ∀ (l : List α) (f : α → ℕ),
+    (∀ x ∈ l, 1 ≤ f x) → l.length ≤ (l.map f).sum
+  | [], _, _ => Nat.le_refl 0
+  | x :: xs, f, h => by
+    simp only [List.length_cons, List.map_cons, List.sum_cons]
+    have hx : 1 ≤ f x := h x (List.Mem.head _)
+    have hxs : xs.length ≤ (xs.map f).sum :=
+      list_sum_ge_length xs f (fun y hy => h y (List.Mem.tail _ hy))
+    omega
+
+/-- Every Hamiltonian tour on `Fin 10` has cost at least `11` under the Petersen graphic metric,
+    since by non-Hamiltonicity of the Petersen graph at least one cycle edge has cost `2`. -/
+theorem petersen_metric_tourCost_ge_eleven (p : List (Fin 10))
+    (hlen : p.length = 10) (hnodup : p.Nodup) :
+    11 ≤ tourCost petersenMetricCost p := by
+  have h_exists_nonedge : ∃ e ∈ cycleEdges p, ¬ petersenAdj e.1 e.2 := by
+    by_contra h_all_petersen
+    push_neg at h_all_petersen
+    exact petersen_no_hamiltonian_tour p hlen hnodup h_all_petersen
+  rcases h_exists_nonedge with ⟨e_star, he_star_mem, he_star_nonedge⟩
+  rcases List.append_of_mem he_star_mem with ⟨L1, L2, h_split⟩
+  have h_cost_ge_one : ∀ e ∈ cycleEdges p, 1 ≤ petersenMetricCost e.1 e.2 := by
+    intro e he
+    have hne : e.1 ≠ e.2 := cycleEdges_loopless p (by omega) hlen hnodup e he
+    dsimp [petersenMetricCost]
+    rw [if_neg hne]
+    split_ifs <;> omega
+  have he_star_cost : petersenMetricCost e_star.1 e_star.2 = 2 := by
+    have hne : e_star.1 ≠ e_star.2 := cycleEdges_loopless p (by omega) hlen hnodup e_star he_star_mem
+    dsimp [petersenMetricCost]
+    rw [if_neg hne, if_neg he_star_nonedge]
+  dsimp [tourCost]
+  rw [h_split]
+  simp only [List.map_append, List.map_cons, List.sum_append, List.sum_cons]
+  rw [he_star_cost]
+  have h_p_ne : p ≠ [] := by rintro rfl; simp at hlen
+  have h_len : (cycleEdges p).length = 10 := by rw [cycleEdges_length p h_p_ne, hlen]
+  have h_split_len : L1.length + 1 + L2.length = 10 := by
+    have h_len_eq := congrArg List.length h_split
+    rw [h_len] at h_len_eq
+    rw [List.length_append, List.length_cons] at h_len_eq
+    omega
+  have h_L1 : ∀ e ∈ L1, 1 ≤ petersenMetricCost e.1 e.2 := by
+    intro e he
+    apply h_cost_ge_one e
+    rw [h_split, List.mem_append]
+    exact Or.inl he
+  have h_L2 : ∀ e ∈ L2, 1 ≤ petersenMetricCost e.1 e.2 := by
+    intro e he
+    apply h_cost_ge_one e
+    rw [h_split, List.mem_append, List.mem_cons]
+    exact Or.inr (Or.inr he)
+  have h1_ge := list_sum_ge_length L1 (fun e => petersenMetricCost e.1 e.2) h_L1
+  have h2_ge := list_sum_ge_length L2 (fun e => petersenMetricCost e.1 e.2) h_L2
+  omega
+
+/-- Unconditional Petersen Metric Integrality Gap (addressing Palomar audit Finding #7):
+    The Held-Karp relaxation admits a fractional point of cost at most `10`, whereas every
+    integral Hamiltonian tour incurs cost at least `11`, establishing a metric integrality gap of ≥ 11/10. -/
+theorem petersen_heldKarp_metric_integrality_gap :
+    (∃ hk : HeldKarpPoint 10, fractionalCost petersenMetricCost hk.x ≤ 10) ∧
+    (∀ p : List (Fin 10), p.length = 10 → p.Nodup → 11 ≤ tourCost petersenMetricCost p) := by
+  refine ⟨⟨petersenHK, ?_⟩, petersen_metric_tourCost_ge_eleven⟩
+  dsimp [petersenHK, fractionalCost]
+  have h_inner (u : Fin 10) :
+      (∑ v : Fin 10, (petersenMetricCost u v : ℝ) * petersenFractional u v) = 2 := by
+    have h_term (v : Fin 10) :
+        (petersenMetricCost u v : ℝ) * petersenFractional u v =
+        if petersenAdj u v then (2 / 3 : ℝ) else 0 := by
+      dsimp [petersenMetricCost, petersenFractional]
+      split_ifs with h1 h2 h3
+      · subst h1; have := petersenAdj_loopless u; contradiction
+      · ring
+      · ring
+      · ring
+    simp_rw [h_term, ← Finset.sum_filter]
+    have h_card := petersen_degrees_three u
+    simp only [Finset.sum_const, nsmul_eq_mul]
+    rw [h_card]
+    norm_num
+  have h_sum_inner : (∑ u : Fin 10, ∑ v : Fin 10, (petersenMetricCost u v : ℝ) * petersenFractional u v) = 20 := by
+    simp_rw [h_inner]
+    simp only [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]
+    norm_num
+  rw [h_sum_inner]
+  norm_num
 
 /-!
 ### Yannakakis Slack Factorization & Semidefinite Extension Complexity Lower Bound
@@ -1878,9 +2169,11 @@ structure HasAffineLift (n r : ℕ) : Prop where
         p.length = n → p.Nodup →
         dfjSlack (tourPoint p) S = Matrix.trace (A S * B p))
 
-/-- Any affine PSD lift of the TSP polytope induces non-negative trace inner products
-    `0 ≤ Matrix.trace (A S * B p)` across all DFJ cuts `S` and valid tours `p`. -/
-lemma hasAffineLift_trace_nonneg {n r : ℕ} (G : Graph n) (p : List (Fin n))
+/-- Unconditional PSD trace nonnegativity theorem (addressing Palomar audit Finding #5):
+    Any affine PSD lift `HasAffineLift n r` of the TSP polytope induces non-negative trace
+    inner products `0 ≤ Matrix.trace (A S * B p)` across all DFJ cuts `S` and valid tours `p`
+    on `n ≥ 3` vertices, without conditional scaling hypotheses. -/
+theorem hasAffineLift_trace_nonneg {n r : ℕ} (G : Graph n) (p : List (Fin n))
     (hn : 3 ≤ n) (hTour : IsTour G p) (S : DFJCut n) (hLift : HasAffineLift n r) :
     ∃ (A : DFJCut n → Matrix (Fin r) (Fin r) ℝ)
       (B : List (Fin n) → Matrix (Fin r) (Fin r) ℝ),
@@ -1922,8 +2215,9 @@ lemma rpow_lt_natPow_ceil_succ {n : ℕ} (hn : 4 ≤ n) (C : ℝ) :
   exact h_rpow
 
 /-- Fiorini-Massar-Pokutta-Tiwary-de Wolf (2012) / Rothvoß (2014) Conditional Scaling Theorem:
-    Unpacks the Yannakakis PSD slack factorization `(A, B)` from `HasAffineLift n r` and proves
-    that under `SatisfiesFioriniRothvossBound n r C`, the lift dimension satisfies `n ^ C < r`. -/
+    Establishes `(n : ℝ) ^ C < (r : ℝ)` as a consequence of an assumed dimension scaling bound
+    `SatisfiesFioriniRothvossBound n r C` on the Yannakakis PSD slack factorization `(A, B)` of an
+    affine lift `HasAffineLift n r`, rather than an independently established complexity barrier. -/
 theorem tsp_extension_complexity_lower_bound :
     ∀ C : ℝ, 0 < C → ∃ n₀ : ℕ, 4 ≤ n₀ ∧
       ∀ n : ℕ, n₀ ≤ n → ∀ r : ℕ,
@@ -2083,11 +2377,59 @@ lemma ringOfTrianglesAdj_loopless {n : ℕ} (u : Fin n) :
     ¬ ringOfTrianglesAdj u u := by
   rintro (⟨h, _⟩ | ⟨h, _⟩) <;> exact h rfl
 
-/-- The Ring-of-Triangles gadget graph decomposed into internal triangle edges and inter-triangle bridges. -/
+/-- The Ring-of-Triangles host graph on `Fin n`: this is the complete host graph decomposed
+    into internal triangle edge and inter-triangle bridge edge classes, used as the target host graph
+    for the oracle-free Hamiltonian Cycle polynomial reduction `hc_to_tsp_reduction_correct`. -/
 def ringOfTrianglesGraph (n : ℕ) : Graph n where
   adj := ringOfTrianglesAdj
   symm := ringOfTrianglesAdj_symm
   loopless := ringOfTrianglesAdj_loopless
+
+/-- Adjacency predicate for the genuinely sparse necklace graph on `Fin n` (addressing Palomar audit Finding #2).
+    Combines directed cycle / cyclic 2-regular edges with internal variable-triangle edges. -/
+def sparseNecklaceAdj {n : ℕ} (u v : Fin n) : Prop :=
+  (v = cycleNext u ∨ u = cycleNext v) ∨ isInternalTriangleEdge u v
+
+instance {n : ℕ} (u v : Fin n) : Decidable (sparseNecklaceAdj u v) :=
+  inferInstanceAs (Decidable ((v = cycleNext u ∨ u = cycleNext v) ∨ isInternalTriangleEdge u v))
+
+lemma sparseNecklaceAdj_symm {n : ℕ} (u v : Fin n) :
+    sparseNecklaceAdj u v → sparseNecklaceAdj v u := by
+  rintro ((h1 | h2) | h3)
+  · exact Or.inl (Or.inr h1)
+  · exact Or.inl (Or.inl h2)
+  · exact Or.inr (isInternalTriangleEdge_symm u v h3)
+
+lemma sparseNecklaceAdj_loopless {n : ℕ} (hn : 3 ≤ n) (u : Fin n) :
+    ¬ sparseNecklaceAdj u u := by
+  intro h
+  rcases h with ((h1 | h2) | h3)
+  · have hne : cycleNext u ≠ u := cycleNext_ne_self (by omega) u
+    exact hne h1.symm
+  · have hne : cycleNext u ≠ u := cycleNext_ne_self (by omega) u
+    exact hne h2.symm
+  · exact h3.1 rfl
+
+/-- The genuine sparse necklace graph on `Fin n` for `n ≥ 3`. -/
+def sparseNecklaceGraph (n : ℕ) (hn : 3 ≤ n) : Graph n where
+  adj := sparseNecklaceAdj
+  symm := sparseNecklaceAdj_symm
+  loopless := sparseNecklaceAdj_loopless hn
+
+/-- Constructive non-completeness witness: `sparseNecklaceGraph 6` is genuinely non-complete,
+    containing no edge between vertex 1 and vertex 4. -/
+theorem sparseNecklaceGraph_six_not_complete :
+    ¬ (sparseNecklaceGraph 6 (by omega)).adj ⟨1, by omega⟩ ⟨4, by omega⟩ := by
+  intro h
+  dsimp [sparseNecklaceGraph, sparseNecklaceAdj] at h
+  rcases h with ((h1 | h2) | h3)
+  · revert h1
+    decide
+  · revert h2
+    decide
+  · dsimp [isInternalTriangleEdge, triangleIdx] at h3
+    revert h3
+    decide
 
 /-- Syntactic variable-triangle orientation reader: returns `true` iff the tour traverses
     the forward entry edge `3i → 3i+1` of triangle `T_i`. -/
@@ -2272,7 +2614,11 @@ theorem sat_to_tsp_backward (F : Formula) (gadget : TSPGadget F)
   intro c hc
   exact clause_satisfied_of_valid_tour gadget p hTour hCost c hc
 
-/-- Main 3-SAT to Decision TSP Reduction Theorem. -/
+/-- Main 3-SAT to Decision TSP Reduction Specification:
+    A conditional gadget-soundness specification asserting that if a 3-SAT formula `F` admits
+    a valid reduction gadget `gadget : TSPGadget F`, then `Satisfiable F` is equivalent to
+    `ValidTourBound gadget.graph gadget.cost gadget.budget`.
+    (Note: The constructed, oracle-free polynomial-time reduction is `hc_to_tsp_reduction_correct`). -/
 theorem sat_to_tsp_reduction_correct (F : Formula) (gadget : TSPGadget F) :
     Satisfiable F ↔ ValidTourBound gadget.graph gadget.cost gadget.budget :=
   ⟨sat_to_tsp_forward F gadget, sat_to_tsp_backward F gadget⟩
@@ -2295,7 +2641,8 @@ lemma adj_of_hcReductionCost_zero {n : ℕ} (G : Graph n) [DecidableRel G.adj]
   contradiction
 
 /-- Constructive, oracle-free polynomial-time reduction from Hamiltonian Cycle (`IsTour G p`)
-    to Decision TSP (`ValidTourBound (ringOfTrianglesGraph n) (hcReductionCost G) 0`). -/
+    on an arbitrary graph `G` to Decision TSP (`ValidTourBound (ringOfTrianglesGraph n) (hcReductionCost G) 0`)
+    on the `ringOfTrianglesGraph n` host graph. -/
 theorem hc_to_tsp_reduction_correct {n : ℕ} (hn : 3 ≤ n) (G : Graph n) [DecidableRel G.adj] :
     (∃ p : List (Fin n), IsTour G p) ↔
       ValidTourBound (ringOfTrianglesGraph n) (hcReductionCost G) 0 := by
@@ -2321,12 +2668,15 @@ theorem hc_to_tsp_reduction_correct {n : ℕ} (hn : 3 ≤ n) (G : Graph n) [Deci
 
 end Reduction
 
+export Reduction (sparseNecklaceAdj sparseNecklaceGraph sparseNecklaceGraph_six_not_complete)
+
 /-!
 ## 8. Track C: Graph-Pruned Cycle-Separation Rank & Arbitrary-n Decision
 
 Whereas `StructuralRank` bounds the unpruned initial queue `(SolverState.init n).queue`
 of length `n!` (which restricts `n! ≤ n^1` to `n ≤ 2`), `PrunedStructuralRank`
-parameterizes the state machine over a support-graph pruned candidate frontier
+proves polynomial clearance conditioned on a pre-certified complete, small frontier:
+specifically, it parameterizes the state machine over a support-graph pruned candidate frontier
 `frontier : List (List (Fin n))` containing all valid Hamiltonian tours of `G`
 within budget `B`. Whenever the support graph's cycle-separation rank bounds the
 pruned frontier by `n ^ k`, the state machine decides TSP in `O(n^{k+3})` steps
@@ -2337,8 +2687,10 @@ for arbitrary `n ≥ 3`.
 def SolverState.initPruned {n : ℕ} (frontier : List (List (Fin n))) : SolverState n :=
   ⟨SearchStatus.searching, frontier, none, none, 0⟩
 
-/-- Graph-Pruned Cycle-Separation Rank: certifies that `frontier` contains only valid tours of `G`,
-    is complete for all valid tours of `(G, c, B)`, and has combinatorial cardinality at most `n ^ k`. -/
+/-- Graph-Pruned Cycle-Separation Rank: proves polynomial clearance conditioned on a pre-certified
+    complete, small frontier `frontier`. Certifies that `frontier` contains only valid tours of `G` (`frontier_tours`),
+    is complete for all valid tours of `(G, c, B)` (`frontier_complete`), and has combinatorial cardinality
+    at most `n ^ k` (`frontier_cardinality`). -/
 structure PrunedStructuralRank (n : ℕ) (G : Graph n) (c : CostFunction n)
     (B : ℕ) (k : ℕ) (frontier : List (List (Fin n))) where
   cut_width_bound : ℕ
@@ -2445,10 +2797,6 @@ theorem ringOfTriangles_nonempty_frontier_witness (n : ℕ) (hn : 3 ≤ n) :
     [List.finRange n].length ≤ n ^ 1 :=
   ⟨ringOfTriangles_frontier_tours hn, ringOfTriangles_frontier_cardinality hn⟩
 
-/-- Canonical unit edge-cost function on `Fin n` assigning weight `1` to all pairs. -/
-def unitCost (n : ℕ) : CostFunction n :=
-  fun _ _ => 1
-
 /-- Track C Non-Empty Frontier Rank-1 Theorem: For all `n ≥ 3`, `PrunedStructuralRank n G c 0 1 frontier`
     is constructively inhabited on `Reduction.ringOfTrianglesGraph n` with the non-empty tour frontier
     `frontier = [List.finRange n]` (`frontier ≠ []`) at rank `k = 1`. -/
@@ -2492,6 +2840,64 @@ theorem pruned_solver_accepts_necklace_all_ge_three (n : ℕ) (hn : 3 ≤ n) :
       (SolverState.initPruned [List.finRange n]) (List.finRange n) [] rfl rfl hValid
   dsimp [run]
   exact run_accepted_stable (Reduction.ringOfTrianglesGraph n) (zeroCost n) 0
+    (n ^ (1 + 3) + n ^ 2) _ (List.finRange n) hStep
+
+/-- Constructive Hamiltonian tour witness on `sparseNecklaceGraph n hn` for all `n ≥ 3`. -/
+lemma finRange_isTour_sparseNecklace (n : ℕ) (hn : 3 ≤ n) :
+    IsTour (sparseNecklaceGraph n hn) (List.finRange n) := by
+  refine ⟨List.length_finRange, List.nodup_finRange n, ?_⟩
+  intro e he
+  have he_next : e.2 = cycleNext e.1 := by
+    rw [List.mem_iff_get] at he
+    rcases he with ⟨idx, hidx⟩
+    have hlen : (List.finRange n).length = n := List.length_finRange
+    have hne : List.finRange n ≠ [] := by
+      intro h
+      rw [h] at hlen
+      simp at hlen
+      omega
+    have hcycle_len : (cycleEdges (List.finRange n)).length = n := by
+      rw [cycleEdges_length (List.finRange n) hne, hlen]
+    let i : Fin n := ⟨idx.val, by omega⟩
+    have hidx_eq : idx = ⟨i.val, by omega⟩ := Fin.ext rfl
+    rw [hidx_eq] at hidx
+    have h1 : e.1 = (List.finRange n).get ⟨i.val, by rw [hlen]; exact i.isLt⟩ := by
+      rw [← hidx]
+      exact cycleEdges_fst_eq (List.finRange n) hlen (by omega) i
+    have h2 : e.2 = (List.finRange n).get ⟨(cycleNext i).val, by rw [hlen]; exact (cycleNext i).isLt⟩ := by
+      rw [← hidx]
+      exact cycleEdges_snd_eq (List.finRange n) hlen (by omega) i
+    have he1 : e.1 = i := by
+      rw [h1]
+      ext
+      simp
+    have he2 : e.2 = cycleNext i := by
+      rw [h2]
+      ext
+      simp
+    rw [he1, he2]
+  dsimp [sparseNecklaceGraph, sparseNecklaceAdj]
+  exact Or.inl (Or.inl he_next)
+
+/-- Track C Constructive Acceptance Witness on the genuine sparse necklace graph:
+    For all `n ≥ 3`, the pruned solver initialized with the necklace tour `[List.finRange n]`
+    accepts in 1 transition step on `sparseNecklaceGraph n hn`. -/
+theorem pruned_solver_accepts_sparseNecklace_all_ge_three (n : ℕ) (hn : 3 ≤ n) :
+    (run (sparseNecklaceGraph n hn) (zeroCost n) 0 (stepBudget n 1)
+      (SolverState.initPruned [List.finRange n])).status =
+      SearchStatus.accepted (List.finRange n) := by
+  dsimp [stepBudget]
+  have hValid : IsTour (sparseNecklaceGraph n hn) (List.finRange n) ∧
+      tourCost (zeroCost n) (List.finRange n) ≤ 0 := by
+    refine ⟨finRange_isTour_sparseNecklace n hn, ?_⟩
+    rw [zeroCost_tourCost_eq_zero]
+  have hStep : (step (sparseNecklaceGraph n hn) (zeroCost n) 0
+      (SolverState.initPruned [List.finRange n])).status =
+      SearchStatus.accepted (List.finRange n) :=
+    step_queue_cons_accept_of_valid (sparseNecklaceGraph n hn) (zeroCost n) 0
+      (SolverState.initPruned [List.finRange n]) (List.finRange n) [] rfl rfl hValid
+  dsimp [run]
+  exact run_accepted_stable (sparseNecklaceGraph n hn) (zeroCost n) 0
     (n ^ (1 + 3) + n ^ 2) _ (List.finRange n) hStep
 
 /-- Exponential upper bound for self: L <= n ^ L and 1 <= n ^ L for all 3 <= n. -/
