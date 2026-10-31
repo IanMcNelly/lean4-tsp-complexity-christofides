@@ -1,5 +1,4 @@
--- Lean 4 Palomar Challenge Module for Decision TSP Complexity, Polyhedral Barriers & Reductions
--- Matches solution module: TSPComplexity
+-- Lean 4 Palomar Challenge Module for Decision TSP Complexity (solution: TSPComplexity)
 
 module
 
@@ -10,19 +9,14 @@ public import Mathlib
 namespace IJM
 namespace TSP
 
-/-! # Advertised Statement: Polyhedral Barriers, Parameterized Solvers, and Reductions for Decision TSP -/
-
-/-- Simple undirected finite graph on vertex set `Fin n`. -/
 structure Graph (n : ℕ) where
   adj : Fin n → Fin n → Prop
   symm : ∀ u v, adj u v → adj v u
   loopless : ∀ u, ¬ adj u u
 
-/-- Non-negative edge weight function. -/
 def CostFunction (n : ℕ) := Fin n → Fin n → ℕ
 def zeroCost (n : ℕ) : CostFunction n := fun _ _ => 0
 def unitCost (n : ℕ) : CostFunction n := fun _ _ => 1
-
 def SymmetricCost {n : ℕ} (c : CostFunction n) : Prop := ∀ u v, c u v = c v u
 def TriangleInequality {n : ℕ} (c : CostFunction n) : Prop := ∀ u v w, c u w ≤ c u v + c v w
 def IsMetricCost {n : ℕ} (c : CostFunction n) : Prop :=
@@ -30,16 +24,12 @@ def IsMetricCost {n : ℕ} (c : CostFunction n) : Prop :=
 
 def cycleEdges {n : ℕ} (p : List (Fin n)) : List (Fin n × Fin n) :=
   match p with | [] => [] | x :: xs => p.zip (xs ++ [x])
-
 def tourCost {n : ℕ} (c : CostFunction n) (p : List (Fin n)) : ℕ :=
   ((cycleEdges p).map (fun e => c e.1 e.2)).sum
-
 def IsTour {n : ℕ} (G : Graph n) (p : List (Fin n)) : Prop :=
   p.length = n ∧ p.Nodup ∧ (∀ e ∈ cycleEdges p, G.adj e.1 e.2)
-
 def ValidTourBound {n : ℕ} (G : Graph n) (c : CostFunction n) (B : ℕ) : Prop :=
   ∃ p : List (Fin n), IsTour G p ∧ tourCost c p ≤ B
-
 def DecidesTSP (algo : (n : ℕ) → Graph n → CostFunction n → ℕ → Bool) : Prop :=
   ∀ (n : ℕ) (G : Graph n) (c : CostFunction n) (B : ℕ), algo n G c B = true ↔ ValidTourBound G c B
 
@@ -83,10 +73,8 @@ structure StructuralRank (n : ℕ) (G : Graph n) (c : CostFunction n) (k : ℕ) 
   queue_cardinality : (SolverState.init n).queue.length ≤ n ^ k
 
 def stepBudget (n : ℕ) (k : ℕ) : ℕ := n ^ (k + 3) + n ^ 2 + 1
-
 noncomputable def structuralTSPSolver (n : ℕ) (G : Graph n) (c : CostFunction n) (B : ℕ) : Bool :=
-  match (run G c B (stepBudget n 1) (SolverState.init n)).status with
-  | .accepted _ => true | _ => false
+  match (run G c B (stepBudget n 1) (SolverState.init n)).status with | .accepted _ => true | _ => false
 
 def CrossesCut {n : ℕ} (S : Finset (Fin n)) (e : Fin n × Fin n) : Prop :=
   (e.1 ∈ S ∧ e.2 ∉ S) ∨ (e.1 ∉ S ∧ e.2 ∈ S)
@@ -149,21 +137,16 @@ def petersenMetricCost : CostFunction 10 :=
   fun u v => if u = v then 0 else if petersenAdj u v then 1 else 2
 
 structure HasAffineLift (n r : ℕ) : Prop where
-  affine_projection :
-    ∃ (L : AffineSubspace ℝ (Matrix (Fin r) (Fin r) ℝ))
-      (T : Matrix (Fin r) (Fin r) ℝ →ᵃ[ℝ] (FractionalAssignment n)),
-      T '' {X | X ∈ L ∧ X.PosSemidef} = TSPPolytope n
-  slack_factorization :
-    ∃ (A : DFJCut n → Matrix (Fin r) (Fin r) ℝ) (B : List (Fin n) → Matrix (Fin r) (Fin r) ℝ),
-      (∀ S, (A S).PosSemidef) ∧ (∀ p, p.length = n → p.Nodup → (B p).PosSemidef) ∧
-      (∀ (S : DFJCut n) (p : List (Fin n)),
-        p.length = n → p.Nodup → dfjSlack (tourPoint p) S = Matrix.trace (A S * B p))
+  affine_projection : ∃ (L : AffineSubspace ℝ (Matrix (Fin r) (Fin r) ℝ))
+    (T : Matrix (Fin r) (Fin r) ℝ →ᵃ[ℝ] (FractionalAssignment n)), T '' {X | X ∈ L ∧ X.PosSemidef} = TSPPolytope n
+  slack_factorization : ∃ (A : DFJCut n → Matrix (Fin r) (Fin r) ℝ) (B : List (Fin n) → Matrix (Fin r) (Fin r) ℝ),
+    (∀ S, (A S).PosSemidef) ∧ (∀ p, p.length = n → p.Nodup → (B p).PosSemidef) ∧
+    (∀ (S : DFJCut n) (p : List (Fin n)), p.length = n → p.Nodup → dfjSlack (tourPoint p) S = Matrix.trace (A S * B p))
 
 def SatisfiesFioriniRothvossBound (n r : ℕ) (C : ℝ) : Prop :=
   4 ≤ n → (∀ (A : DFJCut n → Matrix (Fin r) (Fin r) ℝ) (B : List (Fin n) → Matrix (Fin r) (Fin r) ℝ),
     (∀ S, (A S).PosSemidef) → (∀ p, p.length = n → p.Nodup → (B p).PosSemidef) →
-    (∀ (S : DFJCut n) (p : List (Fin n)),
-      p.length = n → p.Nodup → dfjSlack (tourPoint p) S = Matrix.trace (A S * B p)) →
+    (∀ (S : DFJCut n) (p : List (Fin n)), p.length = n → p.Nodup → dfjSlack (tourPoint p) S = Matrix.trace (A S * B p)) →
     (n : ℝ) ^ (Nat.ceil C + 1) < (r : ℝ))
 
 namespace Reduction
@@ -178,11 +161,24 @@ def triangleIdx {n : ℕ} (u : Fin n) : ℕ := u.val / 3
 def isInternalTriangleEdge {n : ℕ} (u v : Fin n) : Prop := u ≠ v ∧ triangleIdx u = triangleIdx v
 instance {n : ℕ} (u v : Fin n) : Decidable (isInternalTriangleEdge u v) :=
   inferInstanceAs (Decidable (u ≠ v ∧ triangleIdx u = triangleIdx v))
+
+lemma isInternalTriangleEdge_symm {n : ℕ} (u v : Fin n) :
+    isInternalTriangleEdge u v → isInternalTriangleEdge v u := by
+  intro ⟨hne, hidx⟩
+  exact ⟨hne.symm, hidx.symm⟩
+
 def isBridgeEdge {n : ℕ} (u v : Fin n) : Prop := u ≠ v ∧ triangleIdx u ≠ triangleIdx v
 def ringOfTrianglesAdj {n : ℕ} (u v : Fin n) : Prop := isInternalTriangleEdge u v ∨ isBridgeEdge u v
 
-lemma ringOfTrianglesAdj_symm {n : ℕ} (u v : Fin n) : ringOfTrianglesAdj u v → ringOfTrianglesAdj v u := by sorry
-lemma ringOfTrianglesAdj_loopless {n : ℕ} (u : Fin n) : ¬ ringOfTrianglesAdj u u := by sorry
+lemma ringOfTrianglesAdj_symm {n : ℕ} (u v : Fin n) :
+    ringOfTrianglesAdj u v → ringOfTrianglesAdj v u := by
+  rintro (⟨h1, h2⟩ | ⟨h1, h2⟩)
+  · exact Or.inl ⟨h1.symm, h2.symm⟩
+  · exact Or.inr ⟨h1.symm, h2.symm⟩
+
+lemma ringOfTrianglesAdj_loopless {n : ℕ} (u : Fin n) :
+    ¬ ringOfTrianglesAdj u u := by
+  rintro (⟨h, _⟩ | ⟨h, _⟩) <;> exact h rfl
 
 def ringOfTrianglesGraph (n : ℕ) : Graph n where
   adj := ringOfTrianglesAdj
@@ -208,8 +204,7 @@ structure TSPGadget (F : Formula) where
     IsTour graph p → c ∈ F.clauses → SatisfiesClause (decodeAssign p) c = false →
     ∃ e ∈ cycleEdges p, budget + 1 ≤ cost e.1 e.2
 
-def hcReductionCost {n : ℕ} (G : Graph n) [DecidableRel G.adj] : CostFunction n :=
-  fun u v => if G.adj u v then 0 else 1
+def hcReductionCost {n : ℕ} (G : Graph n) [DecidableRel G.adj] : CostFunction n := fun u v => if G.adj u v then 0 else 1
 
 theorem sat_to_tsp_reduction_correct (F : Formula) (gadget : TSPGadget F) :
     Satisfiable F ↔ ValidTourBound gadget.graph gadget.cost gadget.budget := by sorry
@@ -225,8 +220,31 @@ def sparseNecklaceAdj {n : ℕ} (u v : Fin n) : Prop :=
 instance {n : ℕ} (u v : Fin n) : Decidable (sparseNecklaceAdj u v) :=
   inferInstanceAs (Decidable ((v = cycleNext u ∨ u = cycleNext v) ∨ Reduction.isInternalTriangleEdge u v))
 
-lemma sparseNecklaceAdj_symm {n : ℕ} (u v : Fin n) : sparseNecklaceAdj u v → sparseNecklaceAdj v u := by sorry
-lemma sparseNecklaceAdj_loopless {n : ℕ} (hn : 3 ≤ n) (u : Fin n) : ¬ sparseNecklaceAdj u u := by sorry
+lemma sparseNecklaceAdj_symm {n : ℕ} (u v : Fin n) :
+    sparseNecklaceAdj u v → sparseNecklaceAdj v u := by
+  rintro ((h1 | h2) | h3)
+  · exact Or.inl (Or.inr h1)
+  · exact Or.inl (Or.inl h2)
+  · exact Or.inr (Reduction.isInternalTriangleEdge_symm u v h3)
+
+lemma sparseNecklaceAdj_loopless {n : ℕ} (hn : 3 ≤ n) (u : Fin n) :
+    ¬ sparseNecklaceAdj u u := by
+  rintro ((h1 | h2) | h3)
+  · have this : u.val = (cycleNext u).val := congrArg Fin.val h1
+    dsimp [cycleNext] at this
+    have hlt := u.isLt
+    by_cases h_wrap : u.val + 1 < n
+    · rw [Nat.mod_eq_of_lt h_wrap] at this; omega
+    · have h_eq : u.val + 1 = n := by omega
+      rw [h_eq, Nat.mod_self] at this; omega
+  · have this : u.val = (cycleNext u).val := congrArg Fin.val h2
+    dsimp [cycleNext] at this
+    have hlt := u.isLt
+    by_cases h_wrap : u.val + 1 < n
+    · rw [Nat.mod_eq_of_lt h_wrap] at this; omega
+    · have h_eq : u.val + 1 = n := by omega
+      rw [h_eq, Nat.mod_self] at this; omega
+  · exact h3.1 rfl
 
 def sparseNecklaceGraph (n : ℕ) (hn : 3 ≤ n) : Graph n where
   adj := sparseNecklaceAdj
@@ -239,35 +257,28 @@ theorem sparseNecklaceGraph_six_not_complete :
 def SolverState.initPruned {n : ℕ} (frontier : List (List (Fin n))) : SolverState n :=
   ⟨SearchStatus.searching, frontier, none, none, 0⟩
 
-structure PrunedStructuralRank (n : ℕ) (G : Graph n) (c : CostFunction n)
-    (B : ℕ) (k : ℕ) (frontier : List (List (Fin n))) where
+structure PrunedStructuralRank (n : ℕ) (G : Graph n) (c : CostFunction n) (B : ℕ) (k : ℕ) (frontier : List (List (Fin n))) where
   cut_width_bound : ℕ
   rank_le : cut_width_bound ≤ k
   frontier_tours : ∀ p ∈ frontier, IsTour G p
   frontier_complete : ∀ p : List (Fin n), IsTour G p ∧ tourCost c p ≤ B → p ∈ frontier
   frontier_cardinality : frontier.length ≤ n ^ k
 
-noncomputable def prunedStructuralTSPSolver (n : ℕ) (G : Graph n) (c : CostFunction n)
-    (B : ℕ) (frontier : List (List (Fin n))) : Bool :=
+noncomputable def prunedStructuralTSPSolver (n : ℕ) (G : Graph n) (c : CostFunction n) (B : ℕ) (frontier : List (List (Fin n))) : Bool :=
   match (run G c B (stepBudget n 1) (SolverState.initPruned frontier)).status with
   | .accepted _ => true | _ => false
 
 theorem queue_clearance_halts {n : ℕ} (G : Graph n) (c : CostFunction n) (B : ℕ) :
-    ∀ (fuel : ℕ) (s : SolverState n),
-      s.status = SearchStatus.searching →
-      s.queue.length + 1 ≤ fuel →
+    ∀ (fuel : ℕ) (s : SolverState n), s.status = SearchStatus.searching → s.queue.length + 1 ≤ fuel →
       (run G c B fuel s).status ≠ SearchStatus.searching := by sorry
 
 theorem polynomial_termination_rank_one {n : ℕ} (G : Graph n) (c : CostFunction n) (B : ℕ)
-    (s₀ : SolverState n) (hSearch : s₀.status = .searching)
-    (hBound : s₀.queue.length ≤ n) (hn : 1 ≤ n) :
+    (s₀ : SolverState n) (hSearch : s₀.status = .searching) (hBound : s₀.queue.length ≤ n) (hn : 1 ≤ n) :
     (run G c B (n + 1) s₀).status ≠ SearchStatus.searching := by sorry
 
 theorem tsp_soundness (n : ℕ) (G : Graph n) (c : CostFunction n) (B : ℕ)
-    (fuel : ℕ) (w : List (Fin n)) (s₀ : SolverState n)
-    (hSearch : s₀.status = .searching) (hInit : s₀.bestTour = none) :
-    (run G c B fuel s₀).status = .accepted w →
-    ValidTourBound G c B := by sorry
+    (fuel : ℕ) (w : List (Fin n)) (s₀ : SolverState n) (hSearch : s₀.status = .searching) (hInit : s₀.bestTour = none) :
+    (run G c B fuel s₀).status = .accepted w → ValidTourBound G c B := by sorry
 
 theorem tsp_completeness (n : ℕ) (G : Graph n) (c : CostFunction n) (B : ℕ) (hValid : ValidTourBound G c B) :
     ∃ (fuel : ℕ) (w : List (Fin n)), (run G c B fuel (SolverState.init n)).status = .accepted w := by sorry
@@ -286,12 +297,8 @@ theorem tour_is_held_karp_point {n : ℕ} (G : Graph n) (p : List (Fin n)) (hn :
     ∃ hk : HeldKarpPoint n, hk.x = tourPoint p := by sorry
 
 lemma fractionalCost_tourPoint_le_tourCost {n : ℕ} {G : Graph n}
-    (c : CostFunction n) (hc : SymmetricCost c) (p : List (Fin n))
-    (hn : 3 ≤ n) (hTour : IsTour G p) :
+    (c : CostFunction n) (hc : SymmetricCost c) (p : List (Fin n)) (hn : 3 ≤ n) (hTour : IsTour G p) :
     fractionalCost c (tourPoint p) ≤ (tourCost c p : ℝ) := by sorry
-
-theorem held_karp_strictly_contains_tsp_polytope :
-    ∃ n : ℕ, 4 ≤ n ∧ ∃ hk : HeldKarpPoint n, hk.x ∉ TSPPolytope n := by sorry
 
 theorem petersenFractional_not_mem_tspPolytope :
     petersenFractional ∉ TSPPolytope 10 := by sorry
@@ -308,8 +315,7 @@ theorem petersen_dfjSlack_nontrivial_ge_two_thirds (S : DFJCut 10)
 
 theorem petersenMetricCost_isMetric : IsMetricCost petersenMetricCost := by sorry
 
-theorem petersen_metric_tourCost_ge_eleven (p : List (Fin 10))
-    (hlen : p.length = 10) (hnodup : p.Nodup) :
+theorem petersen_metric_tourCost_ge_eleven (p : List (Fin 10)) (hlen : p.length = 10) (hnodup : p.Nodup) :
     11 ≤ tourCost petersenMetricCost p := by sorry
 
 theorem petersen_heldKarp_metric_integrality_gap :
@@ -318,8 +324,7 @@ theorem petersen_heldKarp_metric_integrality_gap :
 
 theorem hasAffineLift_trace_nonneg {n r : ℕ} (G : Graph n) (p : List (Fin n))
     (hn : 3 ≤ n) (hTour : IsTour G p) (S : DFJCut n) (hLift : HasAffineLift n r) :
-    ∃ (A : DFJCut n → Matrix (Fin r) (Fin r) ℝ)
-      (B : List (Fin n) → Matrix (Fin r) (Fin r) ℝ),
+    ∃ (A : DFJCut n → Matrix (Fin r) (Fin r) ℝ) (B : List (Fin n) → Matrix (Fin r) (Fin r) ℝ),
       (A S).PosSemidef ∧ (B p).PosSemidef ∧ 0 ≤ Matrix.trace (A S * B p) := by sorry
 
 theorem tsp_extension_complexity_lower_bound :

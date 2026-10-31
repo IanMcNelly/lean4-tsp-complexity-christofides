@@ -7704,12 +7704,21 @@
               </div>
               <div id="proof-sparseNecklaceAdj_loopless" class="proof-container hidden">
                   <pre class="code-block code-proof"><code>:= <span class="kw">by</span>
-  <span class="kw">intro</span> h
-  rcases h <span class="kw">with</span> ((h1 | h2) | h3)
-  · <span class="kw">have</span> hne : cycleNext u <span class="sym">≠</span> u := cycleNext_ne_self (<span class="kw">by</span> omega) u
-    <span class="kw">exact</span> hne h1.symm
-  · <span class="kw">have</span> hne : cycleNext u <span class="sym">≠</span> u := cycleNext_ne_self (<span class="kw">by</span> omega) u
-    <span class="kw">exact</span> hne h2.symm
+  rintro ((h1 | h2) | h3)
+  · <span class="kw">have</span> this : u.val = (cycleNext u).val := congrArg <span class="ty">Fin</span>.val h1
+    dsimp [cycleNext] at this
+    <span class="kw">have</span> hlt := u.isLt
+    by_cases h_wrap : u.val + 1 &lt; n
+    · rw [<span class="ty">Nat</span>.mod_eq_of_lt h_wrap] at this; omega
+    · <span class="kw">have</span> h_eq : u.val + 1 = n := <span class="kw">by</span> omega
+      rw [h_eq, <span class="ty">Nat</span>.mod_self] at this; omega
+  · <span class="kw">have</span> this : u.val = (cycleNext u).val := congrArg <span class="ty">Fin</span>.val h2
+    dsimp [cycleNext] at this
+    <span class="kw">have</span> hlt := u.isLt
+    by_cases h_wrap : u.val + 1 &lt; n
+    · rw [<span class="ty">Nat</span>.mod_eq_of_lt h_wrap] at this; omega
+    · <span class="kw">have</span> h_eq : u.val + 1 = n := <span class="kw">by</span> omega
+      rw [h_eq, <span class="ty">Nat</span>.mod_self] at this; omega
   · <span class="kw">exact</span> h3.1 rfl</code></pre>
                 </div>
             </div>
@@ -7723,7 +7732,7 @@
                   <span class="decl-name">sparseNecklaceGraph</span>
                 </div>
                 <div class="decl-meta">
-                  <a href="../TSPComplexity.lean#L2651" target="_blank" class="line-link">Line 2651</a>
+                  <a href="../TSPComplexity.lean#L2660" target="_blank" class="line-link">Line 2660</a>
                   <button class="btn btn-copy" onclick="copyDecl('sparseNecklaceGraph')" title="Copy declaration">Copy</button>
                   
                 </div>
@@ -7747,7 +7756,7 @@
                   <span class="decl-name">sparseNecklaceGraph_six_not_complete</span>
                 </div>
                 <div class="decl-meta">
-                  <a href="../TSPComplexity.lean#L2658" target="_blank" class="line-link">Line 2658</a>
+                  <a href="../TSPComplexity.lean#L2667" target="_blank" class="line-link">Line 2667</a>
                   <button class="btn btn-copy" onclick="copyDecl('sparseNecklaceGraph_six_not_complete')" title="Copy declaration">Copy</button>
                   <button class="btn btn-proof" onclick="toggleProof('sparseNecklaceGraph_six_not_complete')">
                   <span id="btn-text-sparseNecklaceGraph_six_not_complete">Show Proof</span>
@@ -7798,7 +7807,7 @@
                   <span class="decl-name">SolverState</span>
                 </div>
                 <div class="decl-meta">
-                  <a href="../TSPComplexity.lean#L2685" target="_blank" class="line-link">Line 2685</a>
+                  <a href="../TSPComplexity.lean#L2694" target="_blank" class="line-link">Line 2694</a>
                   <button class="btn btn-copy" onclick="copyDecl('SolverState')" title="Copy declaration">Copy</button>
                   <button class="btn btn-proof" onclick="toggleProof('SolverState')">
                   <span id="btn-text-SolverState">Show Proof</span>
@@ -7824,7 +7833,7 @@
                   <span class="decl-name">PrunedStructuralRank</span>
                 </div>
                 <div class="decl-meta">
-                  <a href="../TSPComplexity.lean#L2692" target="_blank" class="line-link">Line 2692</a>
+                  <a href="../TSPComplexity.lean#L2701" target="_blank" class="line-link">Line 2701</a>
                   <button class="btn btn-copy" onclick="copyDecl('PrunedStructuralRank')" title="Copy declaration">Copy</button>
                   
                 </div>
@@ -7854,7 +7863,7 @@
                   <span class="decl-name">prunedStructuralRank_mono</span>
                 </div>
                 <div class="decl-meta">
-                  <a href="../TSPComplexity.lean#L2702" target="_blank" class="line-link">Line 2702</a>
+                  <a href="../TSPComplexity.lean#L2711" target="_blank" class="line-link">Line 2711</a>
                   <button class="btn btn-copy" onclick="copyDecl('prunedStructuralRank_mono')" title="Copy declaration">Copy</button>
                   
                 </div>
@@ -7884,7 +7893,7 @@
                   <span class="decl-name">prunedStructuralTSPSolver</span>
                 </div>
                 <div class="decl-meta">
-                  <a href="../TSPComplexity.lean#L2713" target="_blank" class="line-link">Line 2713</a>
+                  <a href="../TSPComplexity.lean#L2722" target="_blank" class="line-link">Line 2722</a>
                   <button class="btn btn-copy" onclick="copyDecl('prunedStructuralTSPSolver')" title="Copy declaration">Copy</button>
                   <button class="btn btn-proof" onclick="toggleProof('prunedStructuralTSPSolver')">
                   <span id="btn-text-prunedStructuralTSPSolver">Show Proof</span>
@@ -7913,7 +7922,7 @@
                   <span class="decl-name">pruned_structural_solver_decides_tsp</span>
                 </div>
                 <div class="decl-meta">
-                  <a href="../TSPComplexity.lean#L2721" target="_blank" class="line-link">Line 2721</a>
+                  <a href="../TSPComplexity.lean#L2730" target="_blank" class="line-link">Line 2730</a>
                   <button class="btn btn-copy" onclick="copyDecl('pruned_structural_solver_decides_tsp')" title="Copy declaration">Copy</button>
                   <button class="btn btn-proof" onclick="toggleProof('pruned_structural_solver_decides_tsp')">
                   <span id="btn-text-pruned_structural_solver_decides_tsp">Show Proof</span>
@@ -7967,7 +7976,7 @@
                   <span class="decl-name">prunedStructuralRank_inhabited_all_ge_three</span>
                 </div>
                 <div class="decl-meta">
-                  <a href="../TSPComplexity.lean#L2753" target="_blank" class="line-link">Line 2753</a>
+                  <a href="../TSPComplexity.lean#L2762" target="_blank" class="line-link">Line 2762</a>
                   <button class="btn btn-copy" onclick="copyDecl('prunedStructuralRank_inhabited_all_ge_three')" title="Copy declaration">Copy</button>
                   <button class="btn btn-proof" onclick="toggleProof('prunedStructuralRank_inhabited_all_ge_three')">
                   <span id="btn-text-prunedStructuralRank_inhabited_all_ge_three">Show Proof</span>
@@ -8003,7 +8012,7 @@
                   <span class="decl-name">finRange_isTour_ringOfTriangles</span>
                 </div>
                 <div class="decl-meta">
-                  <a href="../TSPComplexity.lean#L2766" target="_blank" class="line-link">Line 2766</a>
+                  <a href="../TSPComplexity.lean#L2775" target="_blank" class="line-link">Line 2775</a>
                   <button class="btn btn-copy" onclick="copyDecl('finRange_isTour_ringOfTriangles')" title="Copy declaration">Copy</button>
                   <button class="btn btn-proof" onclick="toggleProof('finRange_isTour_ringOfTriangles')">
                   <span id="btn-text-finRange_isTour_ringOfTriangles">Show Proof</span>
@@ -8034,7 +8043,7 @@
                   <span class="decl-name">ringOfTriangles_frontier_tours</span>
                 </div>
                 <div class="decl-meta">
-                  <a href="../TSPComplexity.lean#L2776" target="_blank" class="line-link">Line 2776</a>
+                  <a href="../TSPComplexity.lean#L2785" target="_blank" class="line-link">Line 2785</a>
                   <button class="btn btn-copy" onclick="copyDecl('ringOfTriangles_frontier_tours')" title="Copy declaration">Copy</button>
                   <button class="btn btn-proof" onclick="toggleProof('ringOfTriangles_frontier_tours')">
                   <span id="btn-text-ringOfTriangles_frontier_tours">Show Proof</span>
@@ -8065,7 +8074,7 @@
                   <span class="decl-name">ringOfTriangles_frontier_cardinality</span>
                 </div>
                 <div class="decl-meta">
-                  <a href="../TSPComplexity.lean#L2784" target="_blank" class="line-link">Line 2784</a>
+                  <a href="../TSPComplexity.lean#L2793" target="_blank" class="line-link">Line 2793</a>
                   <button class="btn btn-copy" onclick="copyDecl('ringOfTriangles_frontier_cardinality')" title="Copy declaration">Copy</button>
                   <button class="btn btn-proof" onclick="toggleProof('ringOfTriangles_frontier_cardinality')">
                   <span id="btn-text-ringOfTriangles_frontier_cardinality">Show Proof</span>
@@ -8095,7 +8104,7 @@
                   <span class="decl-name">ringOfTriangles_nonempty_frontier_witness</span>
                 </div>
                 <div class="decl-meta">
-                  <a href="../TSPComplexity.lean#L2793" target="_blank" class="line-link">Line 2793</a>
+                  <a href="../TSPComplexity.lean#L2802" target="_blank" class="line-link">Line 2802</a>
                   <button class="btn btn-copy" onclick="copyDecl('ringOfTriangles_nonempty_frontier_witness')" title="Copy declaration">Copy</button>
                   <button class="btn btn-proof" onclick="toggleProof('ringOfTriangles_nonempty_frontier_witness')">
                   <span id="btn-text-ringOfTriangles_nonempty_frontier_witness">Show Proof</span>
@@ -8124,7 +8133,7 @@
                   <span class="decl-name">prunedStructuralRank_nonempty_frontier_rank_one</span>
                 </div>
                 <div class="decl-meta">
-                  <a href="../TSPComplexity.lean#L2801" target="_blank" class="line-link">Line 2801</a>
+                  <a href="../TSPComplexity.lean#L2810" target="_blank" class="line-link">Line 2810</a>
                   <button class="btn btn-copy" onclick="copyDecl('prunedStructuralRank_nonempty_frontier_rank_one')" title="Copy declaration">Copy</button>
                   <button class="btn btn-proof" onclick="toggleProof('prunedStructuralRank_nonempty_frontier_rank_one')">
                   <span id="btn-text-prunedStructuralRank_nonempty_frontier_rank_one">Show Proof</span>
@@ -8161,7 +8170,7 @@
                   <span class="decl-name">zeroCost_tourCost_eq_zero</span>
                 </div>
                 <div class="decl-meta">
-                  <a href="../TSPComplexity.lean#L2814" target="_blank" class="line-link">Line 2814</a>
+                  <a href="../TSPComplexity.lean#L2823" target="_blank" class="line-link">Line 2823</a>
                   <button class="btn btn-copy" onclick="copyDecl('zeroCost_tourCost_eq_zero')" title="Copy declaration">Copy</button>
                   <button class="btn btn-proof" onclick="toggleProof('zeroCost_tourCost_eq_zero')">
                   <span id="btn-text-zeroCost_tourCost_eq_zero">Show Proof</span>
@@ -8193,7 +8202,7 @@
                   <span class="decl-name">pruned_solver_accepts_necklace_all_ge_three</span>
                 </div>
                 <div class="decl-meta">
-                  <a href="../TSPComplexity.lean#L2825" target="_blank" class="line-link">Line 2825</a>
+                  <a href="../TSPComplexity.lean#L2834" target="_blank" class="line-link">Line 2834</a>
                   <button class="btn btn-copy" onclick="copyDecl('pruned_solver_accepts_necklace_all_ge_three')" title="Copy declaration">Copy</button>
                   <button class="btn btn-proof" onclick="toggleProof('pruned_solver_accepts_necklace_all_ge_three')">
                   <span id="btn-text-pruned_solver_accepts_necklace_all_ge_three">Show Proof</span>
@@ -8235,7 +8244,7 @@
                   <span class="decl-name">finRange_isTour_sparseNecklace</span>
                 </div>
                 <div class="decl-meta">
-                  <a href="../TSPComplexity.lean#L2844" target="_blank" class="line-link">Line 2844</a>
+                  <a href="../TSPComplexity.lean#L2853" target="_blank" class="line-link">Line 2853</a>
                   <button class="btn btn-copy" onclick="copyDecl('finRange_isTour_sparseNecklace')" title="Copy declaration">Copy</button>
                   <button class="btn btn-proof" onclick="toggleProof('finRange_isTour_sparseNecklace')">
                   <span id="btn-text-finRange_isTour_sparseNecklace">Show Proof</span>
@@ -8294,7 +8303,7 @@
                   <span class="decl-name">pruned_solver_accepts_sparseNecklace_all_ge_three</span>
                 </div>
                 <div class="decl-meta">
-                  <a href="../TSPComplexity.lean#L2883" target="_blank" class="line-link">Line 2883</a>
+                  <a href="../TSPComplexity.lean#L2892" target="_blank" class="line-link">Line 2892</a>
                   <button class="btn btn-copy" onclick="copyDecl('pruned_solver_accepts_sparseNecklace_all_ge_three')" title="Copy declaration">Copy</button>
                   <button class="btn btn-proof" onclick="toggleProof('pruned_solver_accepts_sparseNecklace_all_ge_three')">
                   <span id="btn-text-pruned_solver_accepts_sparseNecklace_all_ge_three">Show Proof</span>
@@ -8337,7 +8346,7 @@
                   <span class="decl-name">le_pow_self_and_pos</span>
                 </div>
                 <div class="decl-meta">
-                  <a href="../TSPComplexity.lean#L2902" target="_blank" class="line-link">Line 2902</a>
+                  <a href="../TSPComplexity.lean#L2911" target="_blank" class="line-link">Line 2911</a>
                   <button class="btn btn-copy" onclick="copyDecl('le_pow_self_and_pos')" title="Copy declaration">Copy</button>
                   <button class="btn btn-proof" onclick="toggleProof('le_pow_self_and_pos')">
                   <span id="btn-text-le_pow_self_and_pos">Show Proof</span>
@@ -8371,7 +8380,7 @@
                   <span class="decl-name">le_pow_self_of_three_le</span>
                 </div>
                 <div class="decl-meta">
-                  <a href="../TSPComplexity.lean#L2914" target="_blank" class="line-link">Line 2914</a>
+                  <a href="../TSPComplexity.lean#L2923" target="_blank" class="line-link">Line 2923</a>
                   <button class="btn btn-copy" onclick="copyDecl('le_pow_self_of_three_le')" title="Copy declaration">Copy</button>
                   <button class="btn btn-proof" onclick="toggleProof('le_pow_self_of_three_le')">
                   <span id="btn-text-le_pow_self_of_three_le">Show Proof</span>
@@ -8397,7 +8406,7 @@
                   <span class="decl-name">prunedStructuralRank_positive_inhabited_all_ge_three</span>
                 </div>
                 <div class="decl-meta">
-                  <a href="../TSPComplexity.lean#L2921" target="_blank" class="line-link">Line 2921</a>
+                  <a href="../TSPComplexity.lean#L2930" target="_blank" class="line-link">Line 2930</a>
                   <button class="btn btn-copy" onclick="copyDecl('prunedStructuralRank_positive_inhabited_all_ge_three')" title="Copy declaration">Copy</button>
                   <button class="btn btn-proof" onclick="toggleProof('prunedStructuralRank_positive_inhabited_all_ge_three')">
                   <span id="btn-text-prunedStructuralRank_positive_inhabited_all_ge_three">Show Proof</span>
@@ -8452,7 +8461,7 @@
                   <span class="decl-name">directedCycleCost</span>
                 </div>
                 <div class="decl-meta">
-                  <a href="../TSPComplexity.lean#L2952" target="_blank" class="line-link">Line 2952</a>
+                  <a href="../TSPComplexity.lean#L2961" target="_blank" class="line-link">Line 2961</a>
                   <button class="btn btn-copy" onclick="copyDecl('directedCycleCost')" title="Copy declaration">Copy</button>
                   <button class="btn btn-proof" onclick="toggleProof('directedCycleCost')">
                   <span id="btn-text-directedCycleCost">Show Proof</span>
@@ -8479,7 +8488,7 @@
                   <span class="decl-name">finRange_tourCost_directedCycleCost_zero</span>
                 </div>
                 <div class="decl-meta">
-                  <a href="../TSPComplexity.lean#L2956" target="_blank" class="line-link">Line 2956</a>
+                  <a href="../TSPComplexity.lean#L2965" target="_blank" class="line-link">Line 2965</a>
                   <button class="btn btn-copy" onclick="copyDecl('finRange_tourCost_directedCycleCost_zero')" title="Copy declaration">Copy</button>
                   <button class="btn btn-proof" onclick="toggleProof('finRange_tourCost_directedCycleCost_zero')">
                   <span id="btn-text-finRange_tourCost_directedCycleCost_zero">Show Proof</span>
@@ -8539,7 +8548,7 @@
                   <span class="decl-name">IsStepChain</span>
                 </div>
                 <div class="decl-meta">
-                  <a href="../TSPComplexity.lean#L2994" target="_blank" class="line-link">Line 2994</a>
+                  <a href="../TSPComplexity.lean#L3003" target="_blank" class="line-link">Line 3003</a>
                   <button class="btn btn-copy" onclick="copyDecl('IsStepChain')" title="Copy declaration">Copy</button>
                   
                 </div>
@@ -8563,7 +8572,7 @@
                   <span class="decl-name">eq_of_isStepChain</span>
                 </div>
                 <div class="decl-meta">
-                  <a href="../TSPComplexity.lean#L3000" target="_blank" class="line-link">Line 3000</a>
+                  <a href="../TSPComplexity.lean#L3009" target="_blank" class="line-link">Line 3009</a>
                   <button class="btn btn-copy" onclick="copyDecl('eq_of_isStepChain')" title="Copy declaration">Copy</button>
                   
                 </div>
@@ -8604,7 +8613,7 @@
                   <span class="decl-name">isStepChain_of_zip_append</span>
                 </div>
                 <div class="decl-meta">
-                  <a href="../TSPComplexity.lean#L3023" target="_blank" class="line-link">Line 3023</a>
+                  <a href="../TSPComplexity.lean#L3032" target="_blank" class="line-link">Line 3032</a>
                   <button class="btn btn-copy" onclick="copyDecl('isStepChain_of_zip_append')" title="Copy declaration">Copy</button>
                   
                 </div>
@@ -8631,7 +8640,7 @@
                   <span class="decl-name">isStepChain_of_directedCycleCost_zero</span>
                 </div>
                 <div class="decl-meta">
-                  <a href="../TSPComplexity.lean#L3032" target="_blank" class="line-link">Line 3032</a>
+                  <a href="../TSPComplexity.lean#L3041" target="_blank" class="line-link">Line 3041</a>
                   <button class="btn btn-copy" onclick="copyDecl('isStepChain_of_directedCycleCost_zero')" title="Copy declaration">Copy</button>
                   <button class="btn btn-proof" onclick="toggleProof('isStepChain_of_directedCycleCost_zero')">
                   <span id="btn-text-isStepChain_of_directedCycleCost_zero">Show Proof</span>
@@ -8669,7 +8678,7 @@
                   <span class="decl-name">tourStartingAt</span>
                 </div>
                 <div class="decl-meta">
-                  <a href="../TSPComplexity.lean#L3049" target="_blank" class="line-link">Line 3049</a>
+                  <a href="../TSPComplexity.lean#L3058" target="_blank" class="line-link">Line 3058</a>
                   <button class="btn btn-copy" onclick="copyDecl('tourStartingAt')" title="Copy declaration">Copy</button>
                   <button class="btn btn-proof" onclick="toggleProof('tourStartingAt')">
                   <span id="btn-text-tourStartingAt">Show Proof</span>
@@ -8701,7 +8710,7 @@
                   <span class="decl-name">canonicalPrunedFrontier</span>
                 </div>
                 <div class="decl-meta">
-                  <a href="../TSPComplexity.lean#L3058" target="_blank" class="line-link">Line 3058</a>
+                  <a href="../TSPComplexity.lean#L3067" target="_blank" class="line-link">Line 3067</a>
                   <button class="btn btn-copy" onclick="copyDecl('canonicalPrunedFrontier')" title="Copy declaration">Copy</button>
                   <button class="btn btn-proof" onclick="toggleProof('canonicalPrunedFrontier')">
                   <span id="btn-text-canonicalPrunedFrontier">Show Proof</span>
@@ -8727,7 +8736,7 @@
                   <span class="decl-name">prunedStructuralRank_positive_rank_one_all_ge_three</span>
                 </div>
                 <div class="decl-meta">
-                  <a href="../TSPComplexity.lean#L3065" target="_blank" class="line-link">Line 3065</a>
+                  <a href="../TSPComplexity.lean#L3074" target="_blank" class="line-link">Line 3074</a>
                   <button class="btn btn-copy" onclick="copyDecl('prunedStructuralRank_positive_rank_one_all_ge_three')" title="Copy declaration">Copy</button>
                   <button class="btn btn-proof" onclick="toggleProof('prunedStructuralRank_positive_rank_one_all_ge_three')">
                   <span id="btn-text-prunedStructuralRank_positive_rank_one_all_ge_three">Show Proof</span>
