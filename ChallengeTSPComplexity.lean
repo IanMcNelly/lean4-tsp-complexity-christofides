@@ -231,7 +231,7 @@ def sparseNecklaceGraph (n : ℕ) (hn : 3 ≤ n) : Graph n where
   loopless := sparseNecklaceAdj_loopless hn
 
 theorem sparseNecklaceGraph_six_not_complete :
-    ¬ (sparseNecklaceGraph 6 (by omega)).adj ⟨1, by omega⟩ ⟨4, by omega⟩ := by sorry
+    ¬ (sparseNecklaceGraph 6 (of_decide_eq_true rfl)).adj ⟨1, of_decide_eq_true rfl⟩ ⟨4, of_decide_eq_true rfl⟩ := by sorry
 
 def SolverState.initPruned {n : ℕ} (frontier : List (List (Fin n))) : SolverState n :=
   ⟨SearchStatus.searching, frontier, none, none, 0⟩

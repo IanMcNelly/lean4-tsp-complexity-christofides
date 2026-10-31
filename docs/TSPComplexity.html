@@ -7758,7 +7758,7 @@
     containing no edge between vertex 1 and vertex 4.</div>
               <div class="signature-container">
                 <pre class="code-block" id="code-sparseNecklaceGraph_six_not_complete"><code><span class="kw">theorem</span> sparseNecklaceGraph_six_not_complete :
-    <span class="sym">¬</span> (sparseNecklaceGraph 6 (<span class="kw">by</span> omega)).adj ⟨1, <span class="kw">by</span> omega⟩ ⟨4, <span class="kw">by</span> omega⟩</code></pre>
+    <span class="sym">¬</span> (sparseNecklaceGraph 6 (of_decide_eq_true rfl)).adj ⟨1, of_decide_eq_true rfl⟩ ⟨4, of_decide_eq_true rfl⟩</code></pre>
               </div>
               <div id="proof-sparseNecklaceGraph_six_not_complete" class="proof-container hidden">
                   <pre class="code-block code-proof"><code>:= <span class="kw">by</span>

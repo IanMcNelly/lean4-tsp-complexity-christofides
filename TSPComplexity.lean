@@ -2656,7 +2656,7 @@ def sparseNecklaceGraph (n : ℕ) (hn : 3 ≤ n) : Graph n where
 /-- Constructive non-completeness witness: `sparseNecklaceGraph 6` is genuinely non-complete,
     containing no edge between vertex 1 and vertex 4. -/
 theorem sparseNecklaceGraph_six_not_complete :
-    ¬ (sparseNecklaceGraph 6 (by omega)).adj ⟨1, by omega⟩ ⟨4, by omega⟩ := by
+    ¬ (sparseNecklaceGraph 6 (of_decide_eq_true rfl)).adj ⟨1, of_decide_eq_true rfl⟩ ⟨4, of_decide_eq_true rfl⟩ := by
   intro h
   dsimp [sparseNecklaceGraph, sparseNecklaceAdj] at h
   rcases h with ((h1 | h2) | h3)
