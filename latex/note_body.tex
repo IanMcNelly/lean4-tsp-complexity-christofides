@@ -1,0 +1,393 @@
+\begin{abstract}
+We describe a Lean~4 formalization of two classical results on the Traveling Salesperson Problem (TSP) over finite undirected graphs: the Christofides--Serdyukov $3/2$-approximation guarantee for metric TSP and the polyhedral integrality gap of the Held--Karp subtour elimination relaxation on the 10-vertex Petersen graph $P_{10}$.
+In the approximation development (\texttt{Christofides.lean}), we represent Hamiltonian tours as duplicate-free cyclic vertex lists over \texttt{Fin n} and model undirected trees, matchings, and Eulerian multigraphs using \texttt{Finset (Sym2 (Fin n))} and \texttt{Multiset (Sym2 (Fin n))}. This representation reduces metric walk shortcutting to structural induction on sublists and supports constructive proofs of the spanning-tree lower bound $\mathrm{cost}(T) \le \mathrm{OPT}$, the handshaking parity of odd-degree vertices, the alternating-cycle matching bound $2\cdot\mathrm{cost}(M) \le \mathrm{OPT}$, and Hierholzer cycle splicing for Eulerian circuits.
+In the complementary polyhedral development (\texttt{TSPComplexity.lean}), we formalize the Dantzig--Fulkerson--Johnson (DFJ) subtour cut inequality via a $\mathbb{Z}_2$ telescoping sum over cyclic shift bijections, embed integral tours into the Held--Karp relaxation, and use kernel computation (\texttt{decide}) together with Mathlib's \texttt{convexHull\_min} to prove that the uniform $x_e = 2/3$ fractional assignment on $P_{10}$ satisfies all $1{,}022$ proper DFJ cut constraints while witnessing an integrality gap of at least $11/10$ under the shortest-path graphic metric. The formalization depends only on the standard Lean~4 axioms (\texttt{propext}, \texttt{Quot.sound}, \texttt{Classical.choice}) and is archived in the Palomar Registry (\texttt{PALOMAR-2026-10-30-000013}).
+\end{abstract}
+
+% ==============================================================================
+\section{Introduction}
+\label{sec:intro}
+% ==============================================================================
+
+For a finite complete graph $K_n$ with symmetric edge weights satisfying the triangle inequality, the Traveling Salesperson Problem (TSP) asks for a Hamiltonian cycle of minimum total weight. Although metric TSP remains NP-hard and cannot be approximated within $123/122$ unless $\mathrm{P}=\mathrm{NP}$~\cite{karp1972,applegate2006}, two foundational results from the 1970s govern its approximation theory:
+\begin{enumerate}
+  \item \emph{Combinatorial upper bound:} The algorithm discovered independently by Christofides~\cite{christofides1976} and Serdyukov~\cite{serdyukov1978} combines a minimum spanning tree $T$ with a minimum-weight perfect matching $M$ on the odd-degree vertices of $T$, shortcuts an Eulerian circuit of the multigraph $T \uplus M$, and produces a tour of cost at most $\frac{3}{2}\,\mathrm{OPT}$.
+  \item \emph{Polyhedral lower bound:} The Held--Karp linear programming relaxation~\cite{dfj1954,hk1970} enforces degree-$2$ conservation at every vertex and the Dantzig--Fulkerson--Johnson (DFJ) subtour elimination inequality $x(\delta(S)) \ge 2$ across every proper non-empty cut $\emptyset \subsetneq S \subsetneq V$. Even with all $2^n - 2$ subtour constraints present, the continuous polytope strictly contains the convex hull of integral tours for $n \ge 4$; on the 10-vertex Petersen graph $P_{10}$, the fractional point $x_e = 2/3$ satisfies every DFJ constraint while admitting no Hamiltonian cycle.
+\end{enumerate}
+
+Despite their compact textbook proofs, mechanizing these two arguments in an interactive theorem prover exposes several representation friction points. A single proof of the Christofides--Serdyukov bound must move between five different combinatorial objects: cyclic vertex permutations (for Hamiltonian tours and shortcutting), simple undirected edge sets (for spanning trees and matchings), edge multisets with parallel edges (when an edge of $M$ duplicates an edge of $T$), closed multigraph walks (for Eulerian circuits), and subset-restricted subcycles (when projecting an optimal tour onto the odd-degree vertices of $T$). Similarly, proving the DFJ subtour inequality and separating the Held--Karp relaxation from the integral tour polytope requires bridging modular index wrap-around on lists with real-valued affine halfspaces and finite graph reflection.
+
+This note reports on our Lean~4 formalization of both results, developed atop Mathlib~\cite{mathlib2020}.\footnote{Source repository: \url{https://github.com/IanMcNelly/lean4-tsp-complexity-christofides}. The Christofides--Serdyukov formalization (\texttt{Christofides.lean}) is independently verified and archived in the Palomar Registry under entry \href{https://palomar-registry.org/entry?id=PALOMAR-2026-10-30-000013&version=1}{\texttt{PALOMAR-2026-10-30-000013}}.} Rather than formalizing imperative graph algorithms (such as Kruskal's algorithm or Edmonds' blossom shrinking), we focus on the combinatorial and polyhedral guarantees themselves, separating certificate properties from finite existence proofs. Specifically:
+\begin{itemize}
+  \item In \texttt{Christofides.lean} ($2{,}735$ lines, $178$ declarations), we formalize the complete $3/2$-approximation proof for all $n \ge 3$, including the spanning-path lower bound $\mathrm{cost}(T) \le \mathrm{OPT}$, the handshaking parity of odd-degree vertices, the alternating matching decomposition yielding $2\cdot\mathrm{cost}(M) \le \mathrm{OPT}$, multigraph degree parity on $T \uplus M$, constructive Hierholzer cycle splicing for Eulerian circuits, and sublist walk contraction under the triangle inequality.
+  \item In \texttt{TSPComplexity.lean} (Sections~5--6), we give an algebraic $\mathbb{Z}_2$ telescoping proof of the DFJ cut condition, prove that every integral tour embeds into the Held--Karp polytope with fractional objective bounded by its tour cost, and verify by kernel reflection (\texttt{decide}) that the uniform $x_e = 2/3$ assignment on $P_{10}$ has zero slack on singleton cuts, slack at least $2/3$ on all non-trivial cuts ($2 \le |S| \le 8$), and induces an unconditional $11/10$ integrality gap under the shortest-path graphic metric.
+\end{itemize}
+
+The remainder of this note is organized around the design choices that kept the proofs elementary. Section~\ref{sec:tours_mst} discusses the representation of cyclic tours, metric walk contraction, and the spanning-tree lower bound. Section~\ref{sec:matching} covers Euler's handshaking parity and the alternating cycle decomposition used for the $1/2\text{-}\mathrm{OPT}$ matching bound. Section~\ref{sec:eulerian} explains the multigraph union $T \uplus M$, Hierholzer trail extension, and the unconditional $3/2$ bound. Section~\ref{sec:polyhedral} presents the $\mathbb{Z}_2$ DFJ parity proof and the Petersen $P_{10}$ separation theorems, and Section~\ref{sec:summary} summarizes the formalization statistics and design trade-offs.
+
+% ==============================================================================
+\section{Tours, Metric Shortcutting, and Spanning Trees}
+\label{sec:tours_mst}
+% ==============================================================================
+
+\subsection{Representing Tours and Metric Costs}
+
+We work over the canonical finite vertex type \texttt{Fin n}. Edge weights are modeled as functions \texttt{CostFunction n := Fin n $\to$ Fin n $\to$ $\mathbb{N}$}, accompanied by the metric specification:
+
+\noindent\begin{minipage}{\linewidth}
+\begin{lstlisting}[language=lean4]
+structure IsMetricCost {n : Nat} (c : CostFunction n) : Prop where
+  symm : forall u v, c u v = c v u
+  zero_diag : forall u, c u u = 0
+  triangle : forall u v w, c u w <= c u v + c v w
+\end{lstlisting}
+\end{minipage}
+Using $\mathbb{N}$-valued edge weights avoids real-number ring conversions throughout the combinatorial stages of the proof; the cast to $\mathbb{R}$ is deferred until the final $3/2$ ratio statement and the continuous Held--Karp linear program.
+
+A key early decision was how to represent Hamiltonian tours and intermediate walks. Mathlib's \texttt{SimpleGraph.Walk} is a dependent inductive family indexed by its endpoints, where every step carries a proof of adjacency. In metric TSP, however, the host graph for shortcutting is the complete graph $K_n$, and two central operations (restricting an optimal tour to the subset $O$ of odd-degree vertices, and removing duplicate vertices from an Eulerian circuit) delete arbitrary interior vertices from a sequence. On dependent walks, deleting interior vertices requires re-stitching adjacency proofs at every splice.
+
+Instead, we represent walks and tours simply as lists \texttt{p : List (Fin n)}. For an open walk, the traversal cost \texttt{walkCost c p} sums $c(u,v)$ over consecutive pairs, while for a closed cycle, \texttt{cycleEdges p} zips \texttt{p} with its one-step rotation:
+
+\noindent\begin{minipage}{\linewidth}
+\begin{lstlisting}[language=lean4]
+def cycleEdges {n : Nat} (p : List (Fin n)) : List (Fin n * Fin n) :=
+  match p with
+  | [] => []
+  | x :: xs => p.zip (xs ++ [x])
+
+def tourCost {n : Nat} (c : CostFunction n) (p : List (Fin n)) : Nat :=
+  ((cycleEdges p).map (fun e => c e.1 e.2)).sum
+
+def IsTour {n : Nat} (G : Graph n) (p : List (Fin n)) : Prop :=
+  p.length = n /\ p.Nodup /\ (forall e in cycleEdges p, G.adj e.1 e.2)
+\end{lstlisting}
+\end{minipage}
+By separating the data (\texttt{List (Fin n)}) from the validity predicate (\texttt{IsTour}), any list-filtering operation immediately inherits Mathlib's \texttt{List.Sublist} API. In particular, metric walk contraction reduces to a single inductive lemma (\texttt{walkCost\_sublist\_le}): if \texttt{w1 <+ w2} is a sublist of an open walk, then under \texttt{IsMetricCost c},
+\begin{equation}
+  \mathrm{walkCost}(c, w_1) \le \mathrm{walkCost}(c, w_2).
+\end{equation}
+Both shortcutting steps in Christofides' algorithm (projecting the optimal tour onto $O$ via \texttt{List.filter} and deduplicating the Eulerian circuit via \texttt{List.eraseDups}) are instances of \texttt{List.Sublist}, allowing us to reuse the same triangle-inequality induction in both places.
+
+To avoid non-constructive Hilbert $\varepsilon$-selection when referring to the optimal tour value $\mathrm{OPT}$, we define \texttt{allTours n := (List.finRange n).permutations} and compute \texttt{optTourCost c} directly by folding \texttt{min} over the mapped tour costs. For $n \ge 3$, the identity permutation \texttt{List.finRange n} witnesses that the tour set on \texttt{completeGraph n} is non-empty, giving an explicit optimal tour $p^*$ achieving \texttt{tourCost c $p^*$ = optTourCost c} (\texttt{exists\_optTour}).
+
+\subsection{Spanning Trees and the MST Lower Bound}
+
+While tours have a natural cyclic order, spanning trees and matchings are unordered edge sets. We represent undirected edges using the symmetric square \texttt{Sym2 (Fin n)}, written \texttt{s(u, v)}, and lift the cost function symmetrically via \texttt{undirectedEdgeCost c s(u, v) = min (c u v) (c v u)} (which equals \texttt{c u v} under \texttt{IsMetricCost c}). A spanning tree on \texttt{Fin n} is packaged as a finite edge set of size $n-1$ that is loopless and connected under the reflexive-transitive closure \texttt{ConnectedInEdges}:
+
+\noindent\begin{minipage}{\linewidth}
+\begin{lstlisting}[language=lean4]
+structure SpanningTree (n : Nat) where
+  edges : Finset (Sym2 (Fin n))
+  card_edges : edges.card = n - 1
+  connected : forall u v : Fin n, ConnectedInEdges edges u v
+  loopless : IsLooplessEdges edges
+\end{lstlisting}
+\end{minipage}
+
+To prove the spanning-tree lower bound $\mathrm{cost}(T_{\mathrm{mst}}) \le \mathrm{OPT}$, textbook proofs delete a single edge from an optimal tour $p^*$ to obtain a Hamiltonian path, which is a spanning tree of cost at most $\mathrm{OPT}$. With our list representation, dropping the wrap-around edge of $p^* = x :: xs$ is immediate: \texttt{cycleEdges (x :: xs)} decomposes into the open path edges \texttt{directedPathEdges (x :: xs)} plus the single closing edge $((x :: xs).\mathrm{getLast}, x)$ (\texttt{cycleEdges\_cons}). Mapping \texttt{Sym2.mk} over the open path produces an $(n-1)$-element duplicate-free edge finset \texttt{tourToSpanningPath} that connects the head $x$ to every vertex in $p^*$, and hence connects all pairs in \texttt{Fin n} by transitivity. Because edge weights are non-negative, dropping the closing edge cannot increase total weight (\texttt{tourToSpanningPath\_cost\_le\_tourCost}), yielding:
+\begin{theorem}[\texttt{MSTCost\_le\_OPT}]
+For $n \ge 3$, any cost function $c$, and any spanning tree $T_{\mathrm{mst}}$ satisfying \texttt{IsMST c $T_{\mathrm{mst}}$},
+\[
+  \mathrm{edgeSetCost}(c, T_{\mathrm{mst}}.\mathrm{edges}) \le \mathrm{optTourCost}(c).
+\]
+\end{theorem}
+
+% ==============================================================================
+\section{Odd-Degree Parity and the \texorpdfstring{$1/2\text{-}\mathrm{OPT}$}{1/2-OPT} Matching Bound}
+\label{sec:matching}
+% ==============================================================================
+
+\subsection{Incidence Double-Counting and Handshaking Parity}
+
+Let $O = \mathrm{oddDegreeVertices}(T.\mathrm{edges})$ be the subset of vertices having odd degree in the spanning tree $T$. To guarantee that $O$ admits a perfect matching, one must first show that $|O|$ is even. Rather than deriving this from Mathlib's \texttt{SimpleGraph.\allowbreak sum\_degrees\_eq\_twice\_card\_edges} (which would require translating back and forth between \texttt{Finset (Sym2 (Fin n))} and \texttt{SimpleGraph (Fin n)}), we prove the incidence double-counting identity directly on loopless \texttt{Sym2} finsets.
+
+For each loopless edge $e = s(u,v)$ with $u \ne v$, filtering \texttt{Finset.univ} by membership $w \in e$ yields the two-element set $\{u, v\}$. Summing vertex degrees $\deg_E(v) = |\{e \in E \mid v \in e\}|$ over $v \in \mathrm{Fin}\;n$ and exchanging the order of summation gives $\sum_v \deg_E(v) = 2|E|$. Splitting the vertex sum across $O$ and its complement $O^c$ shows that $\sum_{v \in O} \deg_E(v)$ is even; since every term in the sum over $O$ is congruent to $1 \pmod 2$, the cardinality $|O|$ must be even:
+\begin{theorem}[\texttt{even\_card\_oddDegreeVertices}]
+For any loopless undirected edge set $E : \mathrm{Finset}(\mathrm{Sym2}(\mathrm{Fin}\;n))$, the odd-degree vertex subset $\mathrm{oddDegreeVertices}(E)$ has even cardinality.
+\end{theorem}
+
+\subsection{Alternating Decomposition of the Shortcut Cycle}
+
+The most delicate part of the Christofides--Serdyukov proof is the bound $\mathrm{cost}(M) \le \frac{1}{2}\,\mathrm{OPT}$ for a minimum-weight perfect matching $M$ on $O$. We define a perfect matching on an arbitrary vertex subset $S \subseteq \mathrm{Fin}\;n$ as a loopless edge finset whose endpoints lie in $S$ and in which every vertex $v \in S$ is incident to exactly one edge:
+
+\noindent\begin{minipage}{\linewidth}
+\begin{lstlisting}[language=lean4]
+structure PerfectMatching {n : Nat} (S : Finset (Fin n)) where
+  edges : Finset (Sym2 (Fin n))
+  endpoints_in : forall e in edges, forall v in e, v in S
+  incident_once : forall v in S, (edges.filter (fun e => v in e)).card = 1
+  loopless : IsLooplessEdges edges
+\end{lstlisting}
+\end{minipage}
+Double-counting incidences across $S$ gives $2|M.\mathrm{edges}| = |S|$ (\texttt{perfectMatching\_card\_two\_mul}).
+
+Given an optimal tour $p^*$ on $K_n$, we project $p^*$ onto $O$ by filtering the list:
+\[
+  \mathrm{shortcutToSubset}(p^*, O) := p^*.\mathrm{filter}(\cdot \in O).
+\]
+Because $p^*$ is a permutation of $\mathrm{Fin}\;n$, filtering by $O$ preserves duplicate-freeness (\texttt{List.Nodup.filter}) and produces a cycle $C_O$ of length $|O| = 2k$. By repeated application of the metric deletion step \texttt{tourCost\_delete\_head\_step}, removing vertices outside $O$ never increases cyclic traversal cost (\texttt{shortcutToSubset\_cost\_le\_opt}):
+\begin{equation}
+  \mathrm{tourCost}(c, C_O) \le \mathrm{tourCost}(c, p^*) = \mathrm{optTourCost}(c).
+\end{equation}
+
+When $O$ is non-empty ($|O| = 2k \ge 2$), the even-length cycle $C_O = [v_0, v_1, \dots, v_{2k-1}]$ decomposes into two complementary perfect matchings on $O$. In Lean, instead of indexing into $C_O$ with modular arithmetic $(2i \bmod 2k)$, we define a recursive pairing function \texttt{cyclePairs} that consumes two vertices at a time from the head of a list, and obtain the second matching by applying the same function to the one-step cyclic rotation \texttt{cycleRotated}:
+
+\noindent\begin{minipage}{\linewidth}
+\begin{lstlisting}[language=lean4]
+def cyclePairs {a : Type*} : List a -> List (Sym2 a)
+  | [] => []
+  | [_] => []
+  | u :: v :: rest => s(u, v) :: cyclePairs rest
+
+def cycleRotated {a : Type*} : List a -> List a
+  | [] => []
+  | u :: rest => rest ++ [u]
+\end{lstlisting}
+\end{minipage}
+This formulation avoids modular index arithmetic entirely. When $L$ is duplicate-free and has even length, structural induction consuming two elements at a time (\texttt{u :: v :: rest}) proves that \texttt{cyclePairs L} has no duplicate edges, covers every vertex in $L$ with incidence multiplicity~$1$ (\texttt{cyclePairs\_incident\_once}), and therefore defines a valid \texttt{PerfectMatching} on $L.\mathrm{toFinset}$ (\texttt{evenCycleMatchingOne}). Since \texttt{cycleRotated L} preserves length, duplicate-freeness, and vertex support, applying \texttt{cyclePairs} to \texttt{cycleRotated L} immediately yields the second matching (\texttt{evenCycleMatchingTwo}) without duplicating the incidence proof.
+
+Moreover, for any list $u :: v :: \mathrm{rest}$ of even length, an inductive zip identity (\texttt{walk\_alternating\_pairs\_cost}) establishes that the sum of the undirected pair weights of $L$ and $\mathrm{cycleRotated}(L)$ equals the cyclic tour cost of $L$ (\texttt{cycle\_matchings\_cost\_sum}):
+\begin{equation}
+\begin{aligned}
+  &\mathrm{edgeSetCost}(c, M_1.\mathrm{edges}) + \mathrm{edgeSetCost}(c, M_2.\mathrm{edges}) \\
+  &\quad = \mathrm{tourCost}(c, C_O).
+\end{aligned}
+\end{equation}
+Since $M$ minimizes weight over all perfect matchings on $O$, we have $\mathrm{cost}(M) \le \mathrm{cost}(M_1)$ and $\mathrm{cost}(M) \le \mathrm{cost}(M_2)$. Adding the two inequalities and chaining with $\mathrm{tourCost}(c, C_O) \le \mathrm{optTourCost}(c)$ discharges the matching bound in exact integer arithmetic:
+\begin{theorem}[\texttt{matchingCost\_le\_half\_OPT}]
+For $n \ge 3$, any metric cost function $c$, any spanning tree $T$, and any minimum-weight perfect matching $M$ on $\mathrm{oddDegreeVertices}(T.\mathrm{edges})$,
+\[
+  2 \cdot \mathrm{edgeSetCost}(c, M.\mathrm{edges}) \le \mathrm{optTourCost}(c).
+\]
+\end{theorem}
+
+% ==============================================================================
+\section{Eulerian Multigraphs, Hierholzer Splicing, and the \texorpdfstring{$3/2$}{3/2} Guarantee}
+\label{sec:eulerian}
+% ==============================================================================
+
+\subsection{Multigraph Union and Degree Parity}
+
+An edge of the matching $M$ on $O$ may already belong to the spanning tree $T$. If one took the set union $T.\mathrm{edges} \cup M.\mathrm{edges}$ as a \texttt{Finset}, any shared edge would collapse to multiplicity~$1$, destroying the even-degree invariant at its endpoints. We therefore define the multigraph union in \texttt{MultigraphEdges n := Multiset (Sym2 (Fin n))} using multiset addition:
+\begin{equation}
+  \mathrm{multigraphUnion}(E_1, E_2) := E_1.\mathrm{val} + E_2.\mathrm{val}.
+\end{equation}
+Because multiset filtering is additive (\texttt{Multiset.filter\_add}), the multigraph degree satisfies $\deg_{T \uplus M}(v) = \deg_T(v) + \deg_M(v)$ (\texttt{multigraphDegree\_add}). If $v \in O$, then $\deg_T(v)$ is odd and $\deg_M(v) = 1$; if $v \notin O$, then $\deg_T(v)$ is even and $\deg_M(v) = 0$. In both cases, $\deg_{T \uplus M}(v)$ is even (\texttt{multigraph\_degree\_even}).
+
+An Eulerian circuit of a multigraph $E$ is specified as a closed vertex walk whose induced undirected edge multiset equals $E$ and which visits every vertex:
+
+\noindent\begin{minipage}{\linewidth}
+\begin{lstlisting}[language=lean4]
+structure EulerianCircuit {n : Nat} (E : MultigraphEdges n) where
+  walk : List (Fin n)
+  is_closed : walk.head? = walk.getLast?
+  edge_multiset_eq : (pathEdges walk : Multiset (Sym2 (Fin n))) = E
+  visits_all : forall v : Fin n, v in walk
+\end{lstlisting}
+\end{minipage}
+Because \texttt{edge\_multiset\_eq} equates the multiset of walk edges with $T.\mathrm{val} + M.\mathrm{val}$, multiset map summation shows that the traversal cost of any Eulerian circuit $W$ of $T \uplus M$ equals the sum of the tree and matching weights (\texttt{circuitCost\_eq\_treeCost\_add\_matchingCost}):
+\begin{equation}
+\begin{aligned}
+  \mathrm{walkCost}(c, W.\mathrm{walk})
+  &= \mathrm{edgeSetCost}(c, T.\mathrm{edges}) \\
+  &\quad + \mathrm{edgeSetCost}(c, M.\mathrm{edges}).
+\end{aligned}
+\end{equation}
+
+\subsection{Constructive Existence via Hierholzer Cycle Splicing}
+
+To obtain an unconditional approximation theorem (rather than assuming an \texttt{EulerianCircuit} as an external hypothesis), Section~20 of \texttt{Christofides.lean} proves that every connected, loopless, even-degree multigraph of the form $E_1 \uplus E_2$ admits an Eulerian circuit (\texttt{exists\_eulerianCircuit}). The proof formalizes Hierholzer's cycle-splicing argument in three stages:
+\begin{enumerate}
+  \item \emph{Walk endpoint parity (\texttt{walk\_degree\_mod\_two}):} For any loopless open walk $u :: ws$ with terminal vertex $b$, the multigraph degree of any vertex $v$ in $\mathrm{pathEdges}(u :: ws)$ modulo~$2$ equals $(\mathbf{1}_{v = u} + \mathbf{1}_{v = b}) \bmod 2$.
+  \item \emph{Fuel-bounded trail extension (\texttt{extend\_trail\_to\_cycle}):} Given a residual even-degree loopless multigraph $R$ and a non-empty trail $u :: ws$ using a submultiset of $R$, if the current endpoint $b$ is distinct from $u$, then $\mathrm{pathEdges}(u :: ws)$ uses an odd number of edges incident to $b$. Since $b$ has even degree in $R$, the difference multigraph $R - \mathrm{pathEdges}(u :: ws)$ has positive degree at $b$, providing an unused incident edge $s(b, z)$ (\texttt{exists\_incident\_edge\_of\_pos\_degree}). Induction on the remaining edge budget $|R| - |\mathrm{pathEdges}(u :: ws)|$ extends the trail until it closes at $u$.
+  \item \emph{Cycle splicing (\texttt{eulerianWalkInduction\_holds}):} By strong induction on the number of unused edges in $H = T \uplus M$, if a closed sub-walk $W_0$ does not yet exhaust $H$, connectivity of $T$ locates a vertex $v \in W_0$ incident to an unused edge in $H - \mathrm{pathEdges}(W_0)$. Extending a closed cycle from $v$ inside the even-degree residual multigraph $H - \mathrm{pathEdges}(W_0)$ and splicing it into $W_0$ via \texttt{pathEdges\_append\_cons} strictly increases the number of covered edges while preserving closure.
+\end{enumerate}
+
+Similarly, the existence of a minimum spanning tree (\texttt{exists\_mst}) and a minimum-weight perfect matching on $O$ (\texttt{exists\_minWeightMatching}) follow from \texttt{Nat.find} minimization (\texttt{exists\_min\_nat}) once each type is shown to be inhabited (by \texttt{tourToSpanningPath} and \texttt{evenCycleMatchingOne}, respectively). Combining these three existence theorems inhabits \texttt{ChristofidesCertificate n c} for every $n \ge 3$ (\texttt{exists\_christofidesCertificate}).
+
+\subsection{Shortcutting the Circuit and Assembling the Ratio}
+
+Given an Eulerian circuit $W$, we define \texttt{shortcutCircuit w := (w.dropLast).eraseDups}. Dropping the duplicated closing vertex before calling \texttt{List.eraseDups} ensures that the resulting list is duplicate-free (\texttt{List.nodup\_eraseDups}), contains every vertex of $\mathrm{Fin}\;n$ (since $W$ visits all vertices), and therefore forms a valid Hamiltonian tour of \texttt{completeGraph n} (\texttt{shortcutCircuit\_isTour}). Because \texttt{w.eraseDups} is a sublist of $w$ beginning at the same head vertex, the sublist contraction lemma implies
+\[
+  \mathrm{tourCost}(c, \mathrm{shortcutCircuit}(W.\mathrm{walk})) \le \mathrm{walkCost}(c, W.\mathrm{walk})
+\]
+(\texttt{shortcut\_tourCost\_le\_circuitCost}). Combining this with the tree and matching bounds yields both the integer-scaled and real-valued unconditional approximation guarantees:
+\begin{theorem}[\texttt{christofides\_certificate\_approx\_ratio\_unconditional}]
+For every $n \ge 3$ and every metric cost function $c : \mathrm{CostFunction}\;n$, there exists a certificate $\mathrm{cert} : \mathrm{ChristofidesCertificate}\;n\;c$ whose shortcut tour $\pi = \mathrm{christofidesTour}(\mathrm{cert})$ is a valid Hamiltonian tour of $K_n$ satisfying
+\[
+\begin{aligned}
+  2 \cdot \mathrm{tourCost}(c, \pi) &\le 3 \cdot \mathrm{optTourCost}(c), \\
+  (\mathrm{tourCost}(c, \pi) : \mathbb{R}) &\le \frac{3}{2}\,(\mathrm{optTourCost}(c) : \mathbb{R}).
+\end{aligned}
+\]
+\end{theorem}
+
+% ==============================================================================
+\section{The Held--Karp Polytope and the Petersen \texorpdfstring{$P_{10}$}{P10} Integrality Gap}
+\label{sec:polyhedral}
+% ==============================================================================
+
+A natural companion question to the $3/2$ upper bound is why standard linear programming relaxations do not directly yield integral tours. In Sections~5 and~6 of \texttt{TSPComplexity.lean}, we formalize the Dantzig--Fulkerson--Johnson (DFJ) subtour elimination constraints, the continuous Held--Karp relaxation, and the 10-vertex Petersen graph counterexample $P_{10}$.
+
+\subsection{A \texorpdfstring{$\mathbb{Z}_2$}{Z2} Telescoping Proof of the DFJ Cut Bound}
+
+For a proper non-empty vertex subset $\emptyset \subsetneq S \subsetneq \mathrm{Fin}\;n$, the DFJ subtour inequality asserts that every Hamiltonian tour $p$ crosses the cut boundary $\delta(S)$ at least twice. Formalizing ``a closed loop that visits both $S$ and $S^c$ must cross $\delta(S)$ an even number of times'' by inducting on list segments is awkward because of the wrap-around step from index $n-1$ to $0$.
+
+We avoid case-splitting on wrap-around indices by working algebraically over $\mathrm{Fin}\;n$. First, we equip $\mathrm{Fin}\;n$ ($n \ge 1$) with the cyclic shift bijection \texttt{cycleNextEquiv : Fin n $\simeq$ Fin n} mapping $i \mapsto (i + 1) \bmod n$. Given the Boolean cut-membership sequence $b(i) = \mathrm{decide}(p[i] \in S)$ and its $\{0,1\} \subset \mathbb{Z}$ encoding $\chi(i) = \mathrm{boolToInt}(b(i))$, we define the signed cyclic difference $\Delta_i = \chi(\mathrm{cycleNext}\;i) - \chi(i) \in \{-1, 0, 1\}$. Re-indexing the first sum along \texttt{cycleNextEquiv} (\texttt{Equiv.sum\_comp}) immediately proves that the signed differences telescope to zero around the cycle (\texttt{cycle\_delta\_sum\_zero}):
+\begin{equation}
+\begin{aligned}
+  \sum_{i \in \mathrm{Fin}\;n} \Delta_i
+  &= \sum_{i \in \mathrm{Fin}\;n} \chi(\mathrm{cycleNext}\;i) - \sum_{i \in \mathrm{Fin}\;n} \chi(i) = 0 \in \mathbb{Z}.
+\end{aligned}
+\end{equation}
+On the other hand, $|\Delta_i| = 1$ if and only if step $i$ crosses $\delta(S)$ ($b(i) \ne b(\mathrm{cycleNext}\;i)$), and $|\Delta_i| = 0$ otherwise (\texttt{abs\_cycleDelta\_eq\_ite}). Because $|z| \equiv z \pmod 2$ for every integer $z \in \{-1, 0, 1\}$ (discharged by \texttt{decide} on the four Boolean pairs in \texttt{cycleDelta\_zmod\_two}), projecting the sum to $\texttt{ZMod 2}$ shows that the number of boundary crossings is always even (\texttt{cyclic\_cut\_crossings\_even}):
+\begin{equation}
+\begin{aligned}
+  &\left(|\{i \in \mathrm{Fin}\;n \mid b(i) \ne b(\mathrm{cycleNext}\;i)\}| : \mathrm{ZMod}\;2\right) \\
+  &\quad = \sum_{i \in \mathrm{Fin}\;n} |\Delta_i| = \sum_{i \in \mathrm{Fin}\;n} \Delta_i = 0.
+\end{aligned}
+\end{equation}
+Since $S$ is both non-empty and proper, and $p$ visits every vertex of $\mathrm{Fin}\;n$, the sequence $b$ attains both \texttt{true} and \texttt{false}. A circular Boolean sequence with zero boundary transitions is constant by simple induction (\texttt{bool\_eq\_zero\_of\_no\_boundary}), so $b$ has at least one transition; by evenness, it has at least two (\texttt{cyclic\_boolean\_transitions\_ge\_two}). Mapping the two distinct transition indices into \texttt{cycleEdges p} proves the DFJ cut theorem:
+\begin{theorem}[\texttt{dfj\_subtour\_cut\_bound}]
+For $n \ge 3$, any valid Hamiltonian tour $p$ on $G$, and any subset $S \subseteq \mathrm{Fin}\;n$ with $S.\mathrm{Nonempty}$ and $S \ne \mathrm{Finset.univ}$, at least two edges of $p$ cross $S$:
+\[
+  2 \le (\mathrm{tourCutEdges}\;p\;S).\mathrm{length}.
+\]
+\end{theorem}
+
+\subsection{Embedding Tours into the Held--Karp Polytope}
+
+A point in the Held--Karp subtour relaxation on $n$ vertices is a symmetric matrix $x : \mathrm{Fin}\;n \to \mathrm{Fin}\;n \to \mathbb{R}$ with zero diagonal, entries in $[0,1]$, degree-$2$ conservation $\sum_{u \ne v} x_{vu} = 2$ at every vertex $v$, and cut capacity $\mathrm{cutCapacity}(x, S) := \sum_{u \in S} \sum_{v \notin S} x_{uv} \ge 2$ across every proper non-empty cut $S$ (\texttt{HeldKarpPoint n}). The fractional objective is $\mathrm{fractionalCost}(c, x) = \frac{1}{2}\sum_{u,v} c(u,v) x_{uv}$, where the factor of $1/2$ accounts for each undirected edge appearing twice in the ordered double sum.
+
+For any valid tour $p$ on $n \ge 3$ vertices, its symmetric indicator matrix $\mathrm{tourPoint}(p)(u,v)$ assigns $1$ if $(u,v)$ or $(v,u)$ belongs to $\mathrm{cycleEdges}(p)$ and $0$ otherwise. Using the inverse shift \texttt{cyclePrev} and the inequality $\mathrm{cycleNext}\;k \ne \mathrm{cyclePrev}\;k$ for $n \ge 3$ (\texttt{cycleNext\_ne\_cyclePrev}), each vertex $v = p[k]$ has exactly two distinct incident neighbours $p[\mathrm{cycleNext}\;k]$ and $p[\mathrm{cyclePrev}\;k]$ along the tour, establishing degree-$2$ conservation (\texttt{tourPoint\_degree\_two}). Combining this with the two distinct boundary crossings from Section~5.1 proves that $\mathrm{tourPoint}(p)$ is a feasible Held--Karp point (\texttt{tour\_is\_held\_karp\_point}), and that for any symmetric cost function $c$,
+\[
+  \mathrm{fractionalCost}(c, \mathrm{tourPoint}(p)) \le (\mathrm{tourCost}(c, p) : \mathbb{R})
+\]
+(\texttt{fractionalCost\_tourPoint\_le\_tourCost}).
+
+\subsection{Separating the Held--Karp Relaxation on \texorpdfstring{$P_{10}$}{P10}}
+
+To show that the Held--Karp relaxation strictly contains the integral tour polytope
+\[
+\begin{aligned}
+  \mathrm{TSPPolytope}(10) &:= \mathrm{convexHull}\;\mathbb{R}\;\bigl\{\mathrm{tourPoint}(p) \;\big|\; \\
+  &\qquad p.\mathrm{length} = 10 \land p.\mathrm{Nodup}\bigr\},
+\end{aligned}
+\]
+we formalize the 10-vertex Petersen graph $P_{10}$ (\texttt{petersenAdj} on \texttt{Fin 10}, decomposing vertices into an outer 5-cycle $\{0,\dots,4\}$, radial spokes, and an inner pentagram $\{5,\dots,9\}$) and define the uniform fractional point:
+\begin{equation}
+  \mathrm{petersenFractional}(u, v) := \begin{cases} 2/3 & \text{if } \mathrm{petersenAdj}(u, v), \\ 0 & \text{otherwise.} \end{cases}
+\end{equation}
+
+Because $\mathrm{Fin}\;10$ is finite, purely combinatorial facts about $P_{10}$ can be discharged inside the Lean~4 kernel by decidable reflection (\texttt{decide}), without invoking the compiler-trust axiom \texttt{native\_decide}:
+\begin{itemize}
+  \item \emph{Feasibility and DFJ slack profile:} Kernel evaluation confirms that every vertex of $P_{10}$ has degree~$3$, every singleton cut $\{v\}$ crosses exactly $3$ edges (\texttt{petersen\_singleton\_cut\_card\_three}), and every non-trivial cut $S$ with $2 \le |S| \le 8$ crosses at least $4$ edges because $P_{10}$ has girth~$5$ (\texttt{petersen\_nontrivial\_cut\_card\_ge\_four}). Scaling by $2/3$ via \texttt{linarith} proves that \texttt{petersenFractional} is a valid \texttt{HeldKarpPoint 10} (\texttt{petersenHK}), has zero DFJ slack on all $10$ singleton cuts (\texttt{petersen\_dfjSlack\_singleton\_zero}), and has strictly positive interior slack
+  \[
+    \mathrm{dfjSlack}(\mathrm{petersenFractional}, S) \ge 4 \cdot \frac{2}{3} - 2 = \frac{2}{3}
+  \]
+  across all non-trivial cuts (\texttt{petersen\_dfjSlack\_nontrivial\_ge\_two\_thirds}).
+  \item \emph{Non-Hamiltonicity and hyperplane separation:} Rather than testing all $10! = 3{,}628{,}800$ permutations of $\mathrm{Fin}\;10$, we define \texttt{petersenWalks k}, which inductively extends duplicate-free $P_{10}$-walks of length $k+1$. Because $P_{10}$ is $3$-regular and duplicate-free walks cannot revisit vertices, \texttt{petersenWalks 9} contains only $240$ simple paths of length~$10$, and \texttt{decide} verifies in milliseconds that none of them closes into a $10$-cycle (\texttt{petersen\_no\_closed\_walk\_10}, \texttt{petersen\_no\_hamiltonian\_tour}). Consequently, any $10$-vertex tour $p$ must use at least one non-edge of $P_{10}$. Under the separating linear functional
+  \[
+    \mathrm{petersenSepCost}(x) := \sum_{u,v \in \mathrm{Fin}\;10} \mathbf{1}_{\neg\mathrm{petersenAdj}(u,v)}\, x_{uv},
+  \]
+  every integral tour indicator satisfies $\mathrm{petersenSepCost}(\mathrm{tourPoint}(p)) \ge 1$ (\texttt{petersen\_tour\_cost\_ge\_one}), so the entire convex hull $\mathrm{TSPPolytope}(10)$ lies in the closed halfspace $\{x \mid 1 \le \mathrm{petersenSepCost}(x)\}$ by Mathlib's \texttt{convexHull\_min}. Since $\mathrm{petersenSepCost}(\mathrm{petersenFractional}) = 0$, this strictly separates the Held--Karp relaxation from the TSP polytope (\texttt{petersen\_strictly\_separates\_held\_karp}).
+  \item \emph{The $11/10$ graphic metric integrality gap:} Finally, we define the shortest-path graphic metric $c_{P_{10}} := \mathrm{petersenMetricCost}$ on $P_{10}$ (which has diameter~$2$):
+  \begin{equation}
+    c_{P_{10}}(u, v) := \begin{cases} 0 & \text{if } u = v, \\ 1 & \text{if } \mathrm{petersenAdj}(u, v), \\ 2 & \text{otherwise.} \end{cases}
+  \end{equation}
+  Kernel verification over $(\mathrm{Fin}\;10)^3$ confirms the triangle inequality (\texttt{petersenMetricCost\_isMetric}). On the $15$ edges of $P_{10}$ (each of weight~$1$), \texttt{petersenFractional} achieves Held--Karp objective $15 \times \frac{2}{3} = 10$. Conversely, because every $10$-tour $p$ traverses $10$ edges of cost at least~$1$ and at least one non-edge $e^*$ of cost~$2$ (isolated via \texttt{List.append\_of\_mem}), every integral tour has cost at least $9 \times 1 + 2 = 11$ (\texttt{petersen\_metric\_tourCost\_ge\_eleven}):
+\end{itemize}
+\begin{theorem}[\texttt{petersen\_heldKarp\_metric\_integrality\_gap}]
+Under the metric cost function $c_{P_{10}} := \mathrm{petersenMetricCost}$, the Held--Karp relaxation admits a feasible point of fractional cost at most $10$, whereas every Hamiltonian tour on $\mathrm{Fin}\;10$ has cost at least $11$:
+\[
+\begin{aligned}
+  &\left(\exists\,\mathrm{hk} : \mathrm{HeldKarpPoint}\;10,\; \mathrm{fractionalCost}(c_{P_{10}}, \mathrm{hk}.x) \le 10\right) \\
+  &\quad\land\;\Bigl(\forall p : \mathrm{List}(\mathrm{Fin}\;10),\; p.\mathrm{length} = 10 \to p.\mathrm{Nodup} \\
+  &\qquad\quad\to 11 \le \mathrm{tourCost}(c_{P_{10}}, p)\Bigr).
+\end{aligned}
+\]
+\end{theorem}
+
+% ==============================================================================
+\section{Formalization Summary and Concluding Remarks}
+\label{sec:summary}
+% ==============================================================================
+
+\begin{table*}[t]
+\centering
+\caption{Summary of principal mechanized theorems across \texttt{Christofides.lean} and \texttt{TSPComplexity.lean} (Sections~5--6), verified under Lean~4 (\texttt{v4.35.0-rc2}) with zero \texttt{sorry}s.}
+\label{tab:formal_summary}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Declaration Name} & \textbf{Module} & \textbf{Mathematical Statement} & \textbf{Key Proof Technique} \\
+\midrule
+\texttt{MSTCost\_le\_OPT} & \texttt{Christofides} & $\mathrm{cost}(T_{\mathrm{mst}}) \le \mathrm{OPT}$ ($n \ge 3$) & Delete wrap-around tour edge (\texttt{tourToSpanningPath}) \\
+\texttt{even\_card\_oddDegreeVertices} & \texttt{Christofides} & $2 \mid |\mathrm{oddDegreeVertices}(E)|$ & Fiberwise \texttt{Sym2} incidence double-counting \\
+\texttt{perfectMatching\_card\_two\_mul} & \texttt{Christofides} & $2\,|M.\mathrm{edges}| = |S|$ & Incidence partition over $S$ \\
+\texttt{cycle\_matchings\_cost\_sum} & \texttt{Christofides} & $\mathrm{cost}(M_1) + \mathrm{cost}(M_2) = \mathrm{tourCost}(c, C_O)$ & Alternating \texttt{cyclePairs} + \texttt{cycleRotated} induction \\
+\texttt{matchingCost\_le\_half\_OPT} & \texttt{Christofides} & $2\cdot\mathrm{cost}(M) \le \mathrm{OPT}$ & Filter $p^*$ to $O$ (\texttt{shortcutToSubset}) + parity split \\
+\texttt{multigraph\_degree\_even} & \texttt{Christofides} & $\forall v,\; 2 \mid \deg_{T \uplus M}(v)$ & Additive multiset degree on $T.\mathrm{val} + M.\mathrm{val}$ \\
+\texttt{exists\_christofidesCertificate} & \texttt{Christofides} & $\exists\,\mathrm{cert} : \mathrm{ChristofidesCertificate}\;n\;c,\;\top$ & \texttt{Nat.find} extrema + Hierholzer trail splicing \\
+\texttt{shortcut\_tourCost\_le\_circuitCost} & \texttt{Christofides} & $\mathrm{tourCost}(c, \mathrm{shortcutCircuit}\;W) \le \mathrm{walkCost}(c, W)$ & Sublist contraction (\texttt{walkCost\_sublist\_le}) \\
+\texttt{christofides\_certificate\_approx\_ratio\_unconditional} & \texttt{Christofides} & $\exists\,\mathrm{cert},\; \mathrm{IsTour}\;\pi \land \mathrm{cost}(\pi) \le \frac{3}{2}\,\mathrm{OPT}$ & Synthesis of tree, matching, and shortcut bounds \\
+\midrule
+\texttt{cyclic\_cut\_crossings\_even} & \texttt{TSPComplexity} & $2 \mid |\{i \mid b(i) \ne b(\mathrm{cycleNext}\;i)\}|$ & Telescoping sum along \texttt{cycleNextEquiv} in \texttt{ZMod 2} \\
+\texttt{dfj\_subtour\_cut\_bound} & \texttt{TSPComplexity} & $2 \le |\delta(S) \cap E(p)|$ ($\emptyset \subsetneq S \subsetneq V$) & Surjectivity of $p$ + even boundary transitions \\
+\texttt{tour\_is\_held\_karp\_point} & \texttt{TSPComplexity} & $\exists\,\mathrm{hk} : \mathrm{HeldKarpPoint}\;n,\; \mathrm{hk}.x = \mathrm{tourPoint}\;p$ & Predecessor/successor distinctness + DFJ cut bound \\
+\texttt{petersen\_dfjSlack\_nontrivial\_ge\_two\_thirds} & \texttt{TSPComplexity} & $2 \le |S| \le 8 \implies \mathrm{dfjSlack}(x_{P_{10}}, S) \ge 2/3$ & Kernel girth-$5$ cut reflection ($\ge 4$ edges) + \texttt{linarith} \\
+\texttt{petersen\_strictly\_separates\_held\_karp} & \texttt{TSPComplexity} & $x_{P_{10}} \in P_{\mathrm{HK}}(10) \setminus \mathrm{TSPPolytope}(10)$ & Depth-$9$ walk tree (\texttt{decide}) + \texttt{convexHull\_min} \\
+\texttt{petersen\_heldKarp\_metric\_integrality\_gap} & \texttt{TSPComplexity} & $\mathrm{LP}_{\mathrm{HK}}(P_{10}) \le 10 < 11 \le \mathrm{OPT}(P_{10})$ & Diameter-$2$ graphic metric + non-edge split \\
+\bottomrule
+\end{tabular}%
+}
+\end{table*}
+
+Table~\ref{tab:formal_summary} lists the principal declarations from both modules. All theorems compile under Lean~4 (\texttt{v4.35.0-rc2}) and depend solely on the three standard axioms \texttt{propext}, \texttt{Quot.sound}, and \texttt{Classical.choice}.\footnote{In addition to the polyhedral proofs in Sections~5--6, \texttt{TSPComplexity.lean} contains auxiliary specification experiments (such as a fuel-bounded permutation frontier scanner, a conditional Yannakakis slack-factorization scaling wrapper, and a Hamiltonian Cycle to Decision TSP cost reduction) together with Python reference scripts in \texttt{benchmarks/}. We omit those auxiliary specifications here to focus on the unconditional approximation and polyhedral results.} Even the finite checks on $P_{10}$ (evaluating all $1{,}022$ proper cuts and the $240$ simple walks of length~$10$) run inside the standard Lean kernel via \texttt{decide}, without relying on \texttt{Lean.ofReduceBool} or \texttt{native\_decide}.
+
+Two practical lessons stood out during the formalization:
+\begin{enumerate}
+  \item \emph{Choose data structures for the hardest transformation, not just the static definition.} Representing tours as \texttt{List (Fin n)} with an external \texttt{IsTour} predicate rather than dependent walks made both vertex-subset projection (\texttt{List.filter}) and Eulerian circuit shortcutting (\texttt{List.eraseDups}) reducible to a single 25-line inductive lemma on \texttt{List.Sublist}. Likewise, defining the two alternating matchings of an even cycle via a two-element list consumer (\texttt{cyclePairs}) and a head-to-tail rotation (\texttt{cycleRotated}) eliminated modular index arithmetic from the $1/2\text{-}\mathrm{OPT}$ matching proof.
+  \item \emph{Prune finite search trees before invoking kernel reflection.} A naive attempt to prove the non-Hamiltonicity of $P_{10}$ by evaluating all $10! = 3{,}628{,}800$ vertex permutations inside the kernel times out. Generating only simple $P_{10}$-walks of length~$10$ (\texttt{petersenWalks 9}) shrinks the search space to $240$ candidates, allowing \texttt{decide} to finish in milliseconds while remaining purely kernel-checked.
+\end{enumerate}
+
+% ==============================================================================
+\begin{thebibliography}{99}
+% ==============================================================================
+
+\bibitem{applegate2006}
+D.~L. Applegate, R.~E. Bixby, V.~Chv\'atal, and W.~J. Cook.
+\newblock {\em The Traveling Salesman Problem: A Computational Study}.
+\newblock Princeton University Press, 2006.
+
+\bibitem{christofides1976}
+N.~Christofides.
+\newblock Worst-case analysis of a new heuristic for the travelling salesman problem.
+\newblock Technical Report 388, Graduate School of Industrial Administration, Carnegie-Mellon University, 1976.
+
+\bibitem{dfj1954}
+G.~Dantzig, R.~Fulkerson, and S.~Johnson.
+\newblock Solution of a large-scale traveling-salesman problem.
+\newblock {\em Journal of the Operations Research Society of America}, 2(4):393--410, 1954.
+
+\bibitem{hk1970}
+M.~Held and R.~M. Karp.
+\newblock The traveling-salesman problem and minimum spanning trees.
+\newblock {\em Operations Research}, 18(6):1138--1162, 1970.
+
+\bibitem{karp1972}
+R.~M. Karp.
+\newblock Reducibility among combinatorial problems.
+\newblock In {\em Complexity of Computer Computations}, pages 85--103. Plenum Press, 1972.
+
+\bibitem{mathlib2020}
+The mathlib Community.
+\newblock The Lean mathematical library.
+\newblock In {\em Proceedings of the 9th ACM SIGPLAN International Conference on Certified Programs and Proofs (CPP)}, pages 367--381, 2020.
+
+\bibitem{serdyukov1978}
+A.~I. Serdyukov.
+\newblock On some extremal walks in graphs.
+\newblock {\em Upravlyaemye Sistemy}, 17:76--79, 1978.
+
+\end{thebibliography}

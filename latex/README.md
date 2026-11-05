@@ -1,23 +1,43 @@
-# LaTeX Archival Monograph Packaging (`latex/`)
+# LaTeX Manuscripts (`tsp_research/latex`)
 
-This directory contains the peer-review and arXiv-compatible LaTeX source for the archival monograph:
+This directory contains the LaTeX manuscripts accompanying the Lean 4 formalization of the Christofides--Serdyukov $3/2$-approximation algorithm (`Christofides.lean`, registered in the Palomar Formalization Registry under [`PALOMAR-2026-10-30-000013`](https://palomar-registry.org/entry?id=PALOMAR-2026-10-30-000013&version=1)) and the Held--Karp / Petersen $P_{10}$ polyhedral separation theorems (`TSPComplexity.lean` §§5–6).
 
-- **`monograph.tex`**: Self-contained LaTeX document based on `MONOGRAPH.md`, with:
-  - Vector TikZ graph figure for the 10-vertex Petersen Graph ($P_{10}$) integrality gap witness ($x_e = 2/3$).
-  - Vector TikZ graph figure for the Ring-of-Triangles 3-SAT Gadget Graph ($G_{\text{path}}$) with variable 2-opt bridges and clause-interlock penalties ($c_{\text{penalty}} = B + 1$).
-  - Vector TikZ diagram for the three formalized mathematical obstructions (Polyhedral Integrality Gaps on $P_{10}$, PSD Extension Complexity & Yannakakis Slack Factorization, and Combinatorial NP-Hardness Reductions).
-  - Vector TikZ plot for the Branch-and-Bound search node explosion ($2^m - 1$ vs. 1) and the Christofides-Serdyukov 3/2-approximation pipeline.
-  - Complete formal theorem statements and proof sketches matching `TSPComplexity.lean` (235 declarations) and `Christofides.lean` (178 declarations; 413 total declarations).
-  - Comprehensive bibliography with 10 seminal citations.
+## Primary Manuscripts (Research Note & Proof Pearl)
 
-## Compilation Instructions
+Both primary manuscripts share a single unified source body (`note_body.tex`) so that mathematical statements, Lean 4 identifiers, and declaration tables remain synchronized across formats:
 
-### Local Compilation (pdfLaTeX)
+| File | Output PDF | Format & Target Venue |
+| :--- | :--- | :--- |
+| [`note_body.tex`](note_body.tex) | *(shared input)* | Core manuscript body (§§1–6, Table 1 declaration inventory, bibliography) |
+| [`research_note.tex`](research_note.tex) | [`research_note.pdf`](research_note.pdf) | **1-column `article` (11pt)** — Preprint format for arXiv (`cs.LO` / `cs.DS` / `math.CO`), GitHub, and AFM |
+| [`proof_pearl.tex`](proof_pearl.tex) | [`proof_pearl.pdf`](proof_pearl.pdf) | **2-column `article` (10pt)** — Proof Pearl / Short Paper format for ACM CPP or ITP |
+| [`monograph.tex`](monograph.tex) | [`monograph.pdf`](monograph.pdf) | Extended archival technical report covering all repository declarations |
+
+## Building the PDFs
+
+Run `pdflatex` twice on either wrapper file to resolve cross-references:
+
 ```bash
 cd latex
-pdflatex -interaction=nonstopmode monograph.tex
-pdflatex -interaction=nonstopmode monograph.tex
+pdflatex -interaction=nonstopmode research_note.tex
+pdflatex -interaction=nonstopmode research_note.tex
+
+pdflatex -interaction=nonstopmode proof_pearl.tex
+pdflatex -interaction=nonstopmode proof_pearl.tex
 ```
 
-### arXiv / Overleaf Submission
-The file `monograph.tex` is fully self-contained, standard `pdfLaTeX`-compatible, and requires no external proprietary packages or shell escapes (`-shell-escape` is NOT required; listings is used instead of minted for 100% arXiv compatibility).
+## Switching `proof_pearl.tex` to `acmart` for ACM CPP Submission
+
+For direct submission to the ACM SIGPLAN International Conference on Certified Programs and Proofs (CPP) Proof Pearl / Short Paper track, replace the `\documentclass` line at the top of `proof_pearl.tex` with:
+
+```latex
+\documentclass[sigplan,10pt,review,anonymous]{acmart}
+```
+
+## Packaging for arXiv Submission
+
+When uploading to arXiv (`cs.LO` primary, cross-listed to `cs.DS` and `math.CO`), include only the two source files:
+- `research_note.tex`
+- `note_body.tex`
+
+The bibliography is embedded directly via `\begin{thebibliography}` inside `note_body.tex`, requiring no external `.bib` or `.bbl` build step on arXiv's TeX Live builder.

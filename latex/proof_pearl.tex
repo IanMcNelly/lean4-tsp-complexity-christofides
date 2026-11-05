@@ -1,0 +1,103 @@
+% Proof Pearl / Short Paper wrapper (2-column format).
+% For ACM CPP (Certified Programs and Proofs) submission, replace the documentclass
+% line below with:
+%   \documentclass[sigplan,10pt,review,anonymous]{acmart}
+% and move \maketitle below the abstract as required by acmart.
+\documentclass[10pt,twocolumn,a4paper]{article}
+
+\usepackage[top=0.85in,bottom=0.9in,left=0.7in,right=0.7in,columnsep=0.25in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{booktabs,array,graphicx}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{cite}
+\usepackage{hyperref}
+
+\definecolor{linkblue}{RGB}{15, 76, 129}
+\definecolor{codebg}{RGB}{248, 249, 250}
+\definecolor{codeframe}{RGB}{218, 222, 228}
+\definecolor{keywordcolor}{RGB}{140, 30, 90}
+\definecolor{commentcolor}{RGB}{90, 105, 115}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=linkblue,
+  citecolor=linkblue,
+  urlcolor=linkblue,
+  pdftitle={Proof Pearl: Formalizing the Christofides-Serdyukov 3/2-Approximation Algorithm and the Held-Karp Petersen Integrality Gap in Lean 4},
+  pdfauthor={Ian McNelly}
+}
+
+\lstdefinelanguage{lean4}{
+  keywords={def, theorem, lemma, structure, where, noncomputable, by, let, have, show, exact, intro, intros, apply, refine, rw, simp, omega, linarith, nlinarith, decide, native_decide, fun, if, then, else, match, with, open, variable, section, namespace, end, instance, deriving, Prop, Type},
+  sensitive=true,
+  morecomment=[l]{--},
+  morecomment=[s]{/-}{-/},
+  morestring=[b]"
+}
+
+\lstset{
+  language=lean4,
+  backgroundcolor=\color{codebg},
+  frame=single,
+  rulecolor=\color{codeframe},
+  basicstyle=\ttfamily\scriptsize,
+  keywordstyle=\color{keywordcolor}\bfseries,
+  commentstyle=\color{commentcolor}\itshape,
+  breaklines=true,
+  columns=fullflexible,
+  keepspaces=true,
+  xleftmargin=3pt,
+  xrightmargin=3pt,
+  aboveskip=6pt,
+  belowskip=6pt,
+  literate=
+    {∀}{{$\forall$}}1
+    {∃}{{$\exists$}}1
+    {↔}{{$\leftrightarrow$}}1
+    {→}{{$\rightarrow$}}1
+    {≤}{{$\le$}}1
+    {≥}{{$\ge$}}1
+    {≠}{{$\ne$}}1
+    {∈}{{$\in$}}1
+    {∉}{{$\notin$}}1
+    {⊆}{{$\subseteq$}}1
+    {∩}{{$\cap$}}1
+    {∪}{{$\cup$}}1
+    {∑}{{$\sum$}}1
+    {ℝ}{{$\mathbb{R}$}}1
+    {ℚ}{{$\mathbb{Q}$}}1
+    {ℕ}{{$\mathbb{N}$}}1
+    {ℤ}{{$\mathbb{Z}$}}1
+    {×}{{$\times$}}1
+    {⟨}{{$\langle$}}1
+    {⟩}{{$\rangle$}}1
+    {∧}{{$\land$}}1
+    {∨}{{$\lor$}}1
+    {¬}{{$\neg$}}1
+    {↦}{{$\mapsto$}}1
+}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\title{\large\textbf{Proof Pearl: Formalizing the Christofides--Serdyukov $3/2$-Approximation Algorithm and the Held--Karp Petersen Integrality Gap in Lean 4}}
+\author{\normalsize Ian McNelly \\ \small\texttt{https://github.com/imcn23/tsp}}
+\date{\small November 2026}
+
+\let\origunderscore\_
+\renewcommand{\_}{\origunderscore\allowbreak}
+
+\begin{document}
+\emergencystretch=3em
+\maketitle
+
+\input{note_body.tex}
+
+\end{document}
